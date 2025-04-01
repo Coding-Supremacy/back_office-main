@@ -93,9 +93,12 @@ def fetch_news(query, display=5):
         return []
 
 def run_prediction_region():
-    CURRENT_DIR = Path(__file__).parent  # 현재 스크립트 위치 (project_2/ui/)
-    DATA_DIR = CURRENT_DIR / "data"      # project_2/ui/data/
-    MODEL_DIR = CURRENT_DIR.parent / "models"  # project_2/models/
+    BASE_DIR = Path(__file__).resolve().parent.parent # Path 객체 반환
+    DATA_DIR = BASE_DIR / "mini2_data"
+    st.markdown(BASE_DIR) 
+    st.markdown(DATA_DIR)
+    MODEL_DIR = BASE_DIR / "mini2_model"
+    st.markdown(MODEL_DIR)
     
     CSV_PATH_MAP = {
         "현대": DATA_DIR / "현대_시장구분별_수출실적.csv",

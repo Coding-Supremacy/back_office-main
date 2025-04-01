@@ -9,7 +9,9 @@ from pathlib import Path
 
 import base64
 import requests
-from yeseul.main_project.project_1.ui_mini1 import mini1_promo_email as mini1_promo_email
+
+from yeseul.ui import mini1_promo_email
+
 
 # 경로 헬퍼 함수
 def get_abs_path(relative_path):

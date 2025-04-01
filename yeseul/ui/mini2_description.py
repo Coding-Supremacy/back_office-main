@@ -136,8 +136,8 @@ def run_description():
         st.markdown("---")
         st.markdown("""
     ### 📈  지역별 Prophet 예측 + 자동차 시장 트렌드 반영 LLM 분석 모델 제작과정""")
-        df1=pd.read_csv('main_project/project_2/ui/data/현대_지역별수출실적.csv')
-        df2=pd.read_csv('main_project/project_2/ui/data/현대_시장구분별_수출실적.csv')
+        df1=pd.read_csv('yeseul/mini2_data/현대_지역별수출실적.csv')
+        df2=pd.read_csv('yeseul/mini2_data/현대_시장구분별_수출실적.csv')
         st.markdown("""
     원본 데이터를 **Prophet 모델**에 적합한 형태로 변환하기 위해
     `pd.melt()` 함수를 활용하여 **시계열 데이터**로 wide → long 변환하였습니다.
