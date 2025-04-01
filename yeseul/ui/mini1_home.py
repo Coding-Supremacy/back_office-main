@@ -1,7 +1,7 @@
 import streamlit as st
 from pathlib import Path
 
-def run_home():
+def run_home1():
     
     
 
