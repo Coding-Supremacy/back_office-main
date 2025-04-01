@@ -10,7 +10,7 @@ from pathlib import Path
 import base64
 import requests
 
-from yeseul.ui import mini1_promo_email
+from ui import mini1_promo_email
 
 
 # 경로 헬퍼 함수
