@@ -190,9 +190,6 @@ def get_country_policy(country):
     }
     return policies.get(country, '정보 없음')
 
-st.title("🚗 기아 자동차 통합 분석 대시보드 (최적화 버전)")
-
-
 
 
 def run_eda_kia():

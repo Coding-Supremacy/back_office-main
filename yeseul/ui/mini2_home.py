@@ -1,6 +1,6 @@
 import streamlit as st
 
-def run_home():
+def run_home2():
     # 타이틀 및 소개
     st.markdown("""
     <h1 style='text-align: center; color: #2E86C1;'>🏠 현대 & 기아 판매현황 분석 시스템</h1>

@@ -95,10 +95,7 @@ def fetch_news(query, display=5):
 def run_prediction_region():
     BASE_DIR = Path(__file__).resolve().parent.parent # Path 객체 반환
     DATA_DIR = BASE_DIR / "mini2_data"
-    st.markdown(BASE_DIR) 
-    st.markdown(DATA_DIR)
-    MODEL_DIR = BASE_DIR / "mini2_model"
-    st.markdown(MODEL_DIR)
+    MODEL_DIR = BASE_DIR / "mini2_models"
     
     CSV_PATH_MAP = {
         "현대": DATA_DIR / "현대_시장구분별_수출실적.csv",
