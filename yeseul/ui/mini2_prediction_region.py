@@ -102,13 +102,8 @@ def run_prediction_region():
         "기아": DATA_DIR / "기아_시장구분별_수출실적.csv"
     }
 
-    channel = option_menu(None, ["현대", "기아"], default_index=0, orientation="horizontal",
-        icons=["car-front-fill", "truck-front-fill"],
-        styles={"container": {"padding": "0!important", "background-color": "#f9f9f9"},
-                "icon": {"color": "#2E86C1", "font-size": "20px"},
-                "nav-link": {"font-size": "16px", "text-align": "center", "margin": "0px", "padding": "10px"},
-                "nav-link-selected": {"background-color": "#2E86C1", "color": "white"}})
-
+    channel = st.session_state.get("brand", "현대")
+    
     market_label_map = {
         "미국": "북미-미국", "캐나다": "북미-캐나다", "멕시코": "북미-멕시코",
         "동유럽": "동유럽", "서유럽": "서유럽", "아시아": "아시아",

@@ -11,6 +11,7 @@ import base64
 import requests
 
 from ui import mini1_promo_email
+from google.cloud import translate_v2 as translate
 
 
 # 경로 헬퍼 함수
@@ -83,7 +84,7 @@ def extract_sigu(address):
 def run_input_step1():
     st.title('📋 고객 정보 입력')
 
-    model_path = Path(__file__).parent.parent / "model" / "svm_model.pkl"
+    model_path = Path(__file__).parent.parent / "mini1_model" / "svm_model.pkl"
     model = joblib.load(model_path)
 
     st.info("""
@@ -219,22 +220,32 @@ def step2_vehicle_selection():
     customer_type, characteristics = cluster_description.get(cluster_id, ("알 수 없는 클러스터", "특징 정보 없음"))
     selected_vehicle = st.session_state.get("selected_vehicle", "")
 
+    # 기본 경로를 정의
+    IMAGE_BASE_PATH = 'mini1_img/'
+
+    # 파일명만 따로 분리해서 관리
+    vehicle_image_files = {
+        'G70 (IK)': 'g70.png',
+        'Santa-Fe ™': 'santafe.png',
+        'NEXO (FE)': 'NEXO.png',
+        'Avante (CN7 N)': 'Avante (CN7 N).png',
+        'G80 (RG3)': 'g80.png',
+        'Grandeur (GN7 HEV)': 'Grandeur.png',
+        'IONIQ (AE EV)': 'IONIQ.png',
+        'i30 (PD)': 'i30.png',
+        'Palisade (LX2)': 'PALISADE.png',
+        'Tucson (NX4 PHEV)': 'TUCSON.png',
+        'Avante (CN7 HEV)': 'Avante.png',
+        'IONIQ 6 (CE)': 'IONIQ6.png',
+        'G90 (HI)': 'G90.jpg',
+        'Santa-Fe (MX5 PHEV)': 'Santa-FePHEV.png',
+        'G90 (RS4)': 'G90.jpg'
+    }
+
+    # 최종 딕셔너리 생성
     vehicle_images = {
-    'G70 (IK)': get_abs_path('img/g70.png'),
-    'Santa-Fe ™': get_abs_path('img/santafe.png'),
-    'NEXO (FE)': get_abs_path('img/NEXO.png'),
-    'Avante (CN7 N)': get_abs_path('img/Avante (CN7 N).png'),
-    'G80 (RG3)': get_abs_path('img/g80.png'),
-    'Grandeur (GN7 HEV)': get_abs_path('img/Grandeur.png'),
-    'IONIQ (AE EV)': get_abs_path('img/IONIQ.png'),
-    'i30 (PD)': get_abs_path('img/i30.png'),
-    'Palisade (LX2)': get_abs_path('img/PALISADE.png'),
-    'Tucson (NX4 PHEV)': get_abs_path('img/TUCSON.png'),
-    'Avante (CN7 HEV)': get_abs_path('img/Avante.png'),
-    'IONIQ 6 (CE)': get_abs_path('img/IONIQ6.png'),
-    'G90 (HI)': get_abs_path('img/G90.jpg'),
-    'Santa-Fe (MX5 PHEV)': get_abs_path('img/Santa-FePHEV.png'),
-    'G90 (RS4)': get_abs_path('img/G90.jpg')
+        name: get_abs_path(IMAGE_BASE_PATH + filename)
+        for name, filename in vehicle_image_files.items()
     }
     # 차량에 대한 기본적인 추천 멘트
     basic_recommendations = {

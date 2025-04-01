@@ -5,7 +5,6 @@ import plotly.express as px
 import plotly.colors as pc
 from streamlit_option_menu import option_menu
 from streamlit_autorefresh import st_autorefresh
-from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
@@ -158,9 +157,9 @@ def run_eda():
             "💰 거래 금액 분석",
             "🛒 구매 빈도 분석",
             "📈 고객 유형 분석",
-            "🌎 지역별 구매 분석"
+            "🚘 모델별 구매 분석"
         ],
-        icons=["calendar", "cash", "cart", "graph-up", "globe"],
+        icons=["", "", "", "", ""],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
@@ -453,100 +452,101 @@ def run_eda():
         except Exception as e:
             st.success(f"이메일을 발송했습니다.")
 
-    # 5) 지역별 구매 분석
-    elif selected == "🌎 지역별 구매 분석":
-        st.subheader("🌎 지역별 구매한 제품 수")
+    # 5) 모델별 구매 분석
+    elif selected == "🚘 모델별 구매 분석":
+        st.subheader("🚘 모델별 구매 통계")
         st.markdown("""
-        이 분석은 지역별 고객의 '구매 건수' 데이터를 실시간으로 시각화합니다. 
-        특정 지역에서 어떤 제품이 많이 팔리는지 확인하여 지역 맞춤형 마케팅 전략 수립에 활용할 수 있습니다.
+        이 분석은 각 모델별 구매 데이터를 시각화하여 어떤 차량 모델이 인기가 있는지 파악합니다. 
+        모델별 판매 추이를 확인하여 마케팅 전략 수립에 활용할 수 있습니다.
         """)
-        file_path = csv_path
-        if os.path.exists(file_path):
-            df = pd.read_csv(file_path)
-            if {'시구', '구매한 제품', '제품 구매 빈도'}.issubset(df.columns):
-                df = df.copy()
-                df.rename(columns={'제품 구매 빈도': '구매 건수'}, inplace=True)
-                purchase_count_by_region = df.groupby(['시구', '구매한 제품'])['구매 건수'].sum().reset_index()
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            if {'구매한 제품', '거래 금액', '제품 구매 빈도'}.issubset(df.columns):
+                
+                # 모델별 판매량 분석
+                model_sales = df['구매한 제품'].value_counts().reset_index()
+                model_sales.columns = ['모델', '판매량']
+                
+                # 모델별 판매량 바 차트
                 bar_fig = px.bar(
-                    purchase_count_by_region, 
-                    x='시구', 
-                    y='구매 건수', 
-                    color='구매한 제품', 
-                    title='지역별 구매 제품 건수',
-                    labels={'시구': '지역', '구매 건수': '총 구매 건수', '구매한 제품': '제품'},
+                    model_sales,
+                    x='모델',
+                    y='판매량',
+                    title='모델별 판매량',
+                    labels={'모델': '차량 모델', '판매량': '총 판매량'},
+                    color='모델',
                     color_discrete_sequence=pastel_colors
                 )
                 bar_fig.update_layout(
-                    title={'text': '지역별 구매 제품 건수', 'x': 0.5, 'font': {'size': 20}},
-                    xaxis=dict(title='지역', tickangle=45),
-                    yaxis=dict(title='총 구매 건수'),
-                    margin=dict(l=40, r=40, t=40, b=80),
+                    title={'text': '모델별 판매량', 'x': 0.5, 'font': {'size': 20}},
+                    xaxis=dict(title='차량 모델', tickangle=45),
+                    yaxis=dict(title='총 판매량'),
+                    margin=dict(l=40, r=40, t=40, b=120),
                     plot_bgcolor='#f4f4f9',
                     paper_bgcolor='#ffffff',
                     font=dict(size=12),
-                    showlegend=True
+                    showlegend=False
                 )
                 st.plotly_chart(bar_fig)
+                
                 custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> X축은 각 지역, Y축은 해당 지역의 총 구매 건수를 표시합니다. 막대 색상은 제품군을 구분하여, 지역별 인기 제품과 구매 패턴을 심도 있게 분석할 수 있습니다.",
+                    "<strong>자세한 그래프 설명:</strong><br> 이 그래프는 각 차량 모델별 총 판매량을 보여줍니다. X축은 차량 모델, Y축은 해당 모델의 총 판매량을 나타냅니다.",
                     "#d1ecf1", "black"
                 )
-                region_selected = st.selectbox("지역 선택", df['시구'].unique())
-                region_data = df[df['시구'] == region_selected]
-                product_count_by_region = region_data.groupby('구매한 제품')['구매 건수'].sum().reset_index()
-                pie_chart_fig = px.pie(
-                    product_count_by_region,
-                    names='구매한 제품',
-                    values='구매 건수',
-                    title=f"{region_selected} 지역의 제품 구매 비율",
-                    color_discrete_sequence=pastel_colors
-                )
-                st.plotly_chart(pie_chart_fig)
+                
+                # 모델별 평균 거래 금액
+                model_avg_price = df.groupby('구매한 제품')['거래 금액'].mean().reset_index()
+                model_avg_price.columns = ['모델', '평균 거래 금액']
+                
+                # 모델 선택 드롭다운
+                selected_model = st.selectbox("모델 선택", df['구매한 제품'].unique())
+                
+                # 선택된 모델의 클러스터별 구매 분포
+                cluster_distribution = df[df['구매한 제품'] == selected_model]['Cluster'].value_counts().reset_index()
+                cluster_distribution.columns = ['클러스터 번호', '고객 수']
+                cluster_distribution['클러스터 번호'] = cluster_distribution['클러스터 번호'].astype(str) + '번 유형'
+
+                
+                pie_fig = px.pie(cluster_distribution,
+                                 names='클러스터 번호',
+                                 values='고객 수',
+                                 title=f"{selected_model} 모델을 구매한 고객의 클러스터 분포",
+                                 color_discrete_sequence=px.colors.qualitative.Set3)
+                st.plotly_chart(pie_fig)
+                
                 custom_info(
-                    f"<strong>자세한 파이차트 설명:</strong><br> 파이차트는 {region_selected} 지역 내 각 제품의 구매 건수 비율을 시각화하여 인기 제품과 소비 패턴을 명확하게 파악할 수 있도록 도와줍니다.",
+                    f"<strong>자세한 파이차트 설명:</strong><br> 이 차트는 {selected_model} 모델을 구매한 고객들의 구매 빈도 분포를 보여줍니다.",
                     "#d1ecf1", "black"
                 )
-                total_region = product_count_by_region['구매 건수'].sum()
-                if total_region >= 150:
-                    custom_info("프로모션 제안: 해당 지역의 구매 건수가 매우 높습니다. → 대형 이벤트, 지역 맞춤 플래그십 스토어, 시승행사 고려.",
-                               "#d1e7dd", "darkgreen")
-                elif total_region >= 120:
-                    custom_info("프로모션 제안: 구매 건수가 높습니다. → 지역 페스티벌, 시승행사, 특별 할인 및 VIP 혜택 확대 고려.",
-                               "#cce5ff", "darkblue")
-                elif total_region >= 100:
-                    custom_info("프로모션 제안: 구매 건수가 양호합니다. → 지역 맞춤 할인 쿠폰, 멤버십 이벤트, 고객 리워드 프로그램 진행 추천.",
-                               "#d4edda", "darkgreen")
-                elif total_region >= 80:
-                    custom_info("프로모션 제안: 구매 건수가 보통 이상입니다. → 오프라인 체험 행사, 지역 광고 및 SNS 마케팅 강화로 브랜드 인지도 상승 도모.",
-                               "#fff3cd", "darkorange")
-                elif total_region >= 60:
-                    custom_info("프로모션 제안: 구매 건수가 보통입니다. → 소규모 이벤트, 온라인 마케팅, 고객 피드백 기반 프로모션 전략 적용.",
-                               "#ffeeba", "darkorange")
-                elif total_region >= 40:
-                    custom_info("프로모션 제안: 구매 건수가 다소 낮습니다. → 타겟 마케팅, 지역 맞춤 할인, 현지 딜러 협업 강화 필요.",
-                               "#f8d7da", "darkred")
-                elif total_region >= 20:
-                    custom_info("프로모션 제안: 구매 건수가 낮습니다. → 집중 온라인 광고, 신규 고객 프로모션, 지역 리서치 통해 전략 재정비.",
-                               "#f5c6cb", "darkred")
-                elif total_region >= 10:
-                    custom_info("프로모션 제안: 구매 건수가 매우 낮습니다. → 신규 시장 테스트, 강력한 온라인 캠페인, 프로모션 재설계 필요.",
-                               "#f5c6cb", "darkred")
-                elif total_region >= 1:
-                    custom_info("프로모션 제안: 구매 건수가 극히 적습니다. → 전면적 시장 재분석, 집중 마케팅, 신규 전략 수립 필요.",
-                               "#f5c6cb", "darkred")
+                
+                # 모델별 분석 결과에 따른 프로모션 제안
+                total_sales = model_sales[model_sales['모델'] == selected_model]['판매량'].values[0]
+                avg_price = model_avg_price[model_avg_price['모델'] == selected_model]['평균 거래 금액'].values[0]
+                
+                if total_sales >= 50:
+                    if avg_price >= 50000000:
+                        custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 많고 고가입니다. → 프리미엄 프로모션, VIP 시승 이벤트, 고객 대상 맞춤형 서비스 제공.",
+                                "#d1e7dd", "darkgreen")
+                    else:
+                        custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 많지만 가격대가 낮습니다. → 대량 구매 할인, 패키지 프로모션, 액세서리 번들 제공.",
+                                "#d4edda", "darkgreen")
+                elif total_sales >= 30:
+                    custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 보통입니다. → 타겟 마케팅 강화, 제한된 기간 할인, 테스트 드라이브 이벤트 진행.",
+                                "#fff3cd", "darkorange")
                 else:
-                    custom_info("프로모션 제안: 이 지역에서는 구매가 전혀 이루어지지 않았습니다. → 전략적 철수 또는 신규 시장 개척 검토.",
-                               "#f5c6cb", "darkred")
+                    custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 낮습니다. → 집중 광고 캠페인, 특별 할인, 신규 고객 유치 프로모션 필요.",
+                                "#f8d7da", "darkred")
+                
                 st.markdown(
                     """
                     ---<br>
                     <strong>추가 설명:</strong><br>
-                    - 데이터는 실제 상황과 다를 수 있으며, 지역별 특성에 따라 마케팅 효과가 달라집니다.<br>
-                    - 다양한 시나리오와 A/B 테스트를 통해 최적의 마케팅 전략을 도출하시기 바랍니다.
+                    - 모델별 판매 데이터를 기반으로 마케팅 전략을 수립하세요.<br>
+                    - 인기 모델과 비인기 모델에 대한 차별화된 접근이 필요합니다.
                     """, unsafe_allow_html=True
                 )
             else:
-                st.error("필요한 컬럼('시구', '구매한 제품', '제품 구매 빈도')이 CSV 파일에 없습니다.")
+                st.error("필요한 컬럼('구매한 제품', '거래 금액', '제품 구매 빈도')이 CSV 파일에 없습니다.")
         else:
             st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
 
