@@ -83,7 +83,7 @@ def extract_sigu(address):
 def run_input_step1():
     st.title('📋 고객 정보 입력')
 
-    model_path = Path(__file__).parent.parent / "models" / "svm_model.pkl"
+    model_path = Path(__file__).parent.parent / "models_mini1" / "svm_model.pkl"
     model = joblib.load(model_path)
 
     st.info("""
