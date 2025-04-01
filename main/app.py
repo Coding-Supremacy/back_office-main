@@ -5,15 +5,15 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
-from ui.mini1_eda import run_eda
-from ui.mini1_home import run_home1
-from ui.mini1_input_new_customer_info import run_input_customer_info
-from ui.mini2_eda_hyundai import run_eda_hyundai
-from ui.mini2_eda_kia import run_eda_kia
-from ui.mini2_prediction_climate import run_prediction_climate
-from ui.mini2_prediction_region import run_prediction_region
-from ui.mini2_trend import run_trend
-from ui.mini2_home import run_home2
+from project_1.ui_mini1.mini1_eda import run_eda
+from project_1.ui_mini1.mini1_home import run_home1
+from project_1.ui_mini1.mini1_input_new_customer_info import run_input_customer_info
+from project_2.ui_mini2.mini2_eda_hyundai import run_eda_hyundai
+from project_2.ui_mini2.mini2_eda_kia import run_eda_kia
+from project_2.ui_mini2.mini2_prediction_climate import run_prediction_climate
+from project_2.ui_mini2.mini2_prediction_region import run_prediction_region
+from project_2.ui_mini2.mini2_trend import run_trend
+from project_2.ui_mini2.mini2_home import run_home2
 
 
 def main():

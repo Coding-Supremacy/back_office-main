@@ -10,7 +10,7 @@ from pathlib import Path
 import base64
 import requests
 
-from ui import mini1_promo_email
+from project_1.ui_mini1 import mini1_promo_email
 
 
 # 경로 헬퍼 함수
@@ -83,7 +83,7 @@ def extract_sigu(address):
 def run_input_step1():
     st.title('📋 고객 정보 입력')
 
-    model_path = Path(__file__).parent.parent / "model" / "svm_model.pkl"
+    model_path = Path(__file__).parent.parent / "models" / "svm_model.pkl"
     model = joblib.load(model_path)
 
     st.info("""
@@ -506,7 +506,7 @@ def step3_customer_data_storage():
                                     columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
 
             # 📌 CSV 파일 경로
-            log_file_path = r'main_project\project_1\data_mini1\이메일_전송_로그.csv'
+            log_file_path = r'main\project_1\data_mini1\이메일_전송_로그.csv'
 
             # 📌 파일이 없으면 새로 생성
             if not os.path.exists(log_file_path):

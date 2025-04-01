@@ -44,7 +44,7 @@ def fontRegistered():
 def load_data():
     # 현재 파일(trend.py)의 위치를 기준으로 상대 경로 생성
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 현재 파일이 있는 디렉토리
-    data_path = os.path.join(BASE_DIR, 'mini2_data/', '수출 주요 국가 차량 판매량 순위_정리 완료2.csv')
+    data_path = os.path.join(BASE_DIR, 'data_mini2/', '수출 주요 국가 차량 판매량 순위_정리 완료2.csv')
     
     # 파일 존재 여부 확인
     if not os.path.exists(data_path):

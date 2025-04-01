@@ -20,8 +20,8 @@ st.markdown("""
 @st.cache_data
 def load_data():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    df_export = pd.read_csv(os.path.join(BASE_DIR, "mini2_data/현대_지역별수출실적.csv"))
-    df_sales = pd.read_csv(os.path.join(BASE_DIR, "mini2_data/현대_차종별판매실적.csv"))
+    df_export = pd.read_csv(os.path.join(BASE_DIR, "data_mini2/현대_지역별수출실적.csv"))
+    df_sales = pd.read_csv(os.path.join(BASE_DIR, "data_mini2/현대_차종별판매실적.csv"))
     return df_export, df_sales
 
 df_export, df_sales = load_data()

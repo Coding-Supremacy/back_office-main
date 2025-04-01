@@ -174,7 +174,7 @@ def run_eda():
 
     pastel_colors = pc.qualitative.Pastel
     # CSV 파일 경로 (필요에 따라 수정)
-    csv_path = "main_project/project_1/data_mini1/클러스터링고객데이터_5.csv"
+    csv_path = "main/project_1/data_mini1/클러스터링고객데이터_5.csv"
 
     # 1) 가입 연도 분석
     if selected == "📊 가입 연도 분석":

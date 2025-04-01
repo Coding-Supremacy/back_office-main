@@ -174,10 +174,10 @@ def create_gdp_export_scatter(df, selected_country):
 
 def run_prediction_climate():
     # 모델 및 데이터 로드
-    model = joblib.load("yeseul/mini2_models/lgbm_tuned_model.pkl")
-    scaler = joblib.load("yeseul/mini2_models/model_columns.pkl")
-    model_columns = joblib.load("yeseul/mini2_models/model_columns.pkl")
-    df = pd.read_csv("yeseul/mini2_data/기아.csv")
+    model = joblib.load("main/project_2/models_mini2/lgbm_tuned_model.pkl")
+    scaler = joblib.load("main/project_2/models_mini2/scaler.pkl")
+    model_columns = joblib.load("main/project_2/models_mini2/model_columns.pkl")
+    df = pd.read_csv("main/project_2/data_mini2/기아.csv")
     
     st.title("🚗 기후별 수출량 분석 대시보드")
     st.markdown("""

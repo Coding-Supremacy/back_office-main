@@ -35,7 +35,7 @@ except Exception as e:
 # 클러스터 그룹별 랜덤 이메일 선택 함수
 def get_random_email_content(cluster_id):
     # 📌 CSV에서 매번 새롭게 불러오기 (랜덤화 유지)
-    df = pd.read_csv('data/클러스터링_이메일_수정.csv')
+    df = pd.read_csv('main/project_1/data_mini1/클러스터링_이메일_수정.csv')
 
     # 📌 클러스터 ID에 해당하는 이메일 필터링
     cluster_emails = df[df["Cluster ID"] == cluster_id][["Email Content", "Subject"]]
@@ -116,7 +116,7 @@ def send_promotion_email(이메일, 이름, cluster_id):
     msg.attach(MIMEText(body, "html"))
 
         # 로고 이미지 첨부 (CID 참조)
-    with open("img/hyundai_logo.jpg", "rb") as img_file:
+    with open("main/project_1/img/hyundai_logo.jpg", "rb") as img_file:
         img = MIMEImage(img_file.read())
         img.add_header("Content-ID", "<hyundai_logo>")
         msg.attach(img)
@@ -221,13 +221,13 @@ def send_welcome_email(이메일, 이름, 아이디, 가입일):
     msg.attach(MIMEText(body, "html"))
 
     # 로고 이미지 첨부 (CID 참조)
-    with open("main_project/project_1/img/hyundai_logo.jpg", "rb") as img_file:
+    with open("main/project_1/img/hyundai_logo.jpg", "rb") as img_file:
         img = MIMEImage(img_file.read())
         img.add_header("Content-ID", "<hyundai_logo>")
         msg.attach(img)
 
     # 웰컴 이미지 첨부 (CID 참조)
-    with open("main_project/project_1/img/welcome.png", "rb") as img_file:
+    with open("main/project_1/img/welcome.png", "rb") as img_file:
         img = MIMEImage(img_file.read())
         img.add_header("Content-ID", "<welcome_icon>")
         msg.attach(img)
@@ -245,10 +245,8 @@ def send_welcome_email(이메일, 이름, 아이디, 가입일):
 
 
 
-
-
 # **📌 이메일 전송 로그 파일 경로**
-log_file_path = r"main_project\project_1\data_mini1\이메일_전송_로그.csv"
+log_file_path = r"main\project_1\data_mini1\이메일_전송_로그.csv"
 
 # **📌 자동 이메일 발송 스케줄링 기능 (중복 방지 + 반복문 종료)**
 def send_scheduled_emails():

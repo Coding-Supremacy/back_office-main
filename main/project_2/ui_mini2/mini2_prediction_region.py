@@ -94,8 +94,8 @@ def fetch_news(query, display=5):
 
 def run_prediction_region():
     BASE_DIR = Path(__file__).resolve().parent.parent # Path 객체 반환
-    DATA_DIR = BASE_DIR / "mini2_data"
-    MODEL_DIR = BASE_DIR / "mini2_models"
+    DATA_DIR = BASE_DIR / "data_mini2"
+    MODEL_DIR = BASE_DIR / "models_mini2"
     
     CSV_PATH_MAP = {
         "현대": DATA_DIR / "현대_시장구분별_수출실적.csv",
@@ -278,7 +278,7 @@ def run_prediction_region():
                 pdf.add_page()
                 pdf.set_auto_page_break(auto=True, margin=15)
 
-                FONT_PATH_ORIG = "main_project/project_2/fonts/NanumGothic.ttf"
+                FONT_PATH_ORIG = "main/project_2/fonts/NanumGothic.ttf"
                 TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "NanumGothic.ttf")
 
                 # 임시 경로에 복사
