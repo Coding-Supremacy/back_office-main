@@ -125,9 +125,9 @@ def filter_sales_data_by_year_and_type():
     전체_해외 = df_sales_melted.loc[df_sales_melted['판매 구분'] != '내수용']
     
     # 전체_국내에 카테고리 컬럼 추가
-    전체_국내['카테고리'] = 전체_국내['차량 모델'].map(car_category_map)
+    전체_국내['카테고리'] = 전체_국내['차량 모델'].map(car_category_map).copy()
     # 전체_해외에 카테고리 컬럼 추가
-    전체_해외['카테고리'] = 전체_해외['차량 모델'].map(car_category_map)
+    전체_해외['카테고리'] = 전체_해외['차량 모델'].map(car_category_map).copy()
 
     
 
