@@ -10,8 +10,9 @@ from pathlib import Path
 import base64
 import requests
 
-from ui import mini1_promo_email
 from google.cloud import translate_v2 as translate
+
+from project_1.ui_mini1 import mini1_promo_email
 
 
 # 경로 헬퍼 함수
@@ -69,22 +70,13 @@ def run_input_customer_info():
     elif st.session_state["step"] == 3:
         step3_customer_data_storage()  # 고객 정보 저장
 
-# 시구 추출 함수
-def extract_sigu(address):
-    # '광역시', '특별시', '도' 등을 포함한 시구만 추출
-    match = re.search(r'([가-힣]+(?:광역시|특별시|도)? [가-힣]+(?:시|구))', address)
-    if match:
-        return match.group(0)
-    else:
-        return "시구 없음"
-
 
 
 # 예측을 위한 입력값을 처리하는 함수
 def run_input_step1():
     st.title('📋 고객 정보 입력')
 
-    model_path = Path(__file__).parent.parent / "mini1_model" / "svm_model.pkl"
+    model_path = Path(__file__).parent.parent / "models_mini1" / "svm_model.pkl"
     model = joblib.load(model_path)
 
     st.info("""
@@ -462,19 +454,18 @@ def step3_customer_data_storage():
             연령 = st.session_state.get("연령", "")
             구매빈도= st.session_state.get("구매빈도", "")
             제품출시년월= st.session_state.get("제품출시년월", "")
+            brand = st.session_state.get("brand", "")
 
-            # 주소에서 시구 추출
-            시구 = extract_sigu(주소)
 
             # 고객 정보 저장
             full_data = pd.DataFrame([[이름, 생년월일, 연령, 성별, 휴대폰번호, 이메일, 주소, 아이디, 가입일, 고객세그먼트, 
-                                       차량구분, 구매한제품, 친환경차, 제품구매날짜, 거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월, Cluster, 시구]],
+                                       차량구분, 구매한제품, 친환경차, 제품구매날짜, 거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월, Cluster]],
                                     columns=["이름", "생년월일", "연령", "성별", "휴대폰번호", "이메일", "주소", "아이디", "가입일", 
                                              "고객 세그먼트", "차량구분", "구매한 제품", "친환경차", "제품 구매 날짜", "거래 금액", 
-                                             "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월", "Cluster", "시구"])
+                                             "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월", "Cluster"])
 
             # 1. 절대 경로로 변환 (프로젝트 루트 기준)
-            file_path = Path(__file__).parent.parent / "data_mini1" / "클러스터링고객데이터_5.csv"
+            file_path = Path(__file__).parent.parent / "data" / f"{brand}_클러스터링고객데이터.csv"
 
             # 2. 디렉토리 생성 (없을 경우)
             os.makedirs(file_path.parent, exist_ok=True)  # exist_ok=True: 이미 있으면 무시
