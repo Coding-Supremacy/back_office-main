@@ -41,7 +41,7 @@ launch_dates = {
     '기아' : {
     'K3': '2018-09',
     'Pegas': '2017-06',
-    'Rio(pride)': '2017-06',
+    'Rio (pride)': '2017-06',
     'EV6': '2021-03',
     'KX7': '2017-03',  # 중국 전용 모델
     'K4': '2014-04',  # 중국 전략형 세단
@@ -67,13 +67,14 @@ launch_dates = {
     'K4': '2020-09'}
 }
 
-# 친환경차 모델 목록
+# 현대 친환경차 모델 목록
 eco_friendly_models = {'현대': [
     'NEXO (FE)', 'Avante (CN7 HEV)', 'Grandeur (GN7 HEV)', 'IONIQ (AE EV)', 
     'Tucson (NX4 PHEV)', 'IONIQ 6 (CE)', 'Santa-Fe (MX5 PHEV)'
 ],
 '기아':['EV6', 'EV5', 'EV9']}
 
+# 클러스터별 차량 추천 모델 목록
 brand_recommendations = {
     '현대': {
         0: ['Avante (CN7 N)', 'NEXO (FE)', 'Santa-Fe ™'],
@@ -106,6 +107,7 @@ def run_input_customer_info():
     elif st.session_state["step"] == 3:
         step3_customer_data_storage()  # 고객 정보 저장
 
+#모델 로드 함수
 def load_models(brand):
     model_dir = Path(__file__).parent.parent / "models_mini1"
 
@@ -403,6 +405,7 @@ def step2_vehicle_selection(brand):
             "Avante (CN7 HEV)": "33090000"
         },
         '기아': {
+            "C'eed" : "25720000",
             "K5": "35460000",
             "K8": "43730000",
             "EV6": "52600000",
@@ -646,43 +649,39 @@ def step2_vehicle_selection(brand):
 def step3_customer_data_storage():
     st.title("📝 고객 정보 입력 및 저장")
 
-    # 고객 정보 입력 폼
     with st.form(key="customer_info_form"):
         이름 = st.text_input("이름")
-        # 📌 **휴대폰 번호 입력 및 즉시 검증**
-        휴대폰번호 = st.text_input("휴대폰 번호 입력", placeholder="필수입니다.", key="phone_input")
-        # 하이픈을 포함한 휴대폰 번호 포맷팅
-        휴대폰번호 = re.sub(r'[^0-9]', '', 휴대폰번호)  # 숫자만 추출
-        if 휴대폰번호 and not re.fullmatch(r"\d{11}", 휴대폰번호):
-            st.session_state["phone_error"] = True
-        else:
-            st.session_state["phone_error"] = False
-        # 오류 메시지 표시
-        if st.session_state["phone_error"]:
-            st.error("⚠️ 휴대폰 번호는 11자리 숫자여야 합니다. (예: 01012345678)")
-        이메일 = st.text_input("이메일 입력", placeholder="필수입니다.", key="email_input")
-        
-        if 이메일 and ("@" not in 이메일 or "." not in 이메일):
-            st.session_state["email_error"] = True
-        else:
-            st.session_state["email_error"] = False
-        # 오류 메시지 표시
-        if st.session_state["email_error"]:
-            st.error("⚠️ 이메일 주소 형식이 올바르지 않습니다. '@'와 '.'을 포함해야 합니다.")
-
+        휴대폰번호 = st.text_input("휴대폰 번호 입력", placeholder="필수입니다.")
+        이메일 = st.text_input("이메일 입력", placeholder="필수입니다.")
         주소 = st.text_input("주소")
         아이디 = st.text_input("아이디")
         가입일 = st.date_input("가입일")
 
-        # 고객 정보 저장하기 버튼
         submit_button = st.form_submit_button("고객정보 저장하기")
 
         if submit_button:
+            # 하이픈 제거 및 숫자만
+            휴대폰번호 = re.sub(r'[^0-9]', '', 휴대폰번호)
+
+            # --- 유효성 검사 ---
+            has_error = False
+
             if not (이름 and 휴대폰번호 and 이메일 and 주소 and 아이디 and 가입일):
                 st.error("⚠️ 모든 항목을 입력해야 합니다!")
+                has_error = True
+
+            if not re.fullmatch(r"\d{11}", 휴대폰번호):
+                st.error("⚠️ 휴대폰 번호는 11자리 숫자여야 합니다. (예: 01012345678)")
+                has_error = True
+
+            if "@" not in 이메일 or "." not in 이메일:
+                st.error("⚠️ 이메일 주소 형식이 올바르지 않습니다. '@'와 '.'을 포함해야 합니다.")
+                has_error = True
+
+            if has_error:
                 st.stop()
 
-            # 입력된 고객 정보 세션 상태에 저장
+            # --- 유효성 통과 후 고객 정보 저장 ---
             st.session_state["name"] = 이름
             st.session_state["phone"] = 휴대폰번호
             st.session_state["email"] = 이메일
@@ -690,64 +689,52 @@ def step3_customer_data_storage():
             st.session_state["id"] = 아이디
             st.session_state["registration_date"] = 가입일
 
-            # 세션 상태에서 다른 필요한 값 가져오기
+            # 필요한 정보 가져오기
             연령 = st.session_state.get("연령", "")
             생년월일 = st.session_state.get("생년월일", "")
             성별 = st.session_state.get("성별", "")
             고객세그먼트 = st.session_state.get("고객세그먼트", "")
             selected_vehicle = st.session_state.get("selected_vehicle", "")
             차량구분 = st.session_state.get("차량구분", "")
-            친환경차 = "여" if selected_vehicle in eco_friendly_models else "부"
-            구매한제품 = selected_vehicle
+            친환경차 = "여" if selected_vehicle in eco_friendly_models.get(st.session_state.get("brand", ""), []) else "부"
             제품구매날짜 = st.session_state.get("제품구매날짜", "")
             거래금액 = st.session_state.get("거래금액", "")
             거래방식 = st.session_state.get("거래방식", "")
             구매빈도 = st.session_state.get("제품구매빈도", "")
             제품구매경로 = st.session_state.get("제품구매경로", "")
-            제품출시년월 = launch_dates.get(selected_vehicle, "")
+            제품출시년월 = st.session_state.get("제품출시년월", "")
             Cluster = st.session_state.get("Cluster", "")
-            연령 = st.session_state.get("연령", "")
-            구매빈도= st.session_state.get("구매빈도", "")
-            제품출시년월= st.session_state.get("제품출시년월", "")
             brand = st.session_state.get("brand", "")
 
+            full_data = pd.DataFrame([[
+                이름, 생년월일, 연령, 성별, 휴대폰번호, 이메일, 주소, 아이디, 가입일,
+                고객세그먼트, 차량구분, selected_vehicle, 친환경차, 제품구매날짜,
+                거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월, Cluster
+            ]], columns=[
+                "이름", "생년월일", "연령", "성별", "휴대폰번호", "이메일", "주소", "아이디", "가입일",
+                "고객 세그먼트", "차량구분", "구매한 제품", "친환경차", "제품 구매 날짜",
+                "거래 금액", "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월", "Cluster"
+            ])
 
-            # 고객 정보 저장
-            full_data = pd.DataFrame([[이름, 생년월일, 연령, 성별, 휴대폰번호, 이메일, 주소, 아이디, 가입일, 고객세그먼트, 
-                                       차량구분, 구매한제품, 친환경차, 제품구매날짜, 거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월, Cluster]],
-                                    columns=["이름", "생년월일", "연령", "성별", "휴대폰번호", "이메일", "주소", "아이디", "가입일", 
-                                             "고객 세그먼트", "차량구분", "구매한 제품", "친환경차", "제품 구매 날짜", "거래 금액", 
-                                             "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월", "Cluster"])
-
-            # 1. 절대 경로로 변환 (프로젝트 루트 기준)
-            file_path = Path(__file__).parent.parent / "data" / f"{brand}_클러스터링고객데이터.csv"
-
-            # 2. 디렉토리 생성 (없을 경우)
-            os.makedirs(file_path.parent, exist_ok=True)  # exist_ok=True: 이미 있으면 무시
-
-            # 3. 파일 존재 여부 확인 (안전한 방법)
-            file_exists = file_path.exists()
-
-            # 4. CSV 저장 (인코딩 명시)
-            full_data.to_csv(file_path, mode='a', header=not file_exists, index=False, encoding='utf-8-sig')
-
+            file_path = Path(__file__).parent.parent / "data" / f"{brand}_고객데이터.csv"
+            os.makedirs(file_path.parent, exist_ok=True)
+            full_data.to_csv(file_path, mode='a', header=not file_path.exists(), index=False, encoding='utf-8-sig')
 
             # 문자 발송
             clicksend_username = st.secrets["CLICKSEND"]["CLICKSEND_USERNAME"]
             clicksend_api_key = st.secrets["CLICKSEND"]["CLICKSEND_API_KEY"]
-            to_number = "+82" + 휴대폰번호[1:]  # 국내 번호 형식으로 변환
+            to_number = "+82" + 휴대폰번호[1:]
             message_body = f"안녕하세요, {이름}님! {brand} 자동차에서 보내드리는 메시지입니다. 멤버십 가입을 축하드리며, 다양한 혜택과 서비스를 경험해보세요!"
 
-            # ClickSend API 호출 (문자 발송)
-            url = "https://rest.clicksend.com/v3/sms/send"
-            auth_header = f"Basic {base64.b64encode(f'{clicksend_username}:{clicksend_api_key}'.encode()).decode()}"
-
-            headers = {"Authorization": auth_header, "Content-Type": "application/json"}
-
-            data = {"messages": [{"source": "sdk", "body": message_body, "to": to_number}]}
-
             try:
-                response = requests.post(url, headers=headers, json=data)
+                response = requests.post(
+                    "https://rest.clicksend.com/v3/sms/send",
+                    headers={
+                        "Authorization": f"Basic {base64.b64encode(f'{clicksend_username}:{clicksend_api_key}'.encode()).decode()}",
+                        "Content-Type": "application/json"
+                    },
+                    json={"messages": [{"source": "sdk", "body": message_body, "to": to_number}]}
+                )
                 st.success("문자가 성공적으로 발송되었습니다.")
             except Exception as e:
                 st.error("문자 발송에 실패했습니다.")
@@ -757,20 +744,12 @@ def step3_customer_data_storage():
             mini1_promo_email.send_welcome_email(이메일, 이름, 아이디, 가입일)
             st.success("이메일이 성공적으로 발송되었습니다.")
 
-
-            # 📌 이메일 전송 로그 저장
+            # 이메일 전송 로그 저장
             log_entry = pd.DataFrame([[이메일, 이름, Cluster, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]],
-                                    columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
-
-            # 📌 CSV 파일 경로
-            log_file_path = r'main_project\project_1\data_mini1\이메일_전송_로그.csv'
-
-            # 📌 파일이 없으면 새로 생성
-            if not os.path.exists(log_file_path):
-                log_entry.to_csv(log_file_path, mode='w', header=True, index=False)  # 새로운 파일 생성
-                print(f"📄 새 이메일 전송 로그 파일 생성됨: {log_file_path}")
-            else:
-                log_entry.to_csv(log_file_path, mode='a', header=False, index=False)  # 기존 파일에 추가
+                                     columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
+            log_file_path = Path("main_project/project_1/data_mini1/이메일_전송_로그.csv")
+            os.makedirs(log_file_path.parent, exist_ok=True)
+            log_entry.to_csv(log_file_path, mode='a', header=not log_file_path.exists(), index=False, encoding='utf-8-sig')
 
             print("✅ 이메일 전송 로그 저장 완료!")
             st.session_state["step"] = 1
