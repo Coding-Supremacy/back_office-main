@@ -19,7 +19,7 @@ from project_2.ui_mini2.mini2_home import run_home2
 def main():
     analysis_menu = None 
     with st.sidebar:
-        # ✅ 1. 브랜드 선택 (항상 상단)
+        # ✅ 1. 브랜드 선택 (항상 상단
         brand = option_menu(
             menu_title="브랜드 선택",
             options=["현대", "기아"],
