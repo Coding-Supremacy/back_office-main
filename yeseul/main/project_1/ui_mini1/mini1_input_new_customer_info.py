@@ -10,7 +10,6 @@ from pathlib import Path
 import base64
 import requests
 
-from google.cloud import translate_v2 as translate
 
 from project_1.ui_mini1 import mini1_promo_email
 
