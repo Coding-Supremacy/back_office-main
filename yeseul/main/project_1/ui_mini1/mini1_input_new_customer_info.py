@@ -300,16 +300,18 @@ def step2_vehicle_selection(brand):
         st.metric(label="차량 유형", value=st.session_state.get("차량구분", "N/A"))
     
     st.markdown("---")  # 구분선
-
-    # 세션 상태에서 필요한 값 가져오기
+    # 추천 차량 목록
     cluster_id = st.session_state.get("Cluster")
     recommended_vehicles = st.session_state.get("recommended_vehicles", [])
+    구매한제품 = st.session_state.get("구매한제품", "")
     selected_vehicle = st.session_state.get("selected_vehicle", "")
+
+    # 구매한 제품이 추천 리스트에 없으면 추가
+    if 구매한제품 and 구매한제품 not in recommended_vehicles:
+        recommended_vehicles.append(구매한제품)
 
     # 기본 경로를 정의
     IMAGE_BASE_PATH = 'img/'
-
-
     # 최종 딕셔너리 생성
     vehicle_images = {
         model: get_abs_path(f"{IMAGE_BASE_PATH}{model}.png")
@@ -367,7 +369,7 @@ def step2_vehicle_selection(brand):
     }
 
     # 차량 링크 매핑
-    vehicle_links = {
+    vehicle_links = {"현대":{
         "Avante (CN7 N)": "https://www.hyundai.com/kr/ko/vehicles/avante",
         "NEXO (FE)": "https://www.hyundai.com/kr/ko/vehicles/nexo",
         "Santa-Fe ™": "https://www.hyundai.com/kr/ko/e/vehicles/santafe/intro",
@@ -383,43 +385,56 @@ def step2_vehicle_selection(brand):
         "Santa-Fe (MX5 PHEV)": "https://www.hyundai.com/kr/ko/e/vehicles/santafe/intro",
         "G90 (RS4)": "https://www.genesis.com/kr/ko/models/luxury-sedan-genesis/g90-black/highlights.html",
         "Avante (CN7 HEV)": "https://www.hyundai.com/kr/ko/e/vehicles/avante-n/intro"
+    },
+    "기아":{}
     }
     # 차량 가격 매핑
     vehicle_prices = {
         '현대': {
-            "Avante (CN7 N)": "19640000",
-            "NEXO (FE)": "69500000",
-            "Santa-Fe ™": "34920000",
-            "G80 (RG3)": "82750000",
-            "G90 (HI)": "129600000",
-            "IONIQ 6 (CE)": "46950000",
-            "i30 (PD)": "25560000",
-            "Tucson (NX4 PHEV)": "27290000",
-            "Grandeur (GN7 HEV)": "37110000",
-            "IONIQ (AE EV)": "67150000",
-            "G70 (IK)": "45240000",
-            "Palisade (LX2)": "43830000",
-            "Santa-Fe (MX5 PHEV)": "34920000",
-            "G90 (RS4)": "135800000",
-            "Avante (CN7 HEV)": "33090000"
+            "Avante (CN7 N)": 19640000,
+            "NEXO (FE)": 69500000,
+            "Santa-Fe ™": 34920000,
+            "G80 (RG3)": 82750000,
+            "G90 (HI)": 129600000,
+            "IONIQ 6 (CE)": 46950000,
+            "i30 (PD)": 25560000,
+            "Tucson (NX4 PHEV)": 27290000,
+            "Grandeur (GN7 HEV)": 37110000,
+            "IONIQ (AE EV)": 67150000,
+            "G70 (IK)": 45240000,
+            "Palisade (LX2)": 43830000,
+            "Santa-Fe (MX5 PHEV)": 34920000,
+            "G90 (RS4)": 135800000,
+            "Avante (CN7 HEV)": 33090000
         },
         '기아': {
-            "C'eed" : "25720000",
-            "K5": "35460000",
-            "K8": "43730000",
-            "EV6": "52600000",
-            "Sorento": "38990000",
-            "Sportage": "32220000",
-            "Carnival": "38960000",
-            "Seltos": "25720000",
-            "Stinger": "49980000",
-            "Niro EV": "49970000",
-            "Mohave": "51440000",
-            "Ray EV": "26930000",
-            "Soul": "24790000",
-            "K3": "22110000",
-            "K9": "87650000",
-            "Forte": "22110000",
+        "C'eed": 25720000,
+        "K5": 35460000,
+        "K8": 43730000,
+        "EV6": 52600000,
+        "Sorento": 38990000,
+        "Sportage": 32220000,
+        "Carnival": 38960000,
+        "Seltos": 25720000,
+        "Stinger": 49980000,
+        "Niro EV": 49970000,
+        "Mohave": 51440000,
+        "Ray EV": 26930000,
+        "Soul": 27846000,           # 27,846,000
+        "K3": 22110000,
+        "K9": 87650000,
+        "Forte": 27986000,          # 27,986,000
+        "KX5": 32220000,
+        "KX7": 38990000,
+        "KX3": 25720000,
+        "Rio (pride)": 23450000,    # 23,450,000
+        "Telluride": 49966000,      # 49,966,000
+        "KX1": 25720000,
+        "K4": 30786000,             # 30,786,000
+        "K2": 22110000,
+        "KX8": 38990000,
+        "KX9": 43830000,
+        "KX10": 43830000
         }
     }
 
@@ -592,56 +607,53 @@ def step2_vehicle_selection(brand):
 
     st.info("고객님의 성향에 맞춘 추천차량 목록입니다.")
 
-    # 고객이 선택한 구입 희망 모델
-    구매한제품 = st.session_state.get("구매한제품", "")
-
-    # 추천 차량 목록에 고객이 고른 모델이 없으면 추가
-    if 구매한제품 and 구매한제품 not in recommended_vehicles:
-        recommended_vehicles.append(구매한제품)
-    
-    if recommended_vehicles:
+    # selected_vehicle 기본값 설정
+    default_vehicle = selected_vehicle or 구매한제품 or recommended_vehicles[0]
+    if default_vehicle in recommended_vehicles:
+        default_index = recommended_vehicles.index(default_vehicle)
+    else:
+        default_index = 0
         # 차량 선택
-        selected_vehicle = st.selectbox("구입 희망 차량을 선택하세요", recommended_vehicles, key="vehicle_select_box", index=recommended_vehicles.index(st.session_state.get("selected_vehicle", recommended_vehicles[0])))
-        
-        if selected_vehicle:
-            # 차량 이미지 가져오기
-            vehicle_image = vehicle_images.get(selected_vehicle, "img/default.png")
-            # 차량 링크 가져오기
-            vehicle_link = vehicle_links.get(selected_vehicle, "#")
-            # 클러스터별 추천 이유
-            vehicle_cluster_recommendations = vehicle_recommendations.get(brand, {})
-            vehicle_recommend = vehicle_cluster_recommendations.get(selected_vehicle, {})
-            cluster_recommend = vehicle_recommend.get(cluster_id, "")
+    selected_vehicle = st.selectbox(
+        "구입 희망 차량을 선택하세요",
+        recommended_vehicles,
+        key="vehicle_select_box",
+        index=default_index
+    )
+    if selected_vehicle:
+        # 이미지, 설명, 링크, 가격 처리
+        vehicle_image = vehicle_images.get(selected_vehicle, get_abs_path("img/default.png"))
+        # 실제 파일 존재 여부 확인
+        if not vehicle_image.exists():
+            vehicle_image = get_abs_path("img/default.png")
+        vehicle_link = vehicle_links.get(selected_vehicle, "#")
+        vehicle_cluster_recommendations = vehicle_recommendations.get(brand, {})
+        vehicle_recommend = vehicle_cluster_recommendations.get(selected_vehicle, {})
+        cluster_recommend = vehicle_recommend.get(cluster_id, "")
 
-            if cluster_recommend:
-                vehicle_description = cluster_recommend
-            else:
-                vehicle_description = basic_recommendations.get(brand, {}).get(selected_vehicle, "차량에 대한 정보가 없습니다.")
-            # 차량 가격 가져오기
-            brand = st.session_state.get("brand", "")
-            vehicle_price = vehicle_prices.get(brand, {}).get(selected_vehicle, "가격 정보 없음")
-            
-            # 이미지 출력과 링크 추가
-            
-            st.image(vehicle_image, use_container_width=True)
-            st.text(vehicle_description)
-            st.markdown(f"[차량 상세정보 확인하기]({vehicle_link})", unsafe_allow_html=True)
-            st.text(f"가격: {vehicle_price}원")
-
+        if cluster_recommend:
+            vehicle_description = cluster_recommend
         else:
-            st.warning("추천 차량이 없습니다. 다시 예측을 시도해 주세요.")
+            vehicle_description = basic_recommendations.get(brand, {}).get(selected_vehicle, "차량에 대한 정보가 없습니다.")
 
-        #차량 가격을 구매한금액
-        
-        # 차량 선택 완료 버튼
-        submit_button = st.button("선택 완료")
-        if submit_button:
-            st.session_state["거래금액"] = vehicle_price #최종 선택 차량의 가격을 거래금액으로 저장
-            st.session_state["selected_vehicle"] = selected_vehicle
-            st.success(f"{selected_vehicle} 선택 완료! 이제 고객 정보를 저장합니다.")
-            st.session_state["step"] = 3  # 고객 정보 저장 단계로 이동
-            # 화면 새로고침
-            st.rerun()
+        vehicle_price = vehicle_prices.get(brand, {}).get(selected_vehicle, "가격 정보 없음")
+
+        # 표시
+        st.image(vehicle_image, use_container_width=True)
+        st.text(vehicle_description)
+        st.markdown(f"[차량 상세정보 확인하기]({vehicle_link})", unsafe_allow_html=True)
+        st.text(f"가격: {vehicle_price:,}원")
+
+    else:
+        st.warning("추천 차량이 없습니다. 다시 예측을 시도해 주세요.")
+
+    # 선택 완료 버튼
+    if st.button("선택 완료"):
+        st.session_state["거래금액"] = vehicle_price
+        st.session_state["selected_vehicle"] = selected_vehicle
+        st.success(f"{selected_vehicle} 선택 완료! 이제 고객 정보를 저장합니다.")
+        st.session_state["step"] = 3
+        st.rerun()
             
 
 
@@ -690,6 +702,7 @@ def step3_customer_data_storage():
 
             # 필요한 정보 가져오기
             연령 = st.session_state.get("연령", "")
+            country = st.session_state.get("country", "")
             생년월일 = st.session_state.get("생년월일", "")
             성별 = st.session_state.get("성별", "")
             고객세그먼트 = st.session_state.get("고객세그먼트", "")
@@ -707,12 +720,12 @@ def step3_customer_data_storage():
 
             full_data = pd.DataFrame([[
                 이름, 생년월일, 연령, 성별, 휴대폰번호, 이메일, 주소, 아이디, 가입일,
-                고객세그먼트, 차량구분, selected_vehicle, 친환경차, 제품구매날짜,
-                거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월, Cluster
+                차량구분, selected_vehicle, 친환경차, 제품구매날짜,
+                거래금액, 거래방식, 구매빈도, 제품구매경로, 제품출시년월,country,고객세그먼트,Cluster
             ]], columns=[
                 "이름", "생년월일", "연령", "성별", "휴대폰번호", "이메일", "주소", "아이디", "가입일",
-                "고객 세그먼트", "차량구분", "구매한 제품", "친환경차", "제품 구매 날짜",
-                "거래 금액", "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월", "Cluster"
+                "차량구분", "구매한 제품", "친환경차", "제품 구매 날짜",
+                "거래 금액", "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월","국가","고객세그먼트","Cluster"
             ])
 
             file_path = Path(__file__).parent.parent / "data" / f"{brand}_고객데이터.csv"
@@ -746,7 +759,7 @@ def step3_customer_data_storage():
             # 이메일 전송 로그 저장
             log_entry = pd.DataFrame([[이메일, 이름, Cluster, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]],
                                      columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
-            log_file_path = Path("main_project/project_1/data_mini1/이메일_전송_로그.csv")
+            log_file_path = Path("data/이메일_전송_로그.csv")
             os.makedirs(log_file_path.parent, exist_ok=True)
             log_entry.to_csv(log_file_path, mode='a', header=not log_file_path.exists(), index=False, encoding='utf-8-sig')
 

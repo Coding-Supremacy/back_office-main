@@ -549,6 +549,3 @@ def run_eda():
                 st.error("필요한 컬럼('구매한 제품', '거래 금액', '제품 구매 빈도')이 CSV 파일에 없습니다.")
         else:
             st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
-
-if __name__ == "__main__":
-    run_eda()
