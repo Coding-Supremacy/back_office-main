@@ -12,6 +12,7 @@ from streamlit_option_menu import option_menu
 import datetime
 import re
 from pathlib import Path
+import shutil
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -267,8 +268,6 @@ def run_prediction_region():
             st.markdown("#### 📀 보고서를 PDF로 저장하기")
             
             def generate_pdf():
-                import shutil
-
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_auto_page_break(auto=True, margin=15)
@@ -276,7 +275,6 @@ def run_prediction_region():
                 FONT_PATH_ORIG = "main_project/project_2/fonts/NanumGothic.ttf"
                 TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "NanumGothic.ttf")
 
-                # 임시 경로에 복사
                 try:
                     shutil.copy(FONT_PATH_ORIG, TEMP_FONT_PATH)
                 except Exception as e:
@@ -287,6 +285,7 @@ def run_prediction_region():
                     pdf.add_font("NanumGothic", "", TEMP_FONT_PATH, uni=True)
                     pdf.set_font("NanumGothic", size=10)
                 else:
+                    st.warning("NanumGothic 폰트를 사용할 수 없습니다. Arial 폰트로 대체합니다.")
                     pdf.set_font("Arial", size=10)
 
                 lines = clean_text(st.session_state.report_text).split('\n')
@@ -294,12 +293,24 @@ def run_prediction_region():
                     for i in range(0, len(line), 60):
                         pdf.cell(0, 10, line[i:i+60], ln=1)
 
-                return pdf.output(dest='S').encode('latin-1')
+                pdf_bytes = bytes(pdf.output(dest='S'))
+                
+                # 임시 폰트 파일 삭제
+                try:
+                    os.remove(TEMP_FONT_PATH)
+                except Exception as e:
+                    st.error(f"임시 폰트 파일 삭제 중 오류 발생: {e}")
 
-            st.download_button(
-                label="📥 PDF 다운로드",
-                data=generate_pdf(),
-                file_name=f"{selected_label}_시장_분석_보고서.pdf",
-                mime="application/pdf",
-                key="pdf_download"
-            )
+                return pdf_bytes
+
+            pdf_data = generate_pdf()
+            if pdf_data is not None:
+                st.download_button(
+                    label="📥 PDF 다운로드",
+                    data=pdf_data,
+                    file_name=f"{selected_label}_시장_분석_보고서.pdf",
+                    mime="application/pdf",
+                    key="pdf_download"
+                )
+            else:
+                st.error("PDF 생성에 실패했습니다.")
