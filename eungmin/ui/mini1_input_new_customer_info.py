@@ -11,6 +11,9 @@ import requests
 import ui.mini1_promo_email
 import pyvista as pv
 from stpyvista import stpyvista
+import panel as pn
+
+pv.set_jupyter_backend('static')
 
 def get_abs_path(relative_path):
     """상대 경로를 절대 경로로 변환"""
@@ -116,6 +119,8 @@ vehicle_3d_models = {
 @st.cache_resource
 def load_3d_model(model_path):
     """3D 모델을 로드하고 PyVista plotter 객체 반환"""
+
+    pn.extension('vtk')
     try:
         mesh = pv.read(get_abs_path(model_path))
         plotter = pv.Plotter(window_size=[400, 400])
@@ -432,6 +437,8 @@ def step2_vehicle_selection(brand):
                 plotter = load_3d_model(model_path)
                 if plotter:
                     stpyvista(plotter, key=f"pv_{selected_vehicle}")
+            viewer = plotter.show(jupyter_backend='static', return_viewer=True)
+            pn.pane.VTK(viewer).servable()
             
             # 차량 링크 가져오기
             vehicle_link = vehicle_links.get(selected_vehicle, "#")
