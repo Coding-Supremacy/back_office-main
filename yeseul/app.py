@@ -18,15 +18,7 @@ from ui.mini2_home import run_home2
 
 def main():
     analysis_menu = None 
-    # 언어 코드 매핑
-    country_to_lang = {
-        "미국": "en",
-        "캐나다": "en",  # 또는 "fr"로 설정 가능
-        "멕시코": "es",
-        "한국": "ko"
-    }
-
-
+    
     with st.sidebar:
         # ✅ 1. 브랜드 선택 (항상 상단)
         brand = option_menu(
