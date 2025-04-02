@@ -1,0 +1,166 @@
+연도,국가명,모델명,판매량,차량 구분,브랜드,파워트레인
+2023,Africa,Toyota Hilux,37382,픽업,Toyota,내연기관
+2023,Africa,Ford Ranger,24618,픽업,Ford,내연기관
+2023,Africa,Volkswagen Polo Vivo,23904,컴팩트,Volkswagen,내연기관
+2023,Africa,Toyota Corolla Cross,22592,SUV,Toyota,하이브리드
+2023,Africa,Isuzu D-Max,18963,픽업,Isuzu,내연기관
+2023,Asia Pacific,Toyota Hilux,195777,픽업,Toyota,내연기관
+2023,Asia Pacific,Isuzu D-Max,148020,픽업,Isuzu,내연기관
+2023,Asia Pacific,Perodua Myvi,123084,해치백,Perodua,내연기관
+2023,Asia Pacific,Honda City,104008,세단,Honda,내연기관
+2023,Asia Pacific,Honda HR-V,98696,SUV,Honda,하이브리드
+2023,Canada,Ford F-Series,123267,픽업,Ford,내연기관
+2023,Canada,Ram Pickup,75257,픽업,Ram,내연기관
+2023,Canada,Toyota RAV4,74688,SUV,Toyota,하이브리드
+2023,Canada,GMC Sierra,59696,픽업,GMC,내연기관
+2023,Canada,Chevrolet Silverado,55286,픽업,Chevrolet,내연기관
+2023,China,Tesla Model Y,456394,SUV,Tesla,전기차
+2023,China,BYD Qin Plus,424213,세단,BYD,하이브리드
+2023,China,BYD Song Plus,395201,SUV,BYD,하이브리드
+2023,China,Nissan Sylphy,378272,세단,Nissan,내연기관
+2023,China,Volkswagen Lavida,345879,세단,Volkswagen,내연기관
+2023,Europe,Tesla Model Y,251604,SUV,Tesla,전기차
+2023,Europe,Dacia Sandero,234715,해치백,Dacia,내연기관
+2023,Europe,Volkswagen T-Roc,204610,SUV,Volkswagen,내연기관
+2023,Europe,Renault Clio,196000,해치백,Renault,내연기관
+2023,Europe,Peugeot 208,190000,해치백,Peugeot,내연기관
+2023,Eastern Europe,Tesla Model Y,263086,SUV,Tesla,전기차
+2023,Eastern Europe,Renault Clio,261189,해치백,Renault,내연기관
+2023,Eastern Europe,Dacia Sandero,242739,해치백,Dacia,내연기관
+2023,Eastern Europe,Volkswagen T-Roc,222802,SUV,Volkswagen,내연기관
+2023,Eastern Europe,Opel Corsa,207010,해치백,Opel,내연기관
+2023,India,Maruti Suzuki Swift,203469,해치백,Maruti Suzuki,내연기관
+2023,India,Maruti Suzuki WagonR,201301,해치백,Maruti Suzuki,내연기관
+2023,India,Maruti Suzuki Baleno,193989,해치백,Maruti Suzuki,내연기관
+2023,India,Maruti Suzuki Vitara (Grand Vitara),179771,SUV,Maruti Suzuki,하이브리드
+2023,India,Tata Nexon,170312,SUV,Tata,하이브리드
+2023,Latin America,Chevrolet Onix,144503,세단,Chevrolet,내연기관
+2023,Latin America,Fiat Strada,128348,픽업,Fiat,내연기관
+2023,Latin America,Toyota Hilux,127400,픽업,Toyota,내연기관
+2023,Latin America,Volkswagen Polo,123043,해치백,Volkswagen,내연기관
+2023,Latin America,Hyundai HB20,103932,해치백,Hyundai,내연기관
+2023,Mexico,Nissan Versa,76926,세단,Nissan,내연기관
+2023,Mexico,Nissan NP300,61878,픽업,Nissan,내연기관
+2023,Mexico,Chevrolet Aveo,52277,세단,Chevrolet,내연기관
+2023,Mexico,Kia Rio,40490,컴팩트,Kia,내연기관
+2023,Mexico,MG 5,33205,세단,MG,하이브리드
+2023,Middle East,Toyota Yaris Sedan,36800,세단,Toyota,내연기관
+2023,Middle East,Nissan Sunny,14900,세단,Nissan,내연기관
+2023,Middle East,Toyota Hilux,13800,픽업,Toyota,내연기관
+2023,Middle East,Hyundai Accent,11100,세단,Hyundai,내연기관
+2023,Middle East,Nissan Patrol,12000,SUV,Nissan,내연기관
+2023,U.S.A,Ford F-Series,750789,픽업,Ford,내연기관
+2023,U.S.A,Chevrolet Silverado,555148,픽업,Chevrolet,내연기관
+2023,U.S.A,Ram 1500,444926,픽업,Ram,내연기관
+2023,U.S.A,Toyota RAV4,434943,SUV,Toyota,하이브리드
+2023,U.S.A,Tesla Model Y,385900,SUV,Tesla,전기차
+2024,Africa,Toyota Hilux,32656,픽업,Toyota,내연기관
+2024,Africa,Volkswagen Polo Vivo,25913,컴팩트,Volkswagen,내연기관
+2024,Africa,Ford Ranger,25553,픽업,Ford,내연기관
+2024,Africa,Toyota Corolla Cross,21861,SUV,Toyota,하이브리드
+2024,Africa,Isuzu D-Max,18973,픽업,Isuzu,내연기관
+2024,Asia Pacific,Toyota Hilux,176043,픽업,Toyota,내연기관
+2024,Asia Pacific,Perodua Myvi,125545,해치백,Perodua,내연기관
+2024,Asia Pacific,Isuzu D-Max,107475,픽업,Isuzu,내연기관
+2024,Asia Pacific,Toyota Vios,92298,세단,Toyota,내연기관
+2024,Asia Pacific,Honda HR-V,91572,SUV,Honda,하이브리드
+2024,Canada,Ford F-Series,133857,픽업,Ford,내연기관
+2024,Canada,Toyota RAV4,77556,SUV,Toyota,하이브리드
+2024,Canada,GMC Sierra,60188,픽업,GMC,내연기관
+2024,Canada,Ram 1500/Heavy Duty,56992,픽업,Ram,내연기관
+2024,Canada,Honda CR-V,55363,SUV,Honda,하이브리드
+2024,Eastern Europe,Dacia Sandero,274702,해치백,Dacia,내연기관
+2024,Eastern Europe,Renault Clio,273354,해치백,Renault,내연기관
+2024,Eastern Europe,Volkswagen Golf,230605,해치백,Volkswagen,내연기관
+2024,Eastern Europe,Volkswagen T-Roc,221712,SUV,Volkswagen,내연기관
+2024,Eastern Europe,Tesla Model Y,215851,SUV,Tesla,전기차
+2024,India,Tata Punch,202000,SUV,Tata,내연기관
+2024,India,Maruti Suzuki Wagon R,191000,해치백,Maruti Suzuki,내연기관
+2024,India,Maruti Suzuki Ertiga,190000,MPV,Maruti Suzuki,내연기관
+2024,India,Maruti Suzuki Brezza,188000,SUV,Maruti Suzuki,내연기관
+2024,India,Hyundai Creta,187000,SUV,Hyundai,하이브리드
+2024,Latin America,Volkswagen Polo,166549,해치백,Volkswagen,내연기관
+2024,Latin America,Fiat Strada,153781,픽업,Fiat,내연기관
+2024,Latin America,Chevrolet Onix,128589,세단,Chevrolet,내연기관
+2024,Latin America,Toyota Hilux,121967,픽업,Toyota,내연기관
+2024,Latin America,Nissan Versa,110173,세단,Nissan,내연기관
+2024,Mexico,Nissan Versa,93278,세단,Nissan,내연기관
+2024,Mexico,Nissan NP300,59031,픽업,Nissan,내연기관
+2024,Mexico,Chevrolet Aveo,58503,세단,Chevrolet,내연기관
+2024,Mexico,Kia K3,51629,세단,Kia,내연기관
+2024,Mexico,Volkswagen Virtus,30945,세단,Volkswagen,내연기관
+2024,Middle East,Nissan Patrol,22400,SUV,Nissan,내연기관
+2024,Middle East,Nissan Sunny,21900,세단,Nissan,내연기관
+2024,Middle East,Toyota Hilux,19915,픽업,Toyota,내연기관
+2024,Middle East,Toyota Land Cruiser,12530,SUV,Toyota,내연기관
+2024,Middle East,Tesla Model 3,6500,세단,Tesla,전기차
+2024,U.S.A,Toyota RAV4,475193,SUV,Toyota,하이브리드
+2024,U.S.A,Ford F-Series,460915,픽업,Ford,내연기관
+2024,U.S.A,Honda CR-V,402791,SUV,Honda,하이브리드
+2024,U.S.A,Tesla Model Y,405900,SUV,Tesla,전기차
+2024,U.S.A,Chevrolet Silverado 1500,344022,픽업,Chevrolet,내연기관
+2024,Europe,Dacia Sandero,288800,해치백,Dacia,내연기관
+2024,Europe,Renault Clio,215700,해치백,Renault,내연기관
+2024,Europe,Volkswagen Golf,215700,해치백,Volkswagen,내연기관
+2024,Europe,Tesla Model Y,200000,SUV,Tesla,전기차
+2024,Europe,Volkswagen T-Roc,195000,SUV,Volkswagen,내연기관
+2024,China,BYD Song,574351,SUV,BYD,하이브리드
+2024,China,Tesla Model Y,480309,SUV,Tesla,전기차
+2024,China,BYD Qin Plus,480025,세단,BYD,하이브리드
+2024,China,BYD Seagull,453593,해치백,BYD,전기차
+2024,China,Nissan Sylphy,342395,세단,Nissan,내연기관
+2025,Africa,Suzuki Swift,2628,해치백,Suzuki,내연기관
+2025,Africa,Toyota Hilux,2557,픽업,Toyota,내연기관
+2025,Africa,Volkswagen Polo Vivo,2549,컴팩트,Volkswagen,내연기관
+2025,Africa,Toyota Corolla Cross,2112,SUV,Toyota,하이브리드
+2025,Africa,Isuzu D-Max,1890,픽업,Isuzu,내연기관
+2025,Eastern Europe,Dacia Sandero,21731,해치백,Dacia,내연기관
+2025,Eastern Europe,Dacia Duster,19015,SUV,Dacia,내연기관
+2025,Eastern Europe,Volkswagen Golf,18822,해치백,Volkswagen,내연기관
+2025,Eastern Europe,Toyota Yaris,17500,해치백,Toyota,내연기관
+2025,Eastern Europe,Renault Clio,16800,해치백,Renault,내연기관
+2025,Latin America,Fiat Strada,8765,픽업,Fiat,내연기관
+2025,Latin America,Volkswagen Polo,5737,해치백,Volkswagen,내연기관
+2025,Latin America,Chevrolet Onix,5432,세단,Chevrolet,내연기관
+2025,Latin America,Hyundai HB20,4980,해치백,Hyundai,내연기관
+2025,Latin America,Jeep Renegade,4500,SUV,Jeep,내연기관
+2025,Mexico,Nissan Versa,8407,세단,Nissan,내연기관
+2025,Mexico,Chevrolet Aveo,4658,세단,Chevrolet,내연기관
+2025,Mexico,Nissan NP300,4185,픽업,Nissan,내연기관
+2025,Mexico,Kia Rio,3900,컴팩트,Kia,내연기관
+2025,Mexico,MG5,3750,세단,MG,하이브리드
+2025,India,Nissan Versa,8407,세단,Nissan,내연기관
+2025,India,Chevrolet Aveo,4658,세단,Chevrolet,내연기관
+2025,India,Nissan NP300,4185,픽업,Nissan,내연기관
+2025,India,Kia Rio,3900,컴팩트,Kia,내연기관
+2025,India,MG5,3750,세단,MG,하이브리드
+2025,U.S.A,Ford F-Series,52455,픽업,Ford,내연기관
+2025,U.S.A,Toyota RAV4,36251,SUV,Toyota,하이브리드
+2025,U.S.A,Chevrolet Silverado,34970,픽업,Chevrolet,내연기관
+2025,U.S.A,Tesla Model Y,31800,SUV,Tesla,전기차
+2025,U.S.A,Ram Pickup,28500,픽업,Ram,내연기관
+2025,Asia Pacific,Toyota Hilux,39200,픽업,Toyota,내연기관
+2025,Asia Pacific,Toyota RAV4,36250,SUV,Toyota,하이브리드
+2025,Asia Pacific,Ford Ranger,28500,픽업,Ford,내연기관
+2025,Asia Pacific,Toyota Corolla,27800,세단,Toyota,내연기관
+2025,Asia Pacific,Honda CR-V,24300,SUV,Honda,하이브리드
+2025,China,BYD Song PLUS DM,41212,SUV,BYD,하이브리드
+2025,China,Changan CS75,37881,SUV,Changan,하이브리드
+2025,China,Geely Xingyue L,29995,SUV,Geely,하이브리드
+2025,China,Geely Xingyuan,28146,SUV,Geely,하이브리드
+2025,China,Tesla Model Y,25694,SUV,Tesla,전기차
+2025,Canada,Ford F-Series,9094,픽업,Ford,내연기관
+2025,Canada,Chevrolet Equinox,4635,SUV,Chevrolet,하이브리드
+2025,Canada,Toyota RAV4,3567,SUV,Toyota,하이브리드
+2025,Canada,Honda CR-V,3417,SUV,Honda,하이브리드
+2025,Canada,Nissan Kicks,3214,SUV,Nissan,하이브리드
+2025,Europe,Dacia Sandero,21731,해치백,Dacia,내연기관
+2025,Europe,Dacia Duster,19015,SUV,Dacia,내연기관
+2025,Europe,Volkswagen Golf,18822,해치백,Volkswagen,내연기관
+2025,Europe,Volkswagen T-Roc,18248,SUV,Volkswagen,내연기관
+2025,Europe,Renault Clio,16995,해치백,Renault,내연기관
+2025,Middle East,Nissan Patrol,22400,SUV,Nissan,내연기관
+2025,Middle East,Nissan Sunny,21900,세단,Nissan,내연기관
+2025,Middle East,Toyota Hilux,19915,픽업,Toyota,내연기관
+2025,Middle East,Toyota Land Cruiser,12530,SUV,Toyota,내연기관
+2025,Middle East,Tesla Model 3,6500,세단,Tesla,전기차

@@ -22,9 +22,10 @@ def load_data():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     df_export = pd.read_csv(os.path.join(BASE_DIR, "data_mini2/현대_지역별수출실적.csv"))
     df_sales = pd.read_csv(os.path.join(BASE_DIR, "data_mini2/현대_차종별판매실적.csv"))
-    return df_export, df_sales
+    df_factory = pd.read_csv(os.path.join(BASE_DIR, "data_mini2/현대_공장별_판매실적.csv"))
+    return df_export, df_sales, df_factory
 
-df_export, df_sales = load_data()
+df_export, df_sales, df_factory = load_data()
 
 def car_type():
     car_types = {
@@ -145,7 +146,7 @@ def run_eda_hyundai():
 
     selected = option_menu(
         menu_title=None,
-        options=["📊 지역별 수출 분석", "🏎️ 차종별 판매 분석"],
+        options=["📊 지역별 수출 분석", "🏎️ 차종별 판매 분석", "🏭 공장별 판매분석"],
         default_index=0,
         orientation="horizontal",
         styles={
@@ -2345,6 +2346,541 @@ def run_eda_hyundai():
 
                 st.write("""##### 📆 [해외] 기타 월별 판매량 (2023년 ~ 2025년 누적)""")
                 st.dataframe(styled_기타, use_container_width=True)
+
+    elif selected == "🏭 공장별 판매분석":
+
+        def render_page_description(page_name):
+            descriptions = {
+                "📈 차량 트렌드": """
+        <div style="border-left: 6px solid #2E86C1; background-color: #EBF5FB; padding: 10px; border-radius: 6px;">
+        이 페이지는 <strong>공장별로 생산된 차량 모델들의 월별 판매량</strong>을 비교할 수 있는 <strong>분석 대시보드</strong>입니다.<br>
+        <strong>공장을 선택하면</strong>, 해당 공장에서 생산된 차량 모델 중 원하는 모델을 선택하여  
+        <strong>월별 판매 트렌드</strong>를 확인할 수 있습니다.
+        </div>
+        """,
+                "🏭 공장 총 판매량": """
+        <div style="border-left: 6px solid #2E86C1; background-color: #EBF5FB; padding: 10px; border-radius: 6px;">
+        이 페이지에서는 <strong>공장별 연간 총 판매량</strong>을 한눈에 확인할 수 있습니다.<br>
+        <strong>판매량이 많은 공장</strong>을 파악하고, 선택적으로 <strong>판매량이 0인 공장 제외</strong> 기능도 사용할 수 있습니다.
+        </div>
+        """,
+                "🥧 내수/수출 비율": """
+        <div style="border-left: 6px solid #2E86C1; background-color: #EBF5FB; padding: 10px; border-radius: 6px;">
+        이 페이지에서는 <strong>공장별 차량의 내수용과 수출용 비율</strong>을 <strong>파이 차트</strong>로 확인할 수 있습니다.<br>
+        <strong>공장을 선택</strong>하면 해당 공장의 <strong>생산 방향(내수/수출)</strong>을 직관적으로 파악할 수 있습니다.
+        </div>
+        """
+            }
+
+            if page_name in descriptions:
+                st.markdown(descriptions[page_name], unsafe_allow_html=True)
+                
+
+        st.markdown("<div class='tab-content'>", unsafe_allow_html=True)
+        # 전처리
+        month_cols = ['1월', '2월', '3월', '4월', '5월', '6월', '7월',
+              '8월', '9월', '10월', '11월', '12월']
+        df_factory[month_cols] = df_factory[month_cols].apply(pd.to_numeric, errors='coerce')
+        df_factory["총합"] = df_factory[month_cols].sum(axis=1)
+
+
+        tab1, tab2, tab3 = st.tabs(["🏭 공장 총 판매량", "📈 차량 트렌드", "🥧 내수/수출 비율"])
+
+        # 1. 차량 모델별 월별 판매 트렌드
+        with tab1:
+            st.subheader("🏭 공장별 연간 총 판매량")
+            render_page_description("🏭 공장 총 판매량")
+            st.divider()
+
+            # 원본 공장별 데이터
+            plant_df = df_factory.groupby("공장명(국가)")["총합"].sum().reset_index()
+
+            # ✅ 사용자 선택: 0인 데이터 제외 여부
+            exclude_zero = st.checkbox("판매량이 0인 공장 제외하기", value=True)
+
+            if exclude_zero:
+                plant_df = plant_df[plant_df["총합"] > 0]
+
+            fig = px.bar(
+                plant_df,
+                x="공장명(국가)",
+                y="총합",
+                color="공장명(국가)",
+                text_auto=True,
+                title="공장별 총 판매량"
+            )
+            fig.update_layout(xaxis_title="공장명", yaxis_title="연간 판매량")
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown("""
+            <div style="border-left: 6px solid #117A65; background-color: #E8F8F5; padding: 12px; border-radius: 6px;">
+            <h5>📌 <strong>공장별 연간 총 판매량 분석 요약</strong></h5>
+            <ol>
+            <li><strong>인도 HMI 공장</strong>이 총 <strong>1,595,495대</strong>로 가장 높은 생산량을 기록하며 <strong>압도적 1위</strong></li>
+            <li><strong>미국 HMMA</strong>(747,232대), <strong>체코 HMMC</strong>(689,355대)도 뒤를 이어 유럽·미주 수출 핵심</li>
+            <li>중국 <strong>BHMC, HAOS</strong> 및 브라질 <strong>HMB</strong>는 각 40만 대 내외로 기여</li>
+            <li><strong>베트남, 인도네시아, 싱가포르</strong> 등 신흥국 공장은 <strong>10만 대 이하</strong>로 소규모 생산</li>
+            </ol>
+            <p><strong>✅ 분석 포인트:</strong> HMI 중심 생산 집중 구조, 공장별 역할 특화, 신흥국 공장 성장 여지</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+
+        # 2. 공장별 총 판매량
+        with tab2:
+            st.subheader("📈 차량 모델별 월별 판매 트렌드")
+            render_page_description("📈 차량 트렌드")
+            st.divider()
+
+            # 공장 선택
+            selected_factory = st.selectbox("공장을 선택하세요", df_factory["공장명(국가)"].unique(), key="factory_selector_tab1")
+
+            # 해당 공장에서 생산된 차량 모델 리스트 추출
+            filtered_df = df_factory[df_factory["공장명(국가)"] == selected_factory]
+            if filtered_df[month_cols].sum().sum() == 0:
+                st.warning(f"⚠️ 선택한 공장({selected_factory})의 판매 데이터가 존재하지 않습니다.")
+            else:
+                model_df = filtered_df.groupby("차량 모델")[month_cols].sum().T
+                model_df.columns.name = None
+                model_df.index.name = "월"
+
+                # 판매량 기준 상위 3개 모델 선택
+                top_models = filtered_df.groupby("차량 모델")["총합"].sum().sort_values(ascending=False).head(3).index.tolist()
+
+                # 멀티셀렉트
+                selected_models = st.multiselect(
+                    "차량 모델 선택", options=model_df.columns.tolist(), default=top_models
+                )
+
+                # 시각화
+                if selected_models:
+                    trend_df = model_df[selected_models].reset_index().melt(id_vars="월", var_name="차량 모델", value_name="판매량")
+                    fig = px.line(trend_df, x="월", y="판매량", color="차량 모델", markers=True)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("차량 모델을 선택해주세요.")
+                if selected_factory == 'HMI':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMI 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Creta, Venue, i20)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Creta(SU2i)</strong> 모델이 <strong>월 평균 약 3만 대 이상</strong>으로 <strong>가장 높은 판매량</strong>을 기록</li>
+                    <li><strong>Venue(QXi)</strong>는 월 평균 2만 대 내외로, 꾸준한 중간 수요 유지</li>
+                    <li><strong>i20(BI3 5DR)</strong>는 월 평균 1만 대 초반 수준으로, <strong>소형차 수요 대응</strong> 역할</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMI 공장은 <strong>Creta 중심의 SUV 라인업이 강세</strong>이며, 다양한 수요층을 위한 <strong>중·소형 모델 분산 생산 전략</strong>을 병행</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HAOS':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HAOS 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(i20, i10, Bayon)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>i20 (BC3)</strong> 모델은 월 평균 약 2만 대 전후의 판매량으로 <strong>HAOS 공장 내 최상위 주력 모델</strong>로 확인됩니다.</li>
+                    <li><strong>i10 (AC3)</strong>는 꾸준히 월 1.2~1.5만 대 수준을 기록하며, <strong>안정적인 판매 흐름</strong>을 유지합니다.</li>
+                    <li><strong>Bayon (BC3 CUV)</strong>는 전체적으로 1만 대 초반의 판매량을 보이며, <strong>CUV 시장 공략용 전략 모델</strong>로 판단됩니다.</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HAOS 공장은 <strong>소형 해치백 및 크로스오버 차량 중심</strong>의 생산 라인업으로 구성되어 있으며, <strong>유럽 도심형 시장 대응</strong>에 최적화된 모델이 집중 배치됨</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'BHMC':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>BHMC 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Elantra, Tucson, BHMC 기타)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Elantra(CN7c)</strong>는 전월 대비 등락은 있지만 전체적으로 <strong>월 평균 1.5~2만 대 이상</strong>을 유지하며 <strong>지속적인 판매 강세</strong>를 보임</li>
+                    <li><strong>Tucson(NX4c)</strong>는 <strong>1만 대 이하 중위권 모델</strong>로서 꾸준한 수요 흐름을 보이며, 하반기 상승세도 확인됨</li>
+                    <li><strong>BHMC 기타 모델</strong>도 하반기 들어 <strong>점진적인 판매 증가</strong>가 확인되며, <strong>내수 수요 또는 신차 전략 모델일 가능성</strong></li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> BHMC 공장은 <strong>Elantra 중심의 세단 라인업</strong>이 주력이며, <strong>SUV(Tucson)</strong> 및 기타 모델의 병행 생산 전략이 수요 대응에 기여</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HMMA':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMMA 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Tucson, Santa-Fe (TMa), Santa-Fe (MX5a))</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Tucson(NX4a)</strong>는 <strong>월 평균 2.5만 대 이상</strong>의 높은 수요를 유지하며, <strong>1월에 최대 판매량(약 3.5만 대 이상)</strong>을 기록</li>
+                    <li><strong>Santa-Fe(TMa)</strong>와 <strong>Santa-Fe(MX5a)</strong>는 <strong>각각 1만 대 전후의 판매량</strong>을 기록하며, <strong>중형 SUV 수요를 분산 대응</strong></li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMMA 공장은 <strong>Tucson 중심의 주력 SUV 라인업</strong>과 함께, <strong>세대 전환 중인 Santa-Fe 모델군</strong>을 병행 생산하며 미국 시장 수요에 유연하게 대응</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HMMC':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMMC 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Tucson, Tucson HEV, i30)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Tucson(NX4e)</strong>는 <strong>월 평균 2.5만 대</strong> 수준의 안정적 수요 유지, <strong>1월 최고 판매량</strong> 기록</li>
+                    <li><strong>Tucson HEV(NX4e HEV)</strong>는 <strong>하이브리드 라인업으로 월 1.3~1.5만 대</strong>의 꾸준한 수요 보임</li>
+                    <li><strong>i30(PDe)</strong>는 <strong>월 5천~1만 대</strong> 사이로 소형 해치백 모델 수요를 충족</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMMC는 <strong>Tucson 시리즈 중심의 SUV + HEV 전략</strong>에 <strong>i30</strong>로 유럽 시장 소형차 수요를 병행 대응 중</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HMB':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMB 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(HB20, Creta SU2b, Creta GSb)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>HB20(BR2)</strong>는 <strong>브라질 내수 시장 중심</strong>으로, <strong>월 2.5~3만 대 수준</strong>의 강한 판매량 유지</li>
+                    <li><strong>Creta(SU2b)</strong>는 월 평균 1만 대 초반대로 <strong>SUV 수요에 안정적으로 대응</strong></li>
+                    <li><strong>Creta(GSb)</strong>는 상대적으로 적은 수량이지만, <strong>특정 지역 시장 공략용</strong>으로 소량 생산 지속</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMB 공장은 <strong>HB20 중심의 소형차 전략</strong>을 주력으로 하며, <strong>Creta 시리즈로 SUV 수요</strong>까지 포괄</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HMMI':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMMI 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Creta, Stargazer, IONIQ5)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Creta(SU2id)</strong>는 <strong>월 9천~1만 대 수준</strong>으로 <strong>HMMI 주력 모델</strong>로 활약 중</li>
+                    <li><strong>Stargazer(KS)</strong>는 MPV 수요에 대응하며 월 4천~6천 대 내외의 <strong>안정적 생산량</strong> 유지</li>
+                    <li><strong>IONIQ5(NE)</strong>는 전기차 수요에 따라 <strong>월 1천 대 이하의 소량 생산</strong>이지만, 친환경차 라인업 강화 목적</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMMI 공장은 <strong>주력 SUV(Creta)와 MPV(Stargazer)의 안정적 운영</strong>과 함께, <strong>전기차(IONIQ5) 생산 거점</strong>으로의 역할도 병행</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HTBC':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HTBC 공장 월별 판매 트렌드 분석</strong></h5>
+                    <p>※ 해당 분석은 <strong>HTBC 공장에서 생산된 전체 차량</strong> 데이터를 기반으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>연간 생산량은 300~500대 수준</strong>으로 규모는 작지만, <strong>하반기(7~10월) 생산 증가세</strong>가 눈에 띔</li>
+                    <li><strong>8월 기준 최대 생산량 496대</strong>로 특정 목적의 <strong>소규모 집중 생산</strong> 가능성</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HTBC는 <strong>전략적/지역 특화 목적</strong>의 생산거점 또는 시험 생산 공장으로 추정 가능</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'Vietnam':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>Vietnam 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>판매량 상위 3개 모델(Accent, Creta, Tucson)</strong>을 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>Accent(HCv)</strong>는 연초(1~3월)에 <strong>2~3천 대 수준의 강세</strong>를 보였으며, 이후 하향 안정세를 유지하며 연중 꾸준한 수요를 기록</li>
+                    <li><strong>Creta(SU2v)</strong>는 <strong>1천~1.8천 대 수준의 판매량</strong>을 기록하며 중간 수요를 지속적으로 견인</li>
+                    <li><strong>Tucson(NX4v)</strong>는 상반기 부진했지만 <strong>10~11월 급증</strong>하며 연말 전략 차종으로서 존재감을 드러냄</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> Vietnam 공장은 <strong>연초에는 세단(Accent)</strong> 중심의 안정적 수요를 기반으로 생산했으며, <strong>하반기부터 SUV 차종(Creta, Tucson)의 비중이 급격히 확대</strong>된 것으로 판단됨</p>
+                    <p>📌 <strong>추가 인사이트:</strong> <span style="color:#5D6D7E;"><em>6~9월 기간 중 일부 모델의 생산량 저조는 글로벌 공급망 이슈 또는 공장 설비 점검 가능성도 고려할 수 있음</em></span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'Singapore':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>Singapore 공장 상위 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 아래 분석은 <strong>생산된 전체 3개 모델(IONIQ5, IONIQ6, IONIQ5 Robotaxi)</strong>의 월별 데이터를 기준으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>IONIQ5 (NE)</strong> 모델이 압도적으로 높은 비중을 차지하며, <strong>하반기(7~12월)에 판매량이 급증</strong>해 전기 SUV 라인업의 전략적 우위를 나타냄</li>
+                    <li><strong>IONIQ6 (CE)</strong>는 월 평균 10~15대 수준으로, 소규모 세단 전기차 시장 대응 차종으로 활용</li>
+                    <li><strong>IONIQ5 Robotaxi (NE R)</strong>는 월 1~2대 수준의 <strong>초기 시험 운영 목적</strong> 생산으로 보이며, 파일럿 프로젝트 형태로 해석 가능</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> Singapore 공장은 <strong>프리미엄 전기 SUV(IONIQ5)를 중심으로 한 고부가가치 라인업</strong>에 집중하고 있으며, <strong>신기술 도입(자율주행 기반)</strong>을 위한 로보택시의 생산 테스트도 병행 중</p>
+                    <p>📌 <strong>맞춤형 인사이트:</strong> <span style="color:#5D6D7E;"><em>IONIQ5의 꾸준한 증가 추세는 싱가포르 내 EV 수요 확대 및 친환경 정책 강화의 영향을 반영</em></span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'CKD':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>CKD 공장 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 본 분석은 <strong>CKD 공장에서 생산된 2개 모델(PV, CV)</strong>의 월별 판매 추이를 기반으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>PV</strong>(Passenger Vehicle, 승용차) 모델이 <strong>전체 생산량의 대부분</strong>을 차지하며, 월별 평균 <strong>9천 대 이상</strong>으로 꾸준한 수요 유지</li>
+                    <li><strong>CV</strong>(Commercial Vehicle, 상용차)는 월별 <strong>100대 내외</strong>로 매우 소량 생산되며, <strong>특정 지역 목적의 수요 대응</strong> 수준</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> CKD 공장은 <strong>승용차 중심의 대량 조립 생산 체계</strong>를 운영하고 있으며, <strong>소규모 상용차 생산</strong>은 보완적 전략으로 해석 가능</p>
+                    <p>📌 <strong>맞춤형 인사이트:</strong> <span style="color:#5D6D7E;"><em>조립 방식(CKD: 완성차 부품 수출 후 현지 조립) 특성상, <strong>물류 효율성과 대량 생산이 용이한 승용 모델</strong>에 집중된 것으로 보임</em></span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'HMGMA':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>HMGMA 공장 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 본 분석은 <strong>단일 모델 IONIQ5(NEa)</strong>의 월별 판매 추이를 기반으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>1월</strong>에 <strong>1,600대</strong> 이상 출고되며 강한 생산 시작을 보였으나, <strong>2월~11월까지 생산량 0</strong>으로 유지</li>
+                    <li><strong>12월</strong>에 <strong>1,000대</strong> 규모로 생산 재개 → 연말 <strong>단기 집중 생산</strong> 가능성</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> HMGMA 공장은 <strong>단일 모델 전기차 생산 중심</strong이며, <strong>간헐적 집중 생산 전략</strong>을 취하는 것으로 해석됨</p>
+                    <p>📌 <strong>맞춤형 인사이트:</strong> <span style="color:#5D6D7E;"><em>생산 장비 세팅, 부품 수급, 지역 배정 이슈 등으로 인해 <strong>일시적 가동 중단 또는 배치 변경</strong> 가능성 존재</em></span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif selected_factory == 'KMX':
+                    st.markdown("""
+                    <div style="border-left: 6px solid #884EA0; background-color: #F5EEF8; padding: 12px; border-radius: 6px;">
+                    <h5>📌 <strong>KMX 공장 차량 모델 판매 트렌드 분석</strong></h5>
+                    <p>※ 본 분석은 <strong>등록된 차량 모델 2종(NX4m, HCm)</strong> 중 <strong>실질 생산이 확인된 NX4m</strong> 모델 중심으로 작성되었습니다.</p>
+                    <ol>
+                    <li><strong>NX4m 모델</strong>은 <strong>상반기(2~5월) 생산 공백</strong> 후, <strong>6월부터 생산 재개</strong></li>
+                    <li><strong>7월~10월</strong> 사이 <strong>최대 3,000대 이상</strong>의 출고량 기록 → <strong>하반기 집중형 생산 패턴</strong> 확인</li>
+                    <li><strong>HCm 모델</strong>은 연간 생산 실적 없음 → <strong>등록만 되어 있고 미생산</strong> 모델일 가능성</li>
+                    </ol>
+                    <p><strong>✅ 분석 포인트:</strong> KMX 공장은 <strong>하반기 집중형 생산 스케줄</strong>을 운영 중이며, <strong>NX4m 단일 모델 전담 생산체계</strong>로 해석됨</p>
+                    <p>📌 <strong>맞춤형 인사이트:</strong> <span style="color:#5D6D7E;"><em>특정 해외 시장 또는 시즌 수요에 맞춘 <strong>한정형 생산 전략</strong> 가능성 존재</em></span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # 3. 공장별 내수/수출 비율
+        with tab3:
+            st.subheader("🥧 공장별 내수/수출 비율 or 전체 생산 추이")
+            render_page_description("🥧 내수/수출 비율")
+            st.divider()
+
+            month_cols = ['1월', '2월', '3월', '4월', '5월', '6월',
+              '7월', '8월', '9월', '10월', '11월', '12월']
+
+            # ✅ 공장 선택
+            factories = df_factory["공장명(국가)"].unique().tolist()
+            selected_factory = st.selectbox("공장을 선택하세요", factories, key="factory_selector_tab3")
+
+            # ✅ 해당 공장 데이터 필터링
+            filtered_df = df_factory[df_factory["공장명(국가)"] == selected_factory]
+            sales_types = filtered_df["판매 구분"].unique()
+
+            # ✅ 데이터 총합이 0인지 체크
+            def is_data_zero(df):
+                return df[month_cols].sum().sum() == 0
+
+            if set(["내수용", "수출용"]).issubset(sales_types):
+                if is_data_zero(filtered_df):
+                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+                else:
+                    pie_df = filtered_df.groupby("판매 구분")[month_cols].sum().sum(axis=1).reset_index()
+                    pie_df.columns = ["판매 구분", "합계"]
+
+                    fig = px.pie(pie_df, names="판매 구분", values="합계",
+                                title=f"{selected_factory} 내수/수출 비율")
+                    st.plotly_chart(fig, use_container_width=True)
+
+            elif set(sales_types) == {"합계"}:
+                if is_data_zero(filtered_df):
+                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+                else:
+                    total_by_month = filtered_df[month_cols].sum().reset_index()
+                    total_by_month.columns = ["월", "판매량"]
+
+                    fig = px.line(total_by_month, x="월", y="판매량", markers=True,
+                                title=f"{selected_factory} 월별 판매량 추이 (합계 기반)")
+                    st.plotly_chart(fig, use_container_width=True)
+
+            elif set(sales_types) == {"수출용"}:
+                if is_data_zero(filtered_df):
+                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+                else:
+                    total_by_month = filtered_df[month_cols].sum().reset_index()
+                    total_by_month.columns = ["월", "판매량"]
+
+                    fig = px.line(total_by_month, x="월", y="판매량", markers=True,
+                                title=f"{selected_factory} 월별 판매량 추이 (수출용 기반)")
+                    st.plotly_chart(fig, use_container_width=True)
+
+            else:
+                st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+
+            st.divider()
+
+            # ✅ 각 공장별 차트 분석 셜명
+            if selected_factory == 'HMI':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMI 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>내수 비중 79.1%</strong>, <strong>수출 비중 20.9%</strong>로 <strong>인도 내수시장 중심</strong의 생산 구조</li>
+                <li>전체 생산량의 4분의 3 이상이 현지 시장 소비용 → <strong>지역 수요 대응형</strong> 공장으로 운영 중</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMI는 인도 로컬 시장에 최적화된 <strong>내수 특화 생산 거점</strong>으로, 수출보다는 국내 안정적 공급에 초점</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HAOS':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HAOS 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>수출 비중이 83.3%</strong>로, 전체 생산량 대부분이 <strong>해외 수출용</strong>으로 운영되는 공장</li>
+                <li><strong>내수용 비중은 16.7%</strong>로 제한적이며, <strong>글로벌 시장 대응 중심의 생산 전략</strong>이 특징</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HAOS는 명확한 <strong>수출 특화 공장</strong>으로, 다수의 수출국 공급을 위한 전략적 생산 거점 역할 수행</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory  == 'BHMC':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>BHMC 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>내수 비중이 88.1%</strong>로, 대부분의 차량이 <strong>중국 내수시장</strong>을 대상으로 생산됨</li>
+                <li><strong>수출 비중은 11.9%</strong>에 불과하여, 해외 시장보다는 <strong>현지 공급 중심</strong>의 전략</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> BHMC는 수출보다는 <strong>중국 내 내수 수요 대응형 생산거점</strong>으로 운영되고 있음</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HMMA':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMMA 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>내수 비중이 94.4%</strong>로, 거의 모든 생산량이 <strong>미국 내수 시장</strong>에 공급됨</li>
+                <li><strong>수출 비중은 5.57%</strong>에 불과하여, 해외 공급은 제한적으로 운영 중</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMMA는 <strong>현지 소비 중심</strong>의 전략적 내수 거점으로, 미국 내 수요 대응을 위한 <strong>고정 공급 허브</strong> 역할을 수행</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HMMC' :
+                st.markdown("""
+                <div style="border-left: 6px solid #117A65; background-color: #E8F8F5; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMMC 공장 월별 판매량 추이 분석</strong></h5>
+                <p>※ 본 데이터는 <strong>수출 기준</strong>으로 제공된 월별 총 판매량 기반 분석입니다.</p>
+                <ol>
+                <li><strong>1월 판매량(약 78,000대)</strong>이 연중 최고치를 기록</li>
+                <li><strong>7~8월</strong>에는 계절성 영향으로 <strong>최저점(약 47,000대)</strong>까지 하락</li>
+                <li><strong>9~10월</strong> 이후 가을부터는 회복세로 전환되어 안정적 흐름</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMMC는 <strong>수출 중심의 대량 생산 공장</strong>으로, <strong>계절성과 분기별 수요 패턴</strong>이 뚜렷하게 나타남</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HMB':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMB 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>내수 비중이 91.9%</strong>로, 대부분의 생산량이 <strong>현지(브라질) 시장</strong>에 집중됨</li>
+                <li><strong>수출 비중은 8.07%</strong>로 제한적이며, 주변 남미 국가로의 소량 수출 추정 가능</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMB는 브라질을 중심으로 한 <strong>내수 특화형 공장</strong>으로, <strong>지역 시장 안정 공급</strong>이 주된 전략으로 보임</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HMMI':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMMI 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>수출 비중이 69.5%</strong>, <strong>내수 비중 30.5%</strong>로 <strong>수출 중심 + 내수 병행</strong> 전략을 채택</li>
+                <li>다양한 시장을 대상으로 생산이 이루어지는 <strong>복합형 생산 거점</strong>으로 분석 가능</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMMI는 <strong>글로벌 수출 확대와 인도네시아 내수 대응</strong>을 동시에 고려한 <strong>혼합형 전략 공장</strong>으로 운영됨</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HTBC':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HTBC 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>수출 비중 58.5%</strong>, <strong>내수 비중 41.5%</strong>로 <strong>균형 잡힌 수출 중심 공장</strong></li>
+                <li>수출이 과반을 넘지만, 내수도 무시할 수 없는 수준으로 <strong>복합형 운영 전략</strong>이 적용된 것으로 분석</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HTBC는 <strong>수출 확대와 동시에 내수 대응</strong>을 위한 <strong>혼합형 공장</strong>으로, 전략 유연성이 높은 운영 형태를 보여줌</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'Vietnam':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>Vietnam 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>내수 비중 97.2%</strong>로, 사실상 <strong>전량 현지 시장</strong> 공급을 위한 생산 구조</li>
+                <li><strong>수출은 0.4%</strong>, <strong>합계 항목 2.3%</strong>로 해외 시장 대응은 거의 이루어지지 않음</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> Vietnam 공장은 <strong>현지 수요 충족을 위한 내수 전용 공장</strong>으로, <strong>공급 안정성과 생산 최적화</strong>에 초점을 둔 구조로 파악됨</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'Singapore':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>Singapore 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>수출 51.2%</strong>, <strong>내수 48.8%</strong>로 <strong>거의 완전한 균형형 생산</strong> 구조</li>
+                <li>내수와 수출을 동시에 고려한 <strong>전략 유연성이 높은 운영 방식</strong></li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> Singapore 공장은 <strong>현지 공급과 해외 시장 대응을 동시 수행</strong>하는 <strong>하이브리드 전략 공장</strong>으로 분류 가능</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'CKD':
+                st.markdown("""
+                <div style="border-left: 6px solid #117A65; background-color: #E8F8F5; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>CKD 공장 월별 판매량 추이 분석</strong></h5>
+                <p>※ 본 데이터는 <strong>내수/수출 구분 없이 '합계 기준'</strong>으로 제공된 월별 판매 실적입니다.</p>
+                <ol>
+                <li><strong>1월 판매량(약 13,000대)</strong>가 연중 최고치로 출발</li>
+                <li><strong>2월 일시적 저조(약 7,400대)</strong> 이후 <strong>9~10천 대 수준 유지</strong></li>
+                <li>연간 전체적으로 <strong>변동 폭은 크지 않으며</strong>, <strong>계단식 안정 흐름</strong>을 유지</li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> CKD 공장은 <strong>연초 집중 생산 이후 연중 고른 생산</strong>을 통해 공급 안정성을 추구하는 것으로 분석됨</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'HMGMA':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMGMA 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>100% 수출 비중</strong>으로, <strong>내수 생산은 전혀 없음</strong></li>
+                <li>전량이 해외 시장 공급을 위해 제조되는 <strong>수출 특화형 전략 거점</strong></li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> HMGMA는 <strong>내수 생산이 없는 순수 수출 공장</strong>으로, 글로벌 수요 대응에 집중하는 구조</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif selected_factory == 'KMX':
+                st.markdown("""
+                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>KMX 공장 내수/수출 비율 분석</strong></h5>
+                <ol>
+                <li><strong>100% 수출 비중</strong>으로, <strong>내수 판매는 전혀 없음</strong></li>
+                <li>글로벌 수출 공급을 전담하는 <strong>수출 중심 생산기지</strong></li>
+                </ol>
+                <p><strong>✅ 분석 포인트:</strong> KMX는 <strong>오직 해외 시장만을 타겟</strong>으로 하는 <strong>완전 수출형 공장</strong>으로 운영 중</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.divider()
+
+            # 현대 지역별 수출실적 분석 요약표 작업
+            
+            df_factory_melted =  df_factory.melt(id_vars=['공장명(국가)', '차량 모델', '판매 구분', '연도'], 
+                                    value_vars=["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"] ,
+                                    var_name='월', value_name='판매량')
+                    
+            st.subheader("📌 현대 공장별 내수/수출별 판매량 통계 요약")
+            st.write('')
+
+            내수_수출_피벗 = df_factory_melted.pivot_table(
+                    index='공장명(국가)',
+                    columns='판매 구분',
+                    values='판매량',
+                    aggfunc='sum',
+                    fill_value=0
+                )
+            
+            # 스타일링을 위해 복사본 생성
+            내수_수출_styled = 내수_수출_피벗.copy()
+
+            # 스타일링 적용
+            styled_내수_수출 = (
+                내수_수출_styled.style
+                .format('{:,.0f}')  # 숫자 포맷
+                .background_gradient(cmap='Blues')
+            )
+            st.dataframe(styled_내수_수출, use_container_width=True)    
 
         
         st.markdown("</div>", unsafe_allow_html=True)
