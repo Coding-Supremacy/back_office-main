@@ -728,7 +728,7 @@ def step3_customer_data_storage():
                 "거래 금액", "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월","국가","고객세그먼트","Cluster"
             ])
 
-            file_path = Path(__file__).parent.parent.parent / "data" / f"{brand}_고객데이터.csv"
+            file_path = Path(__file__).parent.parent.parent.parent / "data" / f"{brand}_고객데이터_신규입력용.csv"
             os.makedirs(file_path.parent, exist_ok=True)
             full_data.to_csv(file_path, mode='a', header=not file_path.exists(), index=False, encoding='utf-8-sig')
 
