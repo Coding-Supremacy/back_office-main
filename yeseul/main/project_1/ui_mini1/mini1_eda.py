@@ -149,17 +149,19 @@ st.markdown(
 
 
 def run_eda():
+    brand = st.session_state.get("brand", "현대")  # 기본값은 현대
+    country = st.session_state.get("country", "")
+
     # 분석 종류 선택 메뉴
-    selected = option_menu(
+    selected_analysis = option_menu(
         menu_title=None,
         options=[
-            "📊 가입 연도 분석",
-            "💰 거래 금액 분석",
-            "🛒 구매 빈도 분석",
-            "📈 고객 유형 분석",
+            "👥 클러스터별 성별 분포",
+            "💰 클러스터별 거래 금액",
+            "🛒 클러스터별 구매 빈도",
             "🚘 모델별 구매 분석"
         ],
-        icons=["", "", "", "", ""],
+        icons=["", "", "", ""],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
@@ -172,380 +174,230 @@ def run_eda():
     )
 
     pastel_colors = pc.qualitative.Pastel
-    # CSV 파일 경로 (필요에 따라 수정)
-    csv_path = "main_project/project_1/data_mini1/클러스터링고객데이터_5.csv"
+    csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
 
-    # 1) 가입 연도 분석
-    if selected == "📊 가입 연도 분석":
-        st.subheader("📊 가입 연도와 고객 등급")
-        st.markdown("""
-        가입일 데이터를 분석하여 각 연도별 유입 고객의 등급과 수를 파악합니다. 
-        X축은 가입 연도, Y축은 가입 고객 수를 나타내며, 서로 다른 색상은 고객 등급(일반, VIP, 이탈 가능 등)을 구분합니다.
-        """)
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if '가입일' in df.columns and '고객 세그먼트' in df.columns:
-                df['가입일'] = pd.to_datetime(df['가입일'], errors='coerce')
-                df['가입 연도'] = df['가입일'].dt.year
-                df_grouped = df.groupby(['가입 연도', '고객 세그먼트']).size().reset_index(name='고객 수')
-                bar_fig = px.bar(
-                    df_grouped,
-                    x='가입 연도',
-                    y='고객 수',
-                    color='고객 세그먼트',
-                    title='가입 연도별 누적 고객',
-                    labels={'가입 연도': '연도', '고객 수': '가입 고객 수', '고객 세그먼트': '고객 등급'},
-                    color_discrete_sequence=pastel_colors
-                )
-                bar_fig.update_layout(
-                    title={'text': '가입 연도별 누적 고객', 'x': 0.5, 'font': {'size': 20}},
-                    xaxis=dict(title='가입 연도', tickformat='%Y'),
-                    yaxis=dict(title='가입 고객 수'),
-                    margin=dict(l=40, r=40, t=40, b=80),
-                    plot_bgcolor='#f4f4f9',
-                    paper_bgcolor='#ffffff',
-                    font=dict(size=12)
-                )
-                st.plotly_chart(bar_fig)
-                custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> 이 그래프는 고객 가입 연도별로 유입된 고객 수와 유형을 시각화합니다. "
-                    "가입 추세를 확인하고, 각 연도별 고객 특성을 분석하여 마케팅 전략 수립에 유용한 인사이트를 제공합니다.",
-                    "#d1ecf1", "black"
-                )
-                total_customers = df_grouped['고객 수'].sum()
-                if total_customers >= 2000:
-                    custom_info("프로모션 제안: 고객수가 매우 많습니다. → 대규모 할인 행사, 프리미엄 멤버십 리뉴얼, VIP 전용 개인화 서비스 강화.",
-                               "#d1e7dd", "darkgreen")
-                elif total_customers >= 1500:
-                    custom_info("프로모션 제안: 고객수가 양호합니다. → 신규 고객 혜택 강화 및 추천인 보상 프로그램 도입 고려.",
-                               "#fff3cd", "darkorange")
-                elif total_customers >= 1000:
-                    custom_info("프로모션 제안: 고객수가 보통입니다. → 소규모 이벤트와 온라인 프로모션을 통한 고객 유입 촉진.",
-                               "#f8d7da", "darkred")
-                elif total_customers >= 500:
-                    custom_info("프로모션 제안: 고객수가 낮습니다. → 온라인 광고, SNS 마케팅, 지역 이벤트 등 신규 고객 확보에 주력.",
-                               "#f8d7da", "darkred")
-                else:
-                    custom_info("프로모션 제안: 고객수가 매우 적습니다. → 마케팅 전략 재검토 및 고객 피드백 수집 후 개선 필요.",
-                               "#f5c6cb", "darkred")
-            else:
-                st.error("필요한 컬럼('가입일', '고객 세그먼트')이 CSV 파일에 없습니다.")
-        else:
-            st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
-    
 
-    elif selected == "💰 거래 금액 분석":
-        st.subheader("💰 고객 유형별 거래 금액")
-        st.markdown("""
-        고객 유형별 거래 금액 분포를 박스플롯으로 시각화합니다. 
-        중앙값, 사분위 범위 및 이상치를 통해 소비 패턴을 파악할 수 있습니다.
-        """)
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if {'Cluster', '거래 금액'}.issubset(df.columns):
+    if os.path.exists(csv_path):
+        df = pd.read_csv(csv_path)
+        
+        # 국가 필터링
+        country_df = df[df['국가'] == country]
+        
+        if selected_analysis == "👥 클러스터별 성별 분포":
+            st.subheader(f"{country} - 클러스터별 성별 분포")
+            
+            if {'Cluster', '성별'}.issubset(country_df.columns):
+                # 클러스터별 성별 분포 계산
+                gender_dist = country_df.groupby(['Cluster', '성별']).size().reset_index(name='인원수')
+                
                 # 클러스터 번호에 +1을 더한 새로운 열 생성
-                df['Cluster_Display'] = df['Cluster'] + 1
+                gender_dist['Cluster_Display'] = gender_dist['Cluster'] + 1
                 
-                # 클러스터가 8개인 경우, 색상 시퀀스를 조정합니다.
-                box_fig = px.box(
-                    df,
-                    x="Cluster_Display",  # 새로운 열을 x축으로 사용
-                    y="거래 금액",
-                    title="고객 유형별 거래 금액 분포",
-                    labels={'Cluster_Display': '고객 유형', '거래 금액': '거래 금액(원)'},
-                    color="Cluster_Display",  # 각 클러스터별로 색상이 다르게 나타나도록 설정
-                    color_discrete_sequence=px.colors.qualitative.Pastel[:8]  # 8개의 색상 사용
-                )
-                box_fig.update_layout(
-                    title={'text': '고객 유형별 거래 금액 분포', 'x': 0.5, 'font': {'size': 20}},
-                    xaxis=dict(title='고객 유형', tickangle=-45),  # x축 레이블을 45도 기울여 정렬
-                    yaxis=dict(title='거래 금액(원)'),
-                    margin=dict(l=40, r=40, t=40, b=120),  # x축 레이블이 잘리지 않도록 여백을 늘림
-                    plot_bgcolor='#f4f4f9',
-                    paper_bgcolor='#ffffff',
-                    font=dict(size=12)
-                )
-                st.plotly_chart(box_fig)
-                custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> 박스플롯은 고객 유형별 거래 금액의 중앙값과 분포, 이상치를 명확하게 보여줍니다. "
-                    "이를 통해 각 고객군의 소비 패턴을 비교 분석할 수 있어 마케팅 전략 수립에 큰 도움이 됩니다.",
-                    "#d1ecf1", "black"
-                )
-                
-                # 각 클러스터별 평균 거래 금액 계산
-                cluster_avg = df.groupby('Cluster')['거래 금액'].mean().sort_values(ascending=False)
-                
-                # 클러스터별로 거래 금액 평균을 비교하여 프로모션 제안
-                for i, (cluster, avg_transaction) in enumerate(cluster_avg.items()):
-                    if i < len(cluster_avg) // 3:  # 상위 1/3 클러스터
-                        custom_info(f"{cluster + 1}번 유형 고객 프로모션 제안: 거래 금액이 가장 높습니다. → 초고가 상품, 맞춤형 컨시어지, 프리미엄 이벤트 강화.",
-                                "#d1e7dd", "darkgreen")
-                    elif i < 2 * len(cluster_avg) // 3:  # 중위 클러스터
-                        custom_info(f"{cluster + 1}번 유형 고객 프로모션 제안: 거래 금액이 중간 수준입니다. → VIP 추가 할인 및 업셀링, 맞춤 마케팅 컨설팅 제공 검토.",
-                                "#d4edda", "darkgreen")
-                    else:  # 하위 클러스터
-                        custom_info(f"{cluster + 1}번 유형 고객 프로모션 제안: 거래 금액이 낮습니다. → 재구매 할인 쿠폰, 적립 이벤트, 타겟 마케팅 통한 충성도 향상.",
-                                "#f8d7da", "darkred")
-            else:
-                st.error("필요한 컬럼('Cluster', '거래 금액')이 CSV 파일에 없습니다.")
-        else:
-            st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
-        
-        
-    
-                  
-        
-
-    # 3) 구매 빈도 분석
-    elif selected == "🛒 구매 빈도 분석":
-        st.subheader("🛒 고객 등급별 구매 빈도")
-        st.markdown("""
-        각 고객 유형의 평균 구매 횟수를 바 차트로 시각화하여 재구매 성향과 소비 패턴을 분석합니다.
-        X축은 고객 유형, Y축은 해당 그룹의 평균 구매 횟수를 표시합니다.
-        """)
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if {'고객 세그먼트', '제품 구매 빈도'}.issubset(df.columns):
-                freq_df = df.groupby('고객 세그먼트')['제품 구매 빈도'].mean().reset_index()
-                freq_df.rename(columns={'제품 구매 빈도': '평균 구매 횟수'}, inplace=True)
                 bar_fig = px.bar(
-                    freq_df,
-                    x="고객 세그먼트",
-                    y="평균 구매 횟수",
-                    title="세그먼트별 평균 구매 빈도",
-                    labels={'고객 세그먼트': '고객 등급', '평균 구매 횟수': '평균 구매 횟수'},
-                    color="고객 세그먼트",
+                    gender_dist,
+                    x='Cluster_Display',
+                    y='인원수',
+                    color='성별',
+                    title=f'{country} 클러스터별 성별 분포',
+                    labels={'Cluster_Display': '클러스터', '인원수': '고객 수'},
+                    barmode='group',
+                    color_discrete_map={'남': '#3498db', '여': '#e74c3c'}
+                )
+                
+                bar_fig.update_layout(
+                    title={'text': f'{country} 클러스터별 성별 분포', 'x': 0.5},
+                    xaxis=dict(title='클러스터 유형'),
+                    yaxis=dict(title='고객 수'),
+                    plot_bgcolor='#f4f4f9',
+                    paper_bgcolor='#ffffff'
+                )
+                
+                st.plotly_chart(bar_fig)
+                
+                # 클러스터별 성별 비율 계산
+                cluster_totals = gender_dist.groupby('Cluster_Display')['인원수'].sum().reset_index()
+                gender_dist = gender_dist.merge(cluster_totals, on='Cluster_Display', suffixes=('', '_total'))
+                gender_dist['비율'] = (gender_dist['인원수'] / gender_dist['인원수_total'] * 100).round(1)
+                
+                # 비율 표시
+                st.subheader("클러스터별 성별 비율")
+                pivot_df = gender_dist.pivot(index='Cluster_Display', columns='성별', values='비율').fillna(0)
+                st.dataframe(pivot_df.style.format("{:.1f}%").background_gradient(cmap='Blues'))
+                
+                # 인사이트 제공
+                st.markdown("""
+                **분석 인사이트:**
+                - 각 클러스터의 성별 분포를 확인하여 타겟 마케팅 전략 수립
+                - 특정 성별이 집중된 클러스터는 성별에 맞는 맞춤형 프로모션 가능
+                - 성별 균형이 잘 맞는 클러스터는 일반적인 마케팅 접근 가능
+                """)
+                
+            else:
+                st.error("필요한 컬럼이 데이터에 없습니다.")
+
+        elif selected_analysis == "💰 클러스터별 거래 금액":
+            st.subheader(f"{country} - 클러스터별 거래 금액 분석")
+            
+            if {'Cluster', '거래 금액'}.issubset(country_df.columns):
+                # 클러스터 번호에 +1을 더한 새로운 열 생성
+                country_df['Cluster_Display'] = country_df['Cluster'] + 1
+                
+                # 박스플롯 생성
+                box_fig = px.box(
+                    country_df,
+                    x='Cluster_Display',
+                    y='거래 금액',
+                    title=f'{country} 클러스터별 거래 금액 분포',
+                    labels={'Cluster_Display': '클러스터', '거래 금액': '거래 금액'},
+                    color='Cluster_Display',
                     color_discrete_sequence=pastel_colors
                 )
-                bar_fig.update_layout(
-                    title={'text': '세그먼트별 평균 구매 빈도', 'x': 0.5, 'font': {'size': 20}},
-                    xaxis=dict(title='고객 유형'),
-                    yaxis=dict(title='평균 구매 횟수'),
-                    margin=dict(l=40, r=40, t=40, b=80),
-                    plot_bgcolor='#f4f4f9',
-                    paper_bgcolor='#ffffff',
-                    font=dict(size=12)
-                )
-                st.plotly_chart(bar_fig)
-                custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> 이 바 차트는 각 고객 유형별 평균 구매 횟수를 시각화하여, 재구매 성향 및 소비 패턴을 명확하게 파악할 수 있도록 도와줍니다.",
-                    "#d1ecf1", "black"
-                )
-                avg_purchase = freq_df['평균 구매 횟수'].mean()
-                if avg_purchase >= 10:
-                    custom_info("프로모션 제안: 구매 빈도가 매우 높습니다. → VIP 보상 프로그램, 맞춤 할인, 전담 컨설팅 강화.",
-                               "#d1e7dd", "darkgreen")
-                elif avg_purchase >= 8:
-                    custom_info("프로모션 제안: 구매 빈도가 높습니다. → 고객 보상 이벤트, 추가 포인트 적립, 맞춤 쿠폰 제공 고려.",
-                               "#cce5ff", "darkblue")
-                elif avg_purchase >= 5:
-                    custom_info("프로모션 제안: 구매 빈도가 양호합니다. → 단골 고객 전환 위한 보상 프로그램, 업그레이드 혜택 제공.",
-                               "#d4edda", "darkgreen")
-                elif avg_purchase >= 3:
-                    custom_info("프로모션 제안: 구매 빈도가 보통입니다. → 재구매 할인, 포인트 2배 적립 행사 등으로 구매 촉진 시도.",
-                               "#fff3cd", "darkorange")
-                elif avg_purchase >= 2:
-                    custom_info("프로모션 제안: 구매 빈도가 낮습니다. → 타겟 마케팅, 즉시 구매 혜택 제공을 통해 재구매 유도.",
-                               "#ffeeba", "darkorange")
-                elif avg_purchase >= 1:
-                    custom_info("프로모션 제안: 구매 빈도가 매우 낮습니다. → 신규 고객 확보와 재구매 촉진 위한 강력 할인 및 프로모션 필요.",
-                               "#f8d7da", "darkred")
-                elif avg_purchase == 0:
-                    custom_info("프로모션 제안: 구매 데이터가 0입니다. → 데이터 점검 후, 신규 이벤트 및 시스템 오류 수정 검토.",
-                               "#f5c6cb", "darkred")
-                else:
-                    custom_info("프로모션 제안: 구매 데이터 오류 발생. → 데이터 정합성 재확인 및 마케팅 전략 수정 필요.",
-                               "#f5c6cb", "darkred")
-            else:
-                st.error("필요한 컬럼('고객 세그먼트', '제품 구매 빈도')이 CSV 파일에 없습니다.")
-        else:
-            st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
-
-    # 4) 클러스터링 분석
-    elif selected == "📈 고객 유형 분석":
-        cluster_data = {
-            "유형": [1, 2, 3, 4, 5, 6, 7, 8],
-            "평균 연령대": [34.65, 51.35, 60, 34.51, 38.55, 61.95, 33.52, 44.94],
-            "거래 금액": ["높음", "높음", "적음", "적당", "낮음", "낮음", "낮음", "매우 높음"],
-            "제품 구매 빈도": ["-", "-", "-", "-", "낮음", "-", "낮음", "낮음"],
-            "친환경차 비율": ["13.04%", "9.30%", "0%", "20.51%", "39.39%", "13.95%", "0%", "100%"],
-            "RFM 세그먼트": ["VIP","VIP","신규","일반","일반","이탈가능","이탈가능","일반"],
-            "클러스터 라벨": ["VIP 고가 다빈도 구매 고객",
-            "VIP 고액 구매 고객",
-            "신규 저가 구매자",
-            "일반적인 중간 소비자",
-            "일반 중간 연령 고액 소비자",
-            "이탈가능성 있는 고연령 저액 소비자",
-            "이탈가능성 있는 저연령 저액 소비자",
-            "일반적인 친환경 고액 소비자"]
-        }
-
-        df = pd.DataFrame(cluster_data)
-
-
-        # Streamlit에서 표 표시
-        st.markdown("""
-        <div style="background-color: #e9f7ef; border-left: 6px solid #28a745; padding: 20px; margin-bottom: 20px; border-radius: 4px;">
-        <h2 style="color: #28a745; text-align: center; margin-bottom: 15px;">📊 고객 유형별 고객 세그먼트 요약</h2>
-        <p style="text-align: center;">
-            각 유형의 고객 특성을 한눈에 볼 수 있도록 정리하였습니다.
-        </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # 인덱스를 숨기고 HTML로 변환하여 출력
-        html_table = df.to_html(index=False)
-        st.markdown(html_table, unsafe_allow_html=True)
-
-        
-
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if {'Cluster', '고객 세그먼트'}.issubset(df.columns):
-                df_grouped = df.groupby(['Cluster', '고객 세그먼트']).size().reset_index(name='고객 수')
-                bar_fig = px.bar(
-                    df_grouped,
-                    x='Cluster',
-                    y='고객 수',
-                    color='고객 세그먼트',
-                    title='클러스터별 고객 세그먼트 분포',
-                    labels={'Cluster': '고객 유형', '고객 수': '고객 수', '고객 세그먼트': '고객 등급'},
-                    color_discrete_sequence=pastel_colors,
-                    barmode="stack"
-                )
-                bar_fig.update_layout(
-                    title={'text': '고객 유형별 고객 세그먼트 분포', 'x': 0.5, 'font': {'size': 20}},
-                    xaxis=dict(title='클러스터'),
-                    yaxis=dict(title='고객 수'),
-                    margin=dict(l=40, r=40, t=40, b=80),
-                    plot_bgcolor='#f4f4f9',
-                    paper_bgcolor='#ffffff',
-                    font=dict(size=12)
-                )
-                st.plotly_chart(bar_fig)
-                custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> 이 그래프는 각 유형에 속한 고객들의 구성과 분포를 시각화합니다. "
-                    "X축은 클러스터 번호, Y축은 해당 유형의 고객 총수를 나타내며, 서로 다른 색상은 고객 유형을 구분하여 각 유형의 특성을 명확하게 파악할 수 있습니다.",
-                    "#d1ecf1", "black"
-                )
-            else:
-                st.error("필요한 컬럼('Cluster', '고객 세그먼트')이 CSV 파일에 없습니다.")
-        else:
-            st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
-            # 이메일 발송 버튼
-        try:
-            if st.button("프로모션 이메일 발송"):
-                for i, (cluster, avg_transaction) in enumerate(cluster_avg.items()):
-                    if i < len(cluster_avg) // 3:  
-                        message = "제휴 카드 사용 시 3% 할인 혜택을 제공합니다."
-                    elif i < 2 * len(cluster_avg) // 3:  
-                        message = "VIP 멤버십 혜택을 통해 추가 할인 및 서비스를 제공합니다."
-                    else:  
-                        message = "재구매 할인 쿠폰을 통해 구매를 촉진해 보세요."
-                    cluster_df = df[df['Cluster'] == cluster]
-                    for index, row in cluster_df.iterrows():
-                        customer_name = row['이름']  # 고객 이름을 데이터프레임에서 가져옴
-                        customer_email = row['이메일']
-                        send_email(customer_name, customer_email, message)
-                st.success("이메일 발송이 완료되었습니다.")
-                  
-        except Exception as e:
-            st.success(f"이메일을 발송했습니다.")
-
-    # 5) 모델별 구매 분석
-    elif selected == "🚘 모델별 구매 분석":
-        st.subheader("🚘 모델별 구매 통계")
-        st.markdown("""
-        이 분석은 각 모델별 구매 데이터를 시각화하여 어떤 차량 모델이 인기가 있는지 파악합니다. 
-        모델별 판매 추이를 확인하여 마케팅 전략 수립에 활용할 수 있습니다.
-        """)
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if {'구매한 제품', '거래 금액', '제품 구매 빈도'}.issubset(df.columns):
                 
-                # 모델별 판매량 분석
-                model_sales = df['구매한 제품'].value_counts().reset_index()
+                box_fig.update_layout(
+                    title={'text': f'{country} 클러스터별 거래 금액 분포', 'x': 0.5},
+                    xaxis=dict(title='클러스터 유형'),
+                    yaxis=dict(title='거래 금액'),
+                    plot_bgcolor='#f4f4f9',
+                    paper_bgcolor='#ffffff',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(box_fig)
+                
+                # 클러스터별 평균 거래 금액 계산
+                avg_transaction = country_df.groupby('Cluster_Display')['거래 금액'].mean().reset_index()
+                avg_transaction['거래 금액'] = avg_transaction['거래 금액'].round()
+                
+                # 평균 거래 금액 표시
+                st.subheader("클러스터별 평균 거래 금액")
+                st.dataframe(avg_transaction.style.format({"거래 금액": "{:,.0f}원"}).background_gradient(subset=['거래 금액'], cmap='Greens'))
+                
+                # 인사이트 제공
+                st.markdown("""
+                **분석 인사이트:**
+                - 고액 거래 클러스터: 프리미엄 서비스, VIP 혜택 제공
+                - 중간 거래 클러스터: 업셀링 기회 탐색, 추가 구매 유도
+                - 저액 거래 클러스터: 진입 장벽 낮은 제품 추천, 할인 프로모션
+                """)
+                
+            else:
+                st.error("필요한 컬럼이 데이터에 없습니다.")
+
+        elif selected_analysis == "🛒 클러스터별 구매 빈도":
+            st.subheader(f"{country} - 클러스터별 구매 빈도 분석")
+            
+            if {'Cluster', '제품구매빈도'}.issubset(country_df.columns):
+                # 클러스터 번호에 +1을 더한 새로운 열 생성
+                country_df['Cluster_Display'] = country_df['Cluster'] + 1
+                
+                # 박스플롯 생성
+                box_fig = px.box(
+                    country_df,
+                    x='Cluster_Display',
+                    y='제품구매빈도',
+                    title=f'{country} 클러스터별 구매 빈도 분포',
+                    labels={'Cluster_Display': '클러스터', '제품구매빈도': '구매 빈도'},
+                    color='Cluster_Display',
+                    color_discrete_sequence=pastel_colors
+                )
+                
+                box_fig.update_layout(
+                    title={'text': f'{country} 클러스터별 구매 빈도 분포', 'x': 0.5},
+                    xaxis=dict(title='클러스터 유형'),
+                    yaxis=dict(title='구매 빈도'),
+                    plot_bgcolor='#f4f4f9',
+                    paper_bgcolor='#ffffff',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(box_fig)
+                
+                # 클러스터별 평균 구매 빈도 계산
+                avg_frequency = country_df.groupby('Cluster_Display')['제품구매빈도'].mean().reset_index()
+                avg_frequency['제품구매빈도'] = avg_frequency['제품구매빈도'].round(2)
+                
+                # 평균 구매 빈도 표시
+                st.subheader("클러스터별 평균 구매 빈도")
+                st.dataframe(avg_frequency.style.format({"제품구매빈도": "{:.2f}회"}).background_gradient(subset=['제품구매빈도'], cmap='Oranges'))
+                
+                # 인사이트 제공
+                st.markdown("""
+                **분석 인사이트:**
+                - 고빈도 구매 클러스터: 충성도 프로그램 강화, 정기 구매 혜택 제공
+                - 중간 빈도 클러스터: 구매 주기 단축을 위한 리마인드 마케팅
+                - 저빈도 클러스터: 재구매 유도 프로모션, 첫 구매 고객 대상 혜택
+                """)
+                
+            else:
+                st.error("필요한 컬럼이 데이터에 없습니다.")
+
+        elif selected_analysis == "🚘 모델별 구매 분석":
+            st.subheader(f"{country} - 모델별 구매 분석")
+            
+            if {'구매한제품', 'Cluster'}.issubset(country_df.columns):
+                # 모델별 판매량 계산
+                model_sales = country_df['구매한제품'].value_counts().reset_index()
                 model_sales.columns = ['모델', '판매량']
                 
-                # 모델별 판매량 바 차트
+                # 바 차트 생성
                 bar_fig = px.bar(
                     model_sales,
                     x='모델',
                     y='판매량',
-                    title='모델별 판매량',
-                    labels={'모델': '차량 모델', '판매량': '총 판매량'},
+                    title=f'{country} 모델별 판매량',
+                    labels={'모델': '차량 모델', '판매량': '판매량'},
                     color='모델',
                     color_discrete_sequence=pastel_colors
                 )
+                
                 bar_fig.update_layout(
-                    title={'text': '모델별 판매량', 'x': 0.5, 'font': {'size': 20}},
+                    title={'text': f'{country} 모델별 판매량', 'x': 0.5},
                     xaxis=dict(title='차량 모델', tickangle=45),
-                    yaxis=dict(title='총 판매량'),
-                    margin=dict(l=40, r=40, t=40, b=120),
+                    yaxis=dict(title='판매량'),
                     plot_bgcolor='#f4f4f9',
                     paper_bgcolor='#ffffff',
-                    font=dict(size=12),
                     showlegend=False
                 )
+                
                 st.plotly_chart(bar_fig)
                 
-                custom_info(
-                    "<strong>자세한 그래프 설명:</strong><br> 이 그래프는 각 차량 모델별 총 판매량을 보여줍니다. X축은 차량 모델, Y축은 해당 모델의 총 판매량을 나타냅니다.",
-                    "#d1ecf1", "black"
+                # 모델 선택
+                selected_model = st.selectbox(
+                    "모델 선택",
+                    country_df['구매한제품'].unique(),
+                    key='model_select'
                 )
                 
-                # 모델별 평균 거래 금액
-                model_avg_price = df.groupby('구매한 제품')['거래 금액'].mean().reset_index()
-                model_avg_price.columns = ['모델', '평균 거래 금액']
+                # 선택된 모델의 클러스터 분포 계산
+                model_cluster = country_df[country_df['구매한제품'] == selected_model]['Cluster'].value_counts().reset_index()
+                model_cluster.columns = ['Cluster', '고객 수']
+                model_cluster['Cluster'] = model_cluster['Cluster'] + 1
                 
-                # 모델 선택 드롭다운
-                selected_model = st.selectbox("모델 선택", df['구매한 제품'].unique())
+                # 파이 차트 생성
+                pie_fig = px.pie(
+                    model_cluster,
+                    names='Cluster',
+                    values='고객 수',
+                    title=f'{selected_model} 모델 구매 고객의 클러스터 분포',
+                    color_discrete_sequence=pastel_colors
+                )
                 
-                # 선택된 모델의 클러스터별 구매 분포
-                cluster_distribution = df[df['구매한 제품'] == selected_model]['Cluster'].value_counts().reset_index()
-                cluster_distribution.columns = ['클러스터 번호', '고객 수']
-                cluster_distribution['클러스터 번호'] = cluster_distribution['클러스터 번호'].astype(str) + '번 유형'
-
-                
-                pie_fig = px.pie(cluster_distribution,
-                                 names='클러스터 번호',
-                                 values='고객 수',
-                                 title=f"{selected_model} 모델을 구매한 고객의 클러스터 분포",
-                                 color_discrete_sequence=px.colors.qualitative.Set3)
                 st.plotly_chart(pie_fig)
                 
-                custom_info(
-                    f"<strong>자세한 파이차트 설명:</strong><br> 이 차트는 {selected_model} 모델을 구매한 고객들의 구매 빈도 분포를 보여줍니다.",
-                    "#d1ecf1", "black"
-                )
+                # 모델별 클러스터 분포 표시
+                st.subheader(f"{selected_model} 모델 구매 고객 클러스터 분포")
+                st.dataframe(model_cluster.style.format({"고객 수": "{:,}명"}).background_gradient(subset=['고객 수'], cmap='Purples'))
                 
-                # 모델별 분석 결과에 따른 프로모션 제안
-                total_sales = model_sales[model_sales['모델'] == selected_model]['판매량'].values[0]
-                avg_price = model_avg_price[model_avg_price['모델'] == selected_model]['평균 거래 금액'].values[0]
+                # 인사이트 제공
+                st.markdown(f"""
+                **{selected_model} 모델 분석 인사이트:**
+                - 주 구매 클러스터: {model_cluster.iloc[0]['Cluster']}번 유형 ({model_cluster.iloc[0]['고객 수']}명)
+                - 타겟 마케팅: 해당 클러스터 특성에 맞는 프로모션 개발
+                - 잠재 고객: 다른 클러스터로의 판매 확장 가능성 탐색
+                """)
                 
-                if total_sales >= 50:
-                    if avg_price >= 50000000:
-                        custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 많고 고가입니다. → 프리미엄 프로모션, VIP 시승 이벤트, 고객 대상 맞춤형 서비스 제공.",
-                                "#d1e7dd", "darkgreen")
-                    else:
-                        custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 많지만 가격대가 낮습니다. → 대량 구매 할인, 패키지 프로모션, 액세서리 번들 제공.",
-                                "#d4edda", "darkgreen")
-                elif total_sales >= 30:
-                    custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 보통입니다. → 타겟 마케팅 강화, 제한된 기간 할인, 테스트 드라이브 이벤트 진행.",
-                                "#fff3cd", "darkorange")
-                else:
-                    custom_info(f"프로모션 제안: {selected_model} 모델은 판매량이 낮습니다. → 집중 광고 캠페인, 특별 할인, 신규 고객 유치 프로모션 필요.",
-                                "#f8d7da", "darkred")
-                
-                st.markdown(
-                    """
-                    ---<br>
-                    <strong>추가 설명:</strong><br>
-                    - 모델별 판매 데이터를 기반으로 마케팅 전략을 수립하세요.<br>
-                    - 인기 모델과 비인기 모델에 대한 차별화된 접근이 필요합니다.
-                    """, unsafe_allow_html=True
-                )
             else:
-                st.error("필요한 컬럼('구매한 제품', '거래 금액', '제품 구매 빈도')이 CSV 파일에 없습니다.")
-        else:
-            st.error(f"⚠️ CSV 파일이 존재하지 않습니다: {csv_path}")
+                st.error("필요한 컬럼이 데이터에 없습니다.")
+                
+    else:
+        st.error(f"CSV 파일을 찾을 수 없습니다: {csv_path}")
