@@ -23,7 +23,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # 화면 모듈 임포트
 from project_1.ui_mini1.mini1_eda import run_eda
 from project_1.ui_mini1.mini1_home import run_home1

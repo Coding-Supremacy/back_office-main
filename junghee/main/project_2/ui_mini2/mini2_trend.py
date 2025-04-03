@@ -5,7 +5,6 @@ import requests
 import numpy as np
 import platform
 from matplotlib import font_manager, rc
-import io
 import random
 from bs4 import BeautifulSoup
 import plotly.express as px
