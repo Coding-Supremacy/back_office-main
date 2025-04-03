@@ -5,6 +5,8 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
+from project_1.ui_mini1.mini1_description import run_description1
+from project_2.ui_mini2.mini2_description import run_description2
 from project_1.ui_mini1.mini1_eda import run_eda
 from project_1.ui_mini1.mini1_home import run_home1
 from project_1.ui_mini1.mini1_input_new_customer_info import run_input_customer_info
@@ -51,7 +53,7 @@ def main():
             # 딜러 서브 메뉴
             dealer_menu = option_menu(
                 menu_title="딜러 메뉴",
-                options=["🏠 홈", "🧾 고객 상담", "📊 고객 분석"],
+                options=["🏠 홈", "🧾 고객 상담", "📊 고객 분석","👩‍💻개발과정"],
                 icons=["house", "chat-dots", "pie-chart"],
                 default_index=0
             )
@@ -61,7 +63,7 @@ def main():
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
                     icons=["house", "geo-alt", "cloud-sun", "truck", "graph-up"],
                     default_index=0
                 )
@@ -82,6 +84,8 @@ def main():
             run_input_customer_info()
         elif dealer_menu == "📊 고객 분석":
             run_eda()
+        elif dealer_menu == "👩‍💻개발과정":
+            run_description1()
 
     elif dashboard_type == "📈 영업 기획·분석 대시보드":
         if analysis_menu == "🏠 홈":
@@ -98,6 +102,8 @@ def main():
             run_eda_hyundai()
         elif analysis_menu == "📈 시장 트렌드":
             run_trend()
+        elif analysis_menu == "🧑‍💻개발과정":
+            run_description2()
 
 
 if __name__ == "__main__":
