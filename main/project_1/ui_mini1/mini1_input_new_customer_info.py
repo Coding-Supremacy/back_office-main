@@ -752,18 +752,35 @@ def step3_customer_data_storage():
                 st.error("문자 발송에 실패했습니다.")
                 print("Error sending SMS:", e)
 
-            # 이메일 발송
-            mini1_promo_email.send_welcome_email(이메일, 이름, 아이디, 가입일)
-            st.success("이메일이 성공적으로 발송되었습니다.")
+            # 현대 회원가입 이메일 발송
+            if brand == '현대':
+                # 이메일 발송
+                mini1_promo_email.send_welcome_email(이메일, 이름, 아이디, 가입일)
+                st.success("이메일이 성공적으로 발송되었습니다.")
 
-            # 이메일 전송 로그 저장
-            log_entry = pd.DataFrame([[이메일, 이름, Cluster, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]],
-                                     columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
-            log_file_path = Path("data/이메일_전송_로그.csv")
-            os.makedirs(log_file_path.parent, exist_ok=True)
-            log_entry.to_csv(log_file_path, mode='a', header=not log_file_path.exists(), index=False, encoding='utf-8-sig')
+                # 이메일 전송 로그 저장
+                log_entry = pd.DataFrame([[이메일, 이름, Cluster, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]],
+                                        columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
+                log_file_path = Path("data/현대_이메일_전송_로그.csv")
+                os.makedirs(log_file_path.parent, exist_ok=True)
+                log_entry.to_csv(log_file_path, mode='a', header=not log_file_path.exists(), index=False, encoding='utf-8-sig')
 
-            print("✅ 이메일 전송 로그 저장 완료!")
+                print("✅ 이메일 전송 로그 저장 완료!")
+                # 기아 회원가입 이메일 발송
+            elif brand == '기아' :
+                # 이메일 발송
+                mini1_promo_email.send_welcome_email(이메일, 이름, 아이디, 가입일)
+                st.success("이메일이 성공적으로 발송되었습니다.")
+
+                # 이메일 전송 로그 저장
+                log_entry = pd.DataFrame([[이메일, 이름, Cluster, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]],
+                                        columns=["이메일", "이름", "클러스터 ID", "전송 시간"])
+                log_file_path = Path("data/기아_이메일_전송_로그.csv")
+                os.makedirs(log_file_path.parent, exist_ok=True)
+                log_entry.to_csv(log_file_path, mode='a', header=not log_file_path.exists(), index=False, encoding='utf-8-sig')
+
+                print("✅ 이메일 전송 로그 저장 완료!")
             st.session_state["step"] = 1
             time.sleep(2)
             st.rerun()
+

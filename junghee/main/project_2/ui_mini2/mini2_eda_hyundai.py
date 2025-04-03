@@ -1,4 +1,3 @@
-from matplotlib import pyplot as plt
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -6,7 +5,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from streamlit_option_menu import option_menu
 import os
-import seaborn as sns
 
 # CSS 스타일링 (이전 스타일 코드 그대로 사용)
 st.markdown("""
@@ -2349,10 +2347,7 @@ def run_eda_hyundai():
                 st.write("""##### 📆 [해외] 기타 월별 판매량 (2023년 ~ 2025년 누적)""")
                 st.dataframe(styled_기타, use_container_width=True)
 
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    if selected == "🏭 공장별 판매분석":
+    elif selected == "🏭 공장별 판매분석":
 
         def render_page_description(page_name):
             descriptions = {
@@ -2635,20 +2630,6 @@ def run_eda_hyundai():
                     </div>
                     """, unsafe_allow_html=True)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         # 3. 공장별 내수/수출 비율
         with tab3:
             st.subheader("🥧 공장별 내수/수출 비율 or 전체 생산 추이")
@@ -2916,8 +2897,7 @@ def run_eda_hyundai():
                 .format('{:,.0f}')  # 숫자 포맷
                 .background_gradient(cmap='Blues')
             )
-            st.dataframe(styled_내수_수출, use_container_width=True)
+            st.dataframe(styled_내수_수출, use_container_width=True)    
 
-            
         
         st.markdown("</div>", unsafe_allow_html=True)
