@@ -456,6 +456,7 @@ def run_eda():
     st.write("run_eda 함수 호출됨")
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
+    st.write(f"선택된 브랜드: {brand}, 선택된 국가: {country}")
 
     # 분석 종류 선택 메뉴
     selected_analysis = option_menu(
@@ -479,6 +480,7 @@ def run_eda():
             "nav-link-selected": {"background-color": "#2E86C1", "color": "white"},
         }
     )
+    st.write(f"선택된 분석 종류: {selected_analysis}")
 
     csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
     if os.path.exists(csv_path):
