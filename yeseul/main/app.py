@@ -42,7 +42,7 @@ def main():
             # 국가 선택
             country = st.selectbox(
                 "국가 선택",
-                ["미국", "캐나다", "멕시코","한국"]
+                ["대한민국","미국", "캐나다", "멕시코"]
             )
             st.session_state["country"] = country
 

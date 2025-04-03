@@ -1,4 +1,4 @@
-이름,생년월일,연령,성별,휴대폰번호,이메일,주소,아이디,가입일,차량구분,구매한 제품,친환경차,제품 구매 날짜,거래 금액,거래방식,제품구매빈도,제품구매경로,제품출시년월,지역,고객 세그먼트,Cluster
+이름,생년월일,연령,성별,휴대폰번호,이메일,주소,아이디,가입일,차량구분,구매한 제품,친환경차,제품 구매 날짜,거래 금액,거래방식,제품구매빈도,제품구매경로,제품출시년월,국가,고객 세그먼트,Cluster
 Robert Brown,1971-10-28,54,남,4332181960,robinsonwilliam@hoffman.net,"402 Peterson Drives Apt. 511, Davisstad, KS 06196",yherrera,2022-07-31,준대형 SUV,Avante,False,2024-12-04,21100000,신용카드,2,온라인,2020-09,미국,2,5
 Michael Wilson,1984-03-12,41,남,+1-959-310-3413x1647,mitchellclark@yahoo.com,"283 Steven Groves, Lake Mark, WI 07832",lydiatrujillo,2023-12-14,준중형 SUV,Ioniq 6,True,2024-07-08,80410000,현금,1,오프라인,2023-01,미국,1,1
 Robert Johnson,1968-10-01,57,남,953.767.2423,zhurst@yahoo.com,"710 Eric Estate, Carlsonfurt, PA 61849",tasha01,2025-02-22,준중형 세단,Sorento,False,2025-03-20,63160000,현금,2,온라인,2021-04,미국,1,2
