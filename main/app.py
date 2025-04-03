@@ -5,7 +5,7 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
-from project_1.ui_mini1.mini1_description import run_description1
+from main.project_1.ui_mini1.mini1_description import run_description1
 from project_2.ui_mini2.mini2_description import run_description2
 from project_1.ui_mini1.mini1_eda import run_eda
 from project_1.ui_mini1.mini1_home import run_home1
