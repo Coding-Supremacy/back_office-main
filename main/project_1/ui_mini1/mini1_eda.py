@@ -423,7 +423,7 @@ def run_eda():
         country_df = df[df['국가'] == country].copy()
         country_df['Cluster_Display'] = country_df['Cluster'] + 1
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
-        st.write(country_df)
+        st.dataframe(country_df)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
             st.write(f"## {country} - 클러스터별 성별 분포 분석")
