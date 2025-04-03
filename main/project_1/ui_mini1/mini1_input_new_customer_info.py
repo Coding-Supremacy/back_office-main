@@ -1054,7 +1054,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
                 margin-bottom: 8px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             ">
-                <strong>트림 가격</strong>: {recommendation.get('트림가격', '정보 없음')}원
+                <strong>트림 가격</strong>: {recommendation.get('트림가격', '정보 없음')}
             </div>
             """, unsafe_allow_html=True)
             
@@ -1066,7 +1066,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
                 margin-bottom: 8px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             ">
-                <strong>추천 옵션</strong>: {recommendation.get('추천옵션', '정보 없음')} (+{recommendation.get('옵션가격', '0')}원)
+                <strong>추천 옵션</strong>: {recommendation.get('추천옵션', '정보 없음')} (+{recommendation.get('옵션가격', '0')})
             </div>
             """, unsafe_allow_html=True)
             
@@ -1079,7 +1079,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 border-left: 4px solid #2ecc71;
             ">
-                <strong>총 예상 가격</strong>: {recommendation.get('총가격', '정보 없음')}원
+                <strong>총 예상 가격</strong>: {recommendation.get('총가격', '정보 없음')}
             </div>
             """, unsafe_allow_html=True)
     
@@ -1088,6 +1088,8 @@ def display_vehicle_recommendation(brand, model, cluster_id):
         with st.expander("✨ **추천 이유**", expanded=True):
             reasons = recommendation.get("추천이유", [])
             for reason in reasons:
+                # **텍스트** 를 <strong>텍스트</strong>로 바꿔주는 처리
+                reason_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', reason)
                 st.markdown(f"""
                 <div style="
                     background: #f0f8ff;
@@ -1097,7 +1099,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
                     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                     border-left: 4px solid #3498db;
                 ">
-                    {reason}
+                    {reason_html}
                 </div>
                 """, unsafe_allow_html=True)
         
