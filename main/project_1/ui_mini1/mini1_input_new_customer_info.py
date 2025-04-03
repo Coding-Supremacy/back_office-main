@@ -708,7 +708,7 @@ def step3_customer_data_storage():
             고객세그먼트 = st.session_state.get("고객세그먼트", "")
             selected_vehicle = st.session_state.get("selected_vehicle", "")
             차량구분 = st.session_state.get("차량구분", "")
-            친환경차 = "여" if selected_vehicle in eco_friendly_models.get(st.session_state.get("brand", ""), []) else "부"
+            친환경차 = "True" if selected_vehicle in eco_friendly_models.get(st.session_state.get("brand", ""), []) else "False"
             제품구매날짜 = st.session_state.get("제품구매날짜", "")
             거래금액 = st.session_state.get("거래금액", "")
             거래방식 = st.session_state.get("거래방식", "")
@@ -728,7 +728,7 @@ def step3_customer_data_storage():
                 "거래 금액", "거래 방식", "제품 구매 빈도", "제품 구매 경로", "제품 출시년월","국가","고객세그먼트","Cluster"
             ])
 
-            file_path = Path(__file__).parent.parent.parent.parent / "data" / f"{brand}_고객데이터_신규입력용.csv"
+            file_path = Path(__file__).parent.parent / "data" / f"{brand}_고객데이터_신규입력용.csv"
             os.makedirs(file_path.parent, exist_ok=True)
             full_data.to_csv(file_path, mode='a', header=not file_path.exists(), index=False, encoding='utf-8-sig')
 

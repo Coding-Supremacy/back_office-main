@@ -9,8 +9,114 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import datetime
+from email.mime.image import MIMEImage
+from project_1.ui_mini1.vehicle_recommendations_data import (
+    brand_recommendations,
+    vehicle_recommendations
+)
+# 개발자 모드 설정 (True: 실제 운영, False: 개발자 모드)
+prod = False  # 이 값을 True로 변경하면 실제 고객에게 발송
+prod_email = "marurun@naver.com"  # 개발자 이메일
+brand = st.session_state.get("brand", "현대")
 
-def send_email(customer_name, customer_email, message, cluster=None, marketing_strategies=None):
+def generate_marketing_strategies(country_df):
+    """
+    분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
+    """
+    strategies = {}
+    
+    # 클러스터 목록
+    clusters = sorted(country_df['고객유형'].unique())
+    
+    # 1. 성별 분석 기반 전략
+    gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
+    gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
+    
+    # 2. 연령 분석 기반 전략
+    age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'std'])
+    
+    # 3. 거래 금액 분석 기반 전략
+    transaction_stats = country_df.groupby('고객유형')['거래 금액'].mean()
+    
+    # 4. 구매 빈도 분석 기반 전략
+    freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean()
+    
+
+    
+    
+    
+    for cluster in clusters:
+        strategy_parts = []
+        
+        # 성별 기반 전략
+        male_pct = gender_pct.loc[cluster, '남']
+        female_pct = gender_pct.loc[cluster, '여']
+        
+        if male_pct >= 60:
+            strategy_parts.append("남성 타겟 프로모션 (스포츠 모델, 기술 기능 강조)")
+        elif female_pct >= 60:
+            strategy_parts.append("여성 타겟 캠페인 (안전 기능, 가족 친화적 메시지)")
+        else:
+            strategy_parts.append("일반적인 마케팅 접근 (다양한 옵션 제공)")
+        
+        # 연령 기반 전략
+        avg_age = age_stats.loc[cluster, 'mean']
+        
+        if avg_age < 35:
+            strategy_parts.append("SNS 마케팅, 트렌디한 디자인/기술 강조")
+        elif avg_age >= 45:
+            strategy_parts.append("안전/편의 기능, 할인 혜택 강조")
+        else:
+            strategy_parts.append("다양한 연령층 호소 가능한 메시지")
+        
+        # 거래 금액 기반 전략
+        avg_transaction = transaction_stats.loc[cluster]
+        transaction_median = transaction_stats.median()
+        
+        if avg_transaction >= transaction_median * 1.2:
+            strategy_parts.append("프리미엄 모델 추천, VIP 서비스 제공")
+        elif avg_transaction <= transaction_median * 0.8:
+            strategy_parts.append("할인 프로모션, 저비용 모델 추천")
+        else:
+            strategy_parts.append("표준 모델 라인업 제안")
+        
+        # 구매 빈도 기반 전략
+        avg_freq = freq_stats.loc[cluster]
+        freq_median = freq_stats.median()
+        
+        if avg_freq >= freq_median * 1.5:
+            strategy_parts.append("충성도 프로그램, 정기 구매 혜택")
+        elif avg_freq <= freq_median * 0.7:
+            strategy_parts.append("재구매 유도 프로모션, 첫 구매 할인")
+        
+        # 전략 조합
+        strategies[cluster] = "<br>• ".join(strategy_parts)
+    
+    return strategies, brand_recommendations
+
+def send_email(customer_name, customer_email, message, cluster=None, marketing_strategies=None, brand_recommendations=None, purchased_model=None):
+    # 개발자 모드인 경우 모든 이메일을 개발자 이메일로 발송
+    if not prod:
+        original_email = customer_email  # 원래 고객 이메일 저장 (로그용)
+        customer_email = prod_email  # 개발자 이메일로 변경
+        message = f"[개발자 모드] 원래 수신자: {original_email}<br><br>{message}"
+    
+    # 브랜드별 테마 설정
+    brand = st.session_state.get("brand", "현대")
+    
+    if brand == "현대":
+        primary_color = "#005bac"  # 현대 블루
+        logo_alt = "현대 로고"
+        logo_cid = "hyundai_logo"
+        brand_name = "현대자동차"
+        logo_path = "main/project_1/img/hyundai_logo.jpg"
+    else:  # 기아
+        primary_color = "#c10b30"  # 기아 레드
+        logo_alt = "기아 로고"
+        logo_cid = "kia_logo"
+        brand_name = "기아자동차"
+        logo_path = "main/project_1/img/kia_logo.png"
+    
     # SMTP 서버 설정
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 587
@@ -20,15 +126,43 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
     msg = MIMEMultipart()
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = customer_email
-    msg['Subject'] = f"{customer_name}님, 프로모션 안내"
+    msg['Subject'] = f"{customer_name}님, 프로모션 안내" if prod else f"[테스트] {customer_name}님, 프로모션 안내"
 
+    # 고객에게 추천할 모델 목록 생성 (구매한 모델 제외)
+    recommended_models = []
+    if cluster and brand_recommendations and brand in brand_recommendations:
+        cluster_key = cluster - 1 if brand == "현대" else cluster  # 현대는 1-8, 기아는 0-5
+        if cluster_key in brand_recommendations[brand]:
+            if purchased_model:
+                # 구매한 모델을 제외한 추천 모델 목록
+                recommended_models = [model for model in brand_recommendations[brand][cluster_key] 
+                                      if model != purchased_model]
+            else:
+                # 구매한 모델 정보가 없는 경우 전체 추천
+                recommended_models = brand_recommendations[brand][cluster_key]
+    
     # 마케팅 전략이 제공된 경우 메시지에 추가
     strategy_message = ""
     if cluster and marketing_strategies and cluster in marketing_strategies:
         strategy_message = f"""
-        <div style="background: #e8f4fc; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #005bac;">
-            <h3 style="margin-top: 0; color: #005bac;">고객님을 위한 맞춤형 제안</h3>
-            <p>{marketing_strategies[cluster]}</p>
+        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
+            <h3 style="margin-top: 0; color: {primary_color};">고객님을 위한 맞춤형 제안</h3></div>
+        """
+    
+    # 추천 모델 목록 추가
+    if recommended_models:
+        models_html = "<h3 style='color: {primary_color};'>추천 모델</h3><ul>"
+        models_html += "".join([f"<li>{model}</li>" for model in recommended_models])
+        models_html += "</ul>"
+        
+        strategy_message += f"""
+        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
+            {models_html}
+        </div>
+        """
+    elif purchased_model:
+        strategy_message += f"""
+        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
         </div>
         """
 
@@ -39,9 +173,9 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
                     border-radius: 15px; box-shadow: 0px 5px 15px rgba(0,0,0,0.1);">
             <!-- 헤더 영역 (로고) -->
             <tr>
-                <td style="text-align: center; padding: 20px; background: #005bac; color: white; 
+                <td style="text-align: center; padding: 20px; background: {primary_color}; color: white; 
                         border-top-left-radius: 15px; border-top-right-radius: 15px;">
-                    <h1 style="margin: 0;">🚗 현대자동차 프로모션 🚗</h1>
+                    <h1 style="margin: 0;">🚗 {brand_name} 프로모션 🚗</h1>
                 </td>
             </tr>
             
@@ -49,10 +183,10 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
             <tr>
                 <td style="padding: 30px; text-align: center;">
                     
-                    <!-- 현대 로고 -->
-                    <a href="https://www.hyundai.com" target="_blank">
-                    <img src="cid:hyundai_logo"
-                        alt="현대 로고" style="width: 100%; max-width: 500px; border-radius: 10px;">
+                    <!-- 브랜드 로고 -->
+                    <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" target="_blank">
+                    <img src="cid:{logo_cid}"
+                        alt="{logo_alt}" style="width: 100%; max-width: 500px; border-radius: 10px;">
                     </a>
 
                     <p style="font-size: 18px;">안녕하세요, <strong>{customer_name}</strong>님!</p>
@@ -63,8 +197,8 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
                         {message}
                     </div>
                     
-                    <a href="https://www.hyundai.com" 
-                        style="display: inline-block; background: #005bac; color: white; padding: 15px 30px; 
+                    <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" 
+                        style="display: inline-block; background: {primary_color}; color: white; padding: 15px 30px; 
                             text-decoration: none; border-radius: 8px; margin-top: 20px; font-size: 16px;">
                         지금 확인하기
                     </a>
@@ -82,7 +216,26 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
     </html>
     """
 
+    # HTML 본문 첨부
     msg.attach(MIMEText(html_body, 'html'))
+
+    # 로고 이미지 첨부
+    try:
+        with open(logo_path, 'rb') as img_file:
+            img_data = img_file.read()
+            img = MIMEImage(img_data)
+            img.add_header('Content-ID', f'<{logo_cid}>')
+            img.add_header('Content-Disposition', 'inline', filename=os.path.basename(logo_path))
+            msg.attach(img)
+    except Exception as e:
+        st.error(f"로고 이미지 첨부 실패: {str(e)}")
+        # 이미지 첨부 실패 시 대체 텍스트 사용
+        html_body = html_body.replace(f'src="cid:{logo_cid}"', f'alt="{logo_alt}" style="display:none;"')
+        msg = MIMEMultipart()  # 기존 메시지 재생성
+        msg['From'] = EMAIL_ADDRESS
+        msg['To'] = customer_email
+        msg['Subject'] = f"{customer_name}님, 프로모션 안내" if prod else f"[테스트] {customer_name}님, 프로모션 안내"
+        msg.attach(MIMEText(html_body, 'html'))
 
     server = smtplib.SMTP('smtp.gmail.com', 587)  # Gmail SMTP 서버 사용
     server.starttls()
@@ -90,7 +243,6 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
     text = msg.as_string()
     server.sendmail(EMAIL_ADDRESS, customer_email, text)
     server.quit()
-
 # 10초마다 자동 새로고침 (10000 밀리초)
 st_autorefresh(interval=10000, limit=None, key="fizzbuzz")
 
@@ -244,7 +396,6 @@ def generate_transaction_insights(transaction_stats):
 
     return "\n".join(insights + [""] + marketing)
 
-
 def generate_frequency_insights(freq_stats):
     insights = ["**📊 구매 빈도 인사이트**"]
     
@@ -396,7 +547,6 @@ def run_eda():
                 st.plotly_chart(box_fig)
                 
                 # 거래 금액 통계
-                # 이 코드로 대체하면 기존 함수와 호환됨
                 transaction_stats = country_df.groupby('고객유형')['거래 금액'].agg(['mean', 'median', 'sum']).round()
                 transaction_stats.rename(columns={'mean': '평균 거래액', 'median': '중앙값', 'sum': '총 거래액'}, inplace=True)
                 transaction_stats.columns = ['평균 거래액', '중앙값', '총 거래액']
@@ -447,14 +597,14 @@ def run_eda():
             
             if {'구매한 제품', 'Cluster'}.issubset(country_df.columns):
                 # 모델별 판매량
-                model_sales = country_df['구매한 제품'].value_counts().reset_index()
+                model_sales = country_df['구매한 제품'].value_counts().reset_index().head(10)
                 model_sales.columns = ['모델', '판매량']
                 
                 # 바 차트
                 bar_fig = px.bar(
                     model_sales, x='모델', y='판매량',
-                    title=f'{country} 모델별 판매량',
-                    color='모델',  # 컬러 매핑을 위해 추가
+                    title=f'{country} 모델별 Top10 판매량',
+                    color='모델',
                     color_discrete_sequence=px.colors.sequential.Sunset
                 )
                 st.plotly_chart(bar_fig)
@@ -488,193 +638,248 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
                 
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
-                    st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
-                    
-                    # 종합 분석 보고서 생성
-                    st.markdown("### 📊 종합 분석 보고서")
-                    
-                    # 1. 기본 통계
-                    st.markdown("#### 1. 기본 통계")
-                    total_customers = len(country_df)
-                    clusters = country_df['고객유형'].nunique()
-                    avg_age = country_df['연령'].mean()
-                    avg_transaction = country_df['거래 금액'].mean()
-                    
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("총 고객 수", f"{total_customers:,}명")
-                    col2.metric("클러스터 수", clusters)
-                    col3.metric("평균 연령", f"{avg_age:.1f}세")
-                    col4.metric("평균 거래액", f"{avg_transaction:,.0f}원")
-                    
-                    # 2. 클러스터별 주요 특성 요약
-                    st.markdown("#### 2. 클러스터별 주요 특성")
-                    
-                    # 성별 분포
-                    gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
-                    gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
-                    
-                    # 연령 통계
-                    age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'std']).round(1)
-                    age_stats.columns = ['평균 연령', '표준편차']
-                    
-                    # 거래 금액 통계
-                    transaction_stats = country_df.groupby('고객유형')['거래 금액'].agg(['mean', 'sum']).round()
-                    transaction_stats.columns = ['평균 거래액', '총 거래액']
-                    
-                    # 구매 빈도 통계
-                    freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean().round(2)
-                    
-                    # 모든 통계를 하나의 데이터프레임으로 결합
-                    summary_df = pd.concat([
-                        gender_pct,
-                        age_stats,
-                        transaction_stats,
-                        freq_stats.rename('평균 구매 빈도')
-                    ], axis=1)
-                    
-                    st.dataframe(summary_df.style.format({
-                        '남': '{:.1f}%',
-                        '여': '{:.1f}%',
-                        '평균 연령': '{:.1f}세',
-                        '표준편차': '{:.1f}세',
-                        '평균 거래액': '{:,.0f}원',
-                        '총 거래액': '{:,.0f}원',
-                        '평균 구매 빈도': '{:.2f}회'
-                    }).background_gradient(cmap='Blues'))
-                    
-                    # 3. 마케팅 전략 제안
-                    st.markdown("#### 3. 클러스터별 마케팅 전략 제안")
-                    # 클러스터별 마케팅
-                    marketing_strategies = {
-                        1: "프리미엄 모델 추천 및 VIP 서비스 제공",
-                        2: "할인 프로모션 및 저비용 모델 강조",
-                        3: "가족 패키지 및 대형차 모델 추천",
-                        4: "첫 구매 고객 대상 특별 혜택 제공",
-                        5: "충성도 프로그램 및 정기 구매 혜택",
-                        6: "SNS 마케팅 및 트렌디한 디자인 강조",
-                        7: "안전 기능 및 편의 사항 강조",
-                        8: "다양한 연령층 호소 가능한 메시지"
-                    }
-                    
-                    for cluster, strategy in marketing_strategies.items():
-                        st.markdown(f"- **클러스터 {cluster}**: {strategy}")
-                    
-                    # 4. 이메일 발송 기능
-                    st.markdown("---")
-                    st.markdown("### ✉️ 클러스터별 타겟 이메일 발송")
-                    
-                    # 클러스터 선택
-                    selected_cluster = st.selectbox(
-                        "클러스터 선택",
-                        sorted(country_df['고객유형'].unique()),
-                        key='email_cluster'
-                    )
-                    
-                    # 해당 클러스터 고객 필터링
-                    cluster_customers = country_df[country_df['고객유형'] == selected_cluster]
-                    
-                    # 이메일 내용 작성
-                    st.markdown("#### 이메일 내용 작성")
-                    
-                    # 기본 메시지 템플릿
-                    template = f"""
-                    <p>현대자동차의 특별한 프로모션 소식을 전해드립니다!</p>
-                    
-                    <p>고객님의 구매 패턴을 분석한 결과, 다음과 같은 맞춤형 제안을 준비했습니다:</p>
-                    
-                    <ul>
-                        <li>{marketing_strategies[selected_cluster]}</li>
-                        <li>한정 기간 할인 프로모션</li>
-                    </ul>
-                    
-                    <p>자세한 내용은 아래 링크를 확인해주세요. 감사합니다!</p>
-                    """
-                    
-                    email_subject = st.text_input(
-                        "이메일 제목",
-                        f"[현대자동차] 고객님을 위한 맞춤 특별 혜택!",
-                        key='email_subject'
-                    )
-                    
-                    email_content = st.text_area(
-                        "이메일 내용 (HTML 형식)",
-                        template,
-                        height=300,
-                        key='email_content'
-                    )
-                    
-                    # 미리보기
-                    if st.checkbox("이메일 미리보기"):
-                        st.markdown("### 이메일 미리보기")
-                        st.markdown(f"**제목**: {email_subject}")
-                        st.markdown(email_content, unsafe_allow_html=True)
-                    
-                    # 발송 대상 확인
-                    st.markdown("#### 발송 대상 고객")
-                    cluster_customers_table = cluster_customers[['이름', '이메일', '성별', '연령', '거래 금액']]
-                    # 페이지 상태 초기화
-                    if 'page' not in st.session_state:
-                        st.session_state.page = 1
+            st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
+            marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
-                    # 페이지네이션 설정
-                    page_size = 7
-                    data = cluster_customers[['이름', '이메일', '성별', '연령', '거래 금액']]
-                    total_pages = max(1, (len(data) - 1) // page_size + 1)
+            # 개발자 모드 상태 표시
+            if not prod:
+                st.warning(f"⚠️ 개발자 모드 활성화 (모든 이메일은 {prod_email}로 발송됩니다)")
+            else:
+                st.success("✅ 운영 모드 (실제 고객에게 이메일 발송)")
+            
+            # 종합 분석 보고서 생성
+            st.markdown("### 📊 종합 분석 보고서")
+            
+            # 1. 기본 통계
+            st.markdown("#### 1. 기본 통계")
+            total_customers = len(country_df)
+            clusters = country_df['고객유형'].nunique()
+            avg_age = country_df['연령'].mean()
+            avg_transaction = country_df['거래 금액'].mean()
+            
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("총 고객 수", f"{total_customers:,}명")
+            col2.metric("클러스터 수", clusters)
+            col3.metric("평균 연령", f"{avg_age:.1f}세")
+            col4.metric("평균 거래액", f"{avg_transaction:,.0f}원")
+            
+            # 2. 클러스터별 주요 특성 요약
+            st.markdown("#### 2. 클러스터별 주요 특성")
+            
+            # 성별 분포
+            gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
+            gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
+            
+            # 연령 통계
+            age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'std']).round(1)
+            age_stats.columns = ['평균 연령', '표준편차']
+            
+            # 거래 금액 통계
+            transaction_stats = country_df.groupby('고객유형')['거래 금액'].agg(['mean', 'sum']).round()
+            transaction_stats.columns = ['평균 거래액', '총 거래액']
+            
+            # 구매 빈도 통계
+            freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean().round(2)
+            
+            # 모든 통계를 하나의 데이터프레임으로 결합
+            summary_df = pd.concat([
+                gender_pct,
+                age_stats,
+                transaction_stats,
+                freq_stats.rename('평균 구매 빈도')
+            ], axis=1)
+            
+            st.dataframe(summary_df.style.format({
+                '남': '{:.1f}%',
+                '여': '{:.1f}%',
+                '평균 연령': '{:.1f}세',
+                '표준편차': '{:.1f}세',
+                '평균 거래액': '{:,.0f}원',
+                '총 거래액': '{:,.0f}원',
+                '평균 구매 빈도': '{:.2f}회'
+            }).background_gradient(cmap='Blues'))
+            
+            # 3. 마케팅 전략 제안
+            st.markdown("#### 3. 클러스터별 마케팅 전략 제안")
+            marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
-                    col1, col2, col3 = st.columns([1, 2, 1])
+            for cluster, strategy in marketing_strategies.items():
+                st.markdown(f"- **클러스터 {cluster}**: {strategy}")
+            
+            # 4. 이메일 발송 기능
+            st.markdown("---")
+            st.markdown("### ✉️ 클러스터별 타겟 이메일 발송")
+            
+            # 클러스터 선택
+            selected_cluster = st.selectbox(
+                "클러스터 선택",
+                sorted(country_df['고객유형'].unique()),
+                key='email_cluster'
+            )
+            
+            # 해당 클러스터 고객 필터링
+            cluster_customers = country_df[country_df['고객유형'] == selected_cluster]
+            
+            # 이메일 내용 작성
+            st.markdown("#### 이메일 내용 작성")
+            
+            # 기본 메시지 템플릿
+            template = f"""
+            <p>{brand}자동차의 특별한 프로모션 소식을 전해드립니다!</p>
+            
+            <p>고객님의 구매 패턴을 분석한 결과, 다음과 같은 맞춤형 제안을 준비했습니다:</p>
+            
+            <ul>
+                <li>{marketing_strategies[selected_cluster]}</li>
+                <li>한정 기간 할인 프로모션</li>
+            </ul>
+            
+            <p>자세한 내용은 아래 링크를 확인해주세요. 감사합니다!</p>
+            """
+            
+            email_subject = st.text_input(
+                "이메일 제목",
+                f"[{brand}자동차] 고객님을 위한 맞춤 특별 혜택!",
+                key='email_subject'
+            )
+            
+            email_content = st.text_area(
+                "이메일 내용 (HTML 형식)",
+                template,
+                height=300,
+                key='email_content'
+            )
+            
+            # 미리보기
+            if st.checkbox("이메일 미리보기"):
+                st.markdown("### 이메일 미리보기")
+                st.markdown(f"**제목**: {email_subject}")
+                st.markdown(email_content, unsafe_allow_html=True)
+            
+            # 발송 대상 확인
+            st.markdown("#### 발송 대상 고객")
+            
+            # 개발자 모드인 경우 이메일 주소를 개발자 이메일로 표시
+            if not prod:
+                display_data = cluster_customers[['이름', '성별', '연령', '거래 금액','구매한 제품']].copy()
+                display_data['이메일'] = prod_email  # 개발자 이메일로 표시
+                display_data = display_data[['이름', '이메일', '성별', '연령', '거래 금액','구매한 제품']]
+                st.warning(f"개발자 모드: 실제 고객 대신 {prod_email}로 발송됩니다")
+            else:
+                display_data = cluster_customers[['이름', '이메일', '성별', '연령', '거래 금액','구매한 제품']]
+            
+            # 페이지네이션 설정
+            # 페이지네이션 설정
+            if 'page' not in st.session_state:
+                st.session_state.page = 1
 
-                    with col1:
-                        if st.button('◀ 이전', disabled=(st.session_state.page <= 1)):
-                            st.session_state.page -= 1
-                            st.rerun()
+            page_size = 7
+            total_pages = max(1, (len(display_data) - 1)) // page_size + 1
 
-                    with col2:
-                        st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
+            # 컬럼 레이아웃 설정 (6:4 비율로 좌우 분할)
+            col_left, col_right = st.columns([6, 4])
 
-                    with col3:
-                        if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages)):
-                            st.session_state.page += 1
-                            st.rerun()
+            with col_left:
+                # 왼쪽 컬럼: 고객 데이터 프레임 + 페이지네이션
+                st.markdown("#### 발송 대상 고객 리스트")
+                
+                # 페이지네이션 컨트롤
+                pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
+                with pagination_col1:
+                    if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
+                        st.session_state.page -= 1
+                        st.rerun()
+                with pagination_col2:
+                    st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
+                with pagination_col3:
+                    if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
+                        st.session_state.page += 1
+                        st.rerun()
+                
+                # 데이터 표시
+                start_idx = (st.session_state.page - 1) * page_size
+                end_idx = min(start_idx + page_size, len(display_data))
+                st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
+                st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
+                        (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
 
-                    start_idx = (st.session_state.page - 1) * page_size
-                    end_idx = min(start_idx + page_size, len(data))
-
-                    # 데이터 표시
-                    st.dataframe(data.iloc[start_idx:end_idx], height=300)
-                    st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다.")
+            with col_right:
+                # 오른쪽 컬럼: 클러스터 추천 모델
+                st.markdown("#### 클러스터 추천 모델")
+                
+                brand = st.session_state.get("brand", "현대")
+                cluster_key = selected_cluster - 1 if brand == "현대" else selected_cluster
+                
+                if brand in brand_recommendations and cluster_key in brand_recommendations[brand]:
+                    recommended_models = brand_recommendations[brand][cluster_key][ :3]
                     
-                    # 이메일 발송 버튼
-                    # 이메일 발송 버튼
-                    if st.button("이메일 발송"):
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
+                    # 카드 형태로 추천 모델 표시
+                    for i, model in enumerate(recommended_models, 1):
+                        with st.expander(f"추천 모델 {i}: {model}", expanded=True):
+                            st.markdown(f"""
+                            <div style="padding: 10px; border-radius: 8px; background-color: #f8f9fa; margin-bottom: 10px;">
+                                <p style="font-weight: bold; margin-bottom: 5px;">{model}</p>
+                                <p style="font-size: 0.9em; color: #555;">
+                                    이 모델은 {brand} {selected_cluster}번 클러스터 고객님들께 가장 인기 있는 모델입니다.
+                                </p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    # 추가로 현재 클러스터에서 실제로 많이 팔린 모델도 함께 표시 (옵션)
+                    if '구매한 제품' in country_df.columns:
+                        st.markdown("---")
+                        st.markdown("##### 이 클러스터의 실제 판매 모델 (Top 3)")
+                        top_sold_models = country_df[country_df['고객유형'] == selected_cluster]['구매한 제품'].value_counts().head(3)
+                        if not top_sold_models.empty:
+                            st.dataframe(
+                                top_sold_models.reset_index().rename(
+                                    columns={'구매한 제품': '모델명', 'count': '판매량'}
+                                ),
+                                hide_index=True
+                            )
+                else:
+                    st.warning(f"이 클러스터({selected_cluster})에 대한 추천 모델 데이터가 없습니다.")
+            
+            # 이메일 발송 버튼
+            if st.button("이메일 발송"):
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                success_count = 0
+                fail_count = 0
+                
+                for i, (_, row) in enumerate(cluster_customers.iterrows()):
+                    try:
+                        send_email(
+                            customer_name=row['이름'],
+                            customer_email=row['이메일'],
+                            message=email_content,
+                            cluster=selected_cluster,
+                            marketing_strategies=marketing_strategies,
+                            brand_recommendations=brand_recommendations,  # 추가된 인자
+                            purchased_model=row['구매한 제품']  # 추가된 인자
+                        )
+                        success_count += 1
                         
-                        success_count = 0
-                        fail_count = 0
-                        
-                        for i, (_, row) in enumerate(cluster_customers.iterrows()):
-                            try:
-                                send_email(
-                                    customer_name=row['이름'],
-                                    customer_email=row['이메일'],
-                                    message=email_content,
-                                    cluster=selected_cluster,
-                                    marketing_strategies=marketing_strategies
-                                )
-                                success_count += 1
-                            except Exception as e:
-                                st.error(f"{row['이름']} 고객에게 이메일 발송 실패: {str(e)}")
-                                fail_count += 1
+                        # 개발자 모드 알림
+                        if not prod:
+                            st.info(f"개발자 모드: {row['이름']} 고객 대신 {prod_email}로 테스트 이메일 발송됨")
                             
-                            progress = (i + 1) / len(cluster_customers)
-                            progress_bar.progress(progress)
-                            status_text.text(f"진행 중: {i + 1}/{len(cluster_customers)} (성공: {success_count}, 실패: {fail_count})")
-                        
-                        progress_bar.empty()
-                        if fail_count == 0:
-                            st.success(f"모든 이메일({success_count}건)이 성공적으로 발송되었습니다!")
-                        else:
-                            st.warning(f"이메일 발송 완료 (성공: {success_count}건, 실패: {fail_count}건)")
-                        
+                    except Exception as e:
+                        st.error(f"{row['이름']} 고객에게 이메일 발송 실패: {str(e)}")
+                        fail_count += 1
+                    
+                    progress = (i + 1) / len(cluster_customers)
+                    progress_bar.progress(progress)
+                    status_text.text(f"진행 중: {i + 1}/{len(cluster_customers)} (성공: {success_count}, 실패: {fail_count})")
+                
+                progress_bar.empty()
+                if fail_count == 0:
+                    st.success(f"모든 이메일({success_count}건)이 성공적으로 발송되었습니다!")
+                    if not prod:
+                        st.warning("개발자 모드 활성화 상태 - 실제 고객 대신 개발자 이메일로 발송되었습니다")
+                else:
+                    st.warning(f"이메일 발송 완료 (성공: {success_count}건, 실패: {fail_count}건)")
+                    
         else:
             st.error(f"CSV 파일을 찾을 수 없습니다: {csv_path}")
