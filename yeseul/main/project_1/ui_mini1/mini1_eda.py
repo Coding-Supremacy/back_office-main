@@ -261,7 +261,6 @@ def custom_info(message, bg_color, text_color="black"):
         f'<div style="background-color: {bg_color}; color: {text_color}; padding: 10px; border-radius: 4px; margin-bottom: 10px;">{message}</div>',
         unsafe_allow_html=True
     )
-
 # 기본 스타일 설정
 st.markdown(
     """
@@ -448,7 +447,6 @@ def generate_model_insights(model_cluster, selected_model):
 def run_eda():
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
-
     # 분석 종류 선택 메뉴
     selected_analysis = option_menu(
         menu_title=None,
@@ -458,6 +456,7 @@ def run_eda():
             "💰 클러스터별 거래 금액",
             "🛒 클러스터별 구매 빈도",
             "🚘 모델별 구매 분석",
+            "🏷️ 클러스터별 고객 세그먼트",
             "📝 종합 보고서 및 이메일 발송"
         ],
         icons=["", "", "", ""],
@@ -472,7 +471,8 @@ def run_eda():
         }
     )
 
-    csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
+    csv_path = os.path.abspath(f"data/{brand}_고객데이터_신규입력용.csv")
+    
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
         country_df = df[df['국가'] == country].copy()
@@ -480,6 +480,7 @@ def run_eda():
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
+            st.write(f"## {country} - 클러스터별 성별 분포 분석")
             st.subheader(f"{country} - 클러스터별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
@@ -645,7 +646,123 @@ def run_eda():
                 
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
+        elif selected_analysis == "🏷️ 클러스터별 고객 세그먼트":
+            st.subheader(f"{country} - 클러스터별 고객 세그먼트 분석")
+            
+            if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
+                # 세그먼트 매핑 딕셔너리
+                segment_mapping = {
+                    "현대": {
+                        0: "VIP",
+                        1: "이탈가능",
+                        2: "신규",
+                        3: "일반"
+                    },
+                    "기아": {
+                        0: "VIP",
+                        1: "일반",
+                        2: "신규",
+                        3: "이탈 가능"
+                    }
+                }
                 
+                # 세그먼트 이름 변환
+                country_df['세그먼트 이름'] = country_df['고객 세그먼트'].map(segment_mapping[brand])
+                
+                # 클러스터별 세그먼트 분포
+                segment_dist = country_df.groupby(['고객유형', '세그먼트 이름']).size().unstack(fill_value=0)
+                segment_pct = segment_dist.div(segment_dist.sum(axis=1), axis=0) * 100
+                
+                # 바 차트
+                st.markdown("### 클러스터별 고객 세그먼트 분포")
+                bar_fig = px.bar(
+                    segment_dist, barmode='stack',
+                    title=f'{country} 클러스터별 고객 세그먼트 분포',
+                    labels={'value': '고객 수', '고객유형': '클러스터'},
+                    color_discrete_sequence=px.colors.qualitative.Pastel
+                )
+                st.plotly_chart(bar_fig)
+                
+                # 비율 표시
+                st.markdown("### 클러스터별 고객 세그먼트 비율 (%)")
+                st.dataframe(segment_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'))
+                
+                # 인사이트 제공
+                st.markdown("### 📊 세그먼트 분석 인사이트")
+                
+                # 1. VIP 고객이 많은 클러스터 분석
+                if 'VIP' in segment_pct.columns:
+                    vip_clusters = segment_pct[segment_pct['VIP'] >= 30].index.tolist()
+                    if vip_clusters:
+                        st.markdown(f"**VIP 고객이 많은 클러스터**: {', '.join(map(str, vip_clusters))}번")
+                        st.markdown("  - 해당 클러스터는 브랜드 충성도가 높은 고객이 많아 VIP 전용 혜택을 강화하는 것이 효과적입니다.")
+                
+                # 2. 이탈 가능 고객이 많은 클러스터 분석
+                if '이탈가능' in segment_pct.columns or '이탈 가능' in segment_pct.columns:
+                    churn_col = '이탈가능' if '이탈가능' in segment_pct.columns else '이탈 가능'
+                    churn_clusters = segment_pct[segment_pct[churn_col] >= 40].index.tolist()
+                    if churn_clusters:
+                        st.markdown(f"**이탈 가능 고객이 많은 클러스터**: {', '.join(map(str, churn_clusters))}번")
+                        st.markdown("  - 재구매 유도 프로모션과 고객 만족도 향상 프로그램이 필요합니다.")
+                
+                # 3. 신규 고객이 많은 클러스터 분석
+                if '신규' in segment_pct.columns:
+                    new_clusters = segment_pct[segment_pct['신규'] >= 50].index.tolist()
+                    if new_clusters:
+                        st.markdown(f"- **신규 고객이 많은 클러스터**: {', '.join(map(str, new_clusters))}번")
+                        st.markdown("  - 브랜드 인지도 향상과 첫 구매 고객을 위한 특별 혜택이 효과적입니다.")
+                
+                # 4. 일반 고객이 많은 클러스터 분석
+                if '일반' in segment_pct.columns:
+                    normal_clusters = segment_pct[segment_pct['일반'] >= 60].index.tolist()
+                    if normal_clusters:
+                        st.markdown(f"- **일반 고객이 많은 클러스터**: {', '.join(map(str, normal_clusters))}번")
+                        st.markdown("  - 일반 고객을 VIP로 전환하기 위한 단계별 혜택 프로그램을 고려해보세요.")
+                
+                # 클러스터별 세그먼트 전략 제안
+                st.markdown("### 🎯 클러스터별 세그먼트 전략 제안")
+                
+                clusters = sorted(segment_pct.index)
+                for cluster in clusters:
+                    # 가장 많은 세그먼트 찾기
+                    main_segment = segment_pct.loc[cluster].idxmax()
+                    main_pct = segment_pct.loc[cluster, main_segment]
+                    
+                    # 전략 생성
+                    strategy = f"**클러스터 {cluster}번** ({main_segment} {main_pct:.1f}%): "
+                    
+                    if main_segment == "VIP":
+                        strategy += "전용 컨시어지 서비스 제공, 신제품 사전 예약 권한 부여, VIP 행사 초대"
+                    elif main_segment in ["이탈가능", "이탈 가능"]:
+                        strategy += "재구매 유도 할인, 고객 만족도 조사 실시, 맞춤형 프로모션 제공"
+                    elif main_segment == "신규":
+                        strategy += "첫 구매 고객 할인, 브랜드 소개 자료 동봉, 앱 가입 유도"
+                    else:  # 일반
+                        strategy += "멤버십 등급 상향 유도, 주기적 프로모션 알림, 충성도 프로그램 소개"
+                    
+                    st.markdown(strategy)
+                
+                # 세그먼트 정의 설명
+                st.markdown("---")
+                st.markdown("#### 세그먼트 정의")
+                
+                if brand == "현대":
+                    st.markdown("""
+                    - **VIP**: 브랜드 충성도가 매우 높고 고가 모델을 구매하는 고객
+                    - **이탈가능**: 최근 구매 빈도가 감소하거나 불만을 표시한 고객
+                    - **신규**: 최근 6개월 이내 첫 구매 고객
+                    - **일반**: VIP도 아니고 이탈 위험도 없는 일반 고객
+                    """)
+                else:  # 기아
+                    st.markdown("""
+                    - **VIP**: 브랜드 충성도가 매우 높고 고가 모델을 구매하는 고객
+                    - **이탈 가능**: 최근 구매 빈도가 감소하거나 불만을 표시한 고객
+                    - **신규**: 최근 6개월 이내 첫 구매 고객
+                    - **일반**: VIP도 아니고 이탈 위험도 없는 일반 고객
+                    """)
+                
+            else:
+                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")                
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
             st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
@@ -654,7 +771,7 @@ def run_eda():
             if not prod:
                 st.warning(f"⚠️ 개발자 모드 활성화 (모든 이메일은 {prod_email}로 발송됩니다)")
             else:
-                st.success("✅ 운영 모드 (실제 고객에게 이메일 발송)")
+                st.write("")
             
             # 종합 분석 보고서 생성
             st.markdown("### 📊 종합 분석 보고서")
@@ -772,7 +889,7 @@ def run_eda():
             template = f"""
             <p>{brand}자동차의 특별한 프로모션 소식을 전해드립니다!</p>
             
-            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.:</p>
+            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.</p>
             
             <ul>
                 • {marketing_strategies[selected_cluster]}
