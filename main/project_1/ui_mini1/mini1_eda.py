@@ -451,7 +451,7 @@ def generate_model_insights(model_cluster, selected_model):
         marketing.append(f"- 클러스터 {', '.join(map(str, other_clusters))}: 판매 확장을 위한 타겟 마케팅 테스트")
 
     return "\n".join(insights + [""] + marketing)
-
+@st.cache_data(show_spinner=False)
 def run_eda():
     st.write("run_eda 함수 호출됨")
     brand = st.session_state.get("brand", "현대")
