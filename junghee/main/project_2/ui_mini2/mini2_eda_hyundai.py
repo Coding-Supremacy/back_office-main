@@ -2656,7 +2656,7 @@ def run_eda_hyundai():
             st.divider()
 
             month_cols = ['1월', '2월', '3월', '4월', '5월', '6월',
-              '7월', '8월', '9월', '10월', '11월', '12월']
+                        '7월', '8월', '9월', '10월', '11월', '12월']
 
             # ✅ 공장 선택
             factories = df_factory["공장명(국가)"].unique().tolist()
@@ -2666,21 +2666,37 @@ def run_eda_hyundai():
             filtered_df = df_factory[df_factory["공장명(국가)"] == selected_factory]
             sales_types = filtered_df["판매 구분"].unique()
 
-            # ✅ 데이터 총합이 0인지 체크
+            # ✅ 데이터 총합이 0인지 체크 함수
             def is_data_zero(df):
                 return df[month_cols].sum().sum() == 0
 
+            # ✅ 내수/수출 둘 다 있는 경우 → 실제 데이터 존재 여부에 따라 분기 처리
             if set(["내수용", "수출용"]).issubset(sales_types):
-                if is_data_zero(filtered_df):
-                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
-                else:
-                    pie_df = filtered_df.groupby("판매 구분")[month_cols].sum().sum(axis=1).reset_index()
-                    pie_df.columns = ["판매 구분", "합계"]
+                pie_df = filtered_df.groupby("판매 구분")[month_cols].sum().sum(axis=1).reset_index()
+                pie_df.columns = ["판매 구분", "합계"]
 
+                # ▶️ 실제 판매량이 존재하는 데이터만 필터링
+                pie_df = pie_df[pie_df["합계"] > 0]
+
+                if pie_df.empty:
+                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+                elif len(pie_df) == 1:
+                    # 한쪽만 데이터가 있는 경우 → 라인차트
+                    sales_type = pie_df["판매 구분"].values[0]
+                    target_df = filtered_df[filtered_df["판매 구분"] == sales_type]
+                    total_by_month = target_df[month_cols].sum().reset_index()
+                    total_by_month.columns = ["월", "판매량"]
+
+                    fig = px.line(total_by_month, x="월", y="판매량", markers=True,
+                                title=f"{selected_factory} 월별 판매량 추이 ({sales_type} 기반)")
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    # 내수/수출 둘 다 판매량 있음 → 파이차트
                     fig = px.pie(pie_df, names="판매 구분", values="합계",
                                 title=f"{selected_factory} 내수/수출 비율")
                     st.plotly_chart(fig, use_container_width=True)
 
+            # ✅ 합계만 있는 경우
             elif set(sales_types) == {"합계"}:
                 if is_data_zero(filtered_df):
                     st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
@@ -2692,6 +2708,7 @@ def run_eda_hyundai():
                                 title=f"{selected_factory} 월별 판매량 추이 (합계 기반)")
                     st.plotly_chart(fig, use_container_width=True)
 
+            # ✅ 수출용만 있는 경우
             elif set(sales_types) == {"수출용"}:
                 if is_data_zero(filtered_df):
                     st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
@@ -2701,6 +2718,18 @@ def run_eda_hyundai():
 
                     fig = px.line(total_by_month, x="월", y="판매량", markers=True,
                                 title=f"{selected_factory} 월별 판매량 추이 (수출용 기반)")
+                    st.plotly_chart(fig, use_container_width=True)
+
+            # ✅ 내수용만 있는 경우
+            elif set(sales_types) == {"내수용"}:
+                if is_data_zero(filtered_df):
+                    st.warning("⚠️ 해당 공장의 판매량이 0이기 때문에 분석할 수 없습니다.")
+                else:
+                    total_by_month = filtered_df[month_cols].sum().reset_index()
+                    total_by_month.columns = ["월", "판매량"]
+
+                    fig = px.line(total_by_month, x="월", y="판매량", markers=True,
+                                title=f"{selected_factory} 월별 판매량 추이 (내수용 기반)")
                     st.plotly_chart(fig, use_container_width=True)
 
             else:
@@ -2836,18 +2865,20 @@ def run_eda_hyundai():
                 """, unsafe_allow_html=True)
             elif selected_factory == 'HMGMA':
                 st.markdown("""
-                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
-                <h5>📌 <strong>HMGMA 공장 내수/수출 비율 분석</strong></h5>
+                <div style="border-left: 6px solid #117A65; background-color: #E8F8F5; padding: 12px; border-radius: 6px;">
+                <h5>📌 <strong>HMGMA 공장 월별 판매 트렌드 분석</strong></h5>
+                <p>※ 본 데이터는 내수/수출을 구분하였으나, 실제 판매 실적은 <strong>‘내수용’ 기준</strong>만 존재합니다.</p>
                 <ol>
-                <li><strong>100% 수출 비중</strong>으로, <strong>내수 생산은 전혀 없음</strong></li>
-                <li>전량이 해외 시장 공급을 위해 제조되는 <strong>수출 특화형 전략 거점</strong></li>
+                <li>1월 판매량 <strong>1,623대</strong>, 12월 <strong>1,006대</strong> 기록 – <strong>특정 시점 집중 생산</strong></li>
+                <li>2월~11월 <strong>판매량 0</strong> – <strong>생산 또는 공급 중단 상태</strong> 추정</li>
+                <li>연간 기준 <strong>판매 빈도 불규칙</strong> – <strong>상시 운영보다는 비정기적 생산 패턴</strong></li>
                 </ol>
-                <p><strong>✅ 분석 포인트:</strong> HMGMA는 <strong>내수 생산이 없는 순수 수출 공장</strong>으로, 글로벌 수요 대응에 집중하는 구조</p>
+                <p>✅ <strong>분석 포인트:</strong> HMGMA 공장은 <strong>한정된 기간에만 생산이 집중</strong>되며, <strong>수출 실적이 없는 내수 특화형 공장</strong>으로 해석 가능</p>
                 </div>
                 """, unsafe_allow_html=True)
             elif selected_factory == 'KMX':
                 st.markdown("""
-                <div style="border-left: 6px solid #2980B9; background-color: #EBF5FB; padding: 12px; border-radius: 6px;">
+                <div style="border-left: 6px solid #117A65; background-color: #E8F8F5; padding: 12px; border-radius: 6px;">
                 <h5>📌 <strong>KMX 공장 내수/수출 비율 분석</strong></h5>
                 <ol>
                 <li><strong>100% 수출 비중</strong>으로, <strong>내수 판매는 전혀 없음</strong></li>
