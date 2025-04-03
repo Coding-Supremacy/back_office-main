@@ -10,6 +10,8 @@ from email.mime.text import MIMEText
 import smtplib
 import datetime
 from email.mime.image import MIMEImage
+import sys
+sys.path.append('/mount/src/back_office-main/main/')
 from project_1.ui_mini1.vehicle_recommendations_data import (
     brand_recommendations,
     vehicle_recommendations
