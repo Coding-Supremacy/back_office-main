@@ -176,7 +176,7 @@ def run_yeon():
     # 모델 및 데이터 로드
 
 
-    model = joblib.load("main/project_2/models_mini2/h_lgbm_tuned_model.pkl")
+    model = joblib.load("main/project_2/models_mini2/h_lgbm_model.pkl")
     scaler = joblib.load("main/project_2/models_mini2/h_scaler.pkl")
     model_columns = joblib.load("main/project_2/models_mini2/h_model_columns.pkl")
     df = pd.read_csv("main/project_2/data_mini2/현대.csv")
