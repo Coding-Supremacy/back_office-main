@@ -811,17 +811,36 @@ def run_eda():
                 cluster_key = selected_cluster - 1 if brand == "현대" else selected_cluster
                 
                 if brand in brand_recommendations and cluster_key in brand_recommendations[brand]:
-                    recommended_models = brand_recommendations[brand][cluster_key][ :3]
+                    recommended_models = brand_recommendations[brand][cluster_key][:3]  # 최대 3개만 표시
                     
                     # 카드 형태로 추천 모델 표시
                     for i, model in enumerate(recommended_models, 1):
                         with st.expander(f"추천 모델 {i}: {model}", expanded=True):
+                            # vehicle_recommendations에서 추천 이유 가져오기
+                            recommendation_text = ""
+                            
+                            # 클러스터 키 조정 (현대: 1-8 → 0-7, 기아: 0-5 유지)
+                            cluster_key_for_rec = selected_cluster - 1 if brand == "현대" else selected_cluster
+                            
+                            # 추천 이유 조회
+                            if (brand in vehicle_recommendations and 
+                                model in vehicle_recommendations[brand] and 
+                                cluster_key_for_rec in vehicle_recommendations[brand][model]):
+                                
+                                # 줄바꿈 문자를 <br> 태그로 미리 변환
+                                recommendation_text = vehicle_recommendations[brand][model][cluster_key_for_rec].replace('\n', '<br>')
+                                
+                            else:
+                                # 추천 이유가 없는 경우 기본 문구
+                                recommendation_text = f"{model} 모델은 {brand} {selected_cluster}번 클러스터 고객님들께 추천드립니다."
+                            
+                            # HTML로 표시 (이제 f-string 내에 백슬래시 없음)
                             st.markdown(f"""
                             <div style="padding: 10px; border-radius: 8px; background-color: #f8f9fa; margin-bottom: 10px;">
-                                <p style="font-weight: bold; margin-bottom: 5px;">{model}</p>
-                                <p style="font-size: 0.9em; color: #555;">
-                                    이 모델은 {brand} {selected_cluster}번 클러스터 고객님들께 가장 인기 있는 모델입니다.
-                                </p>
+                                <p style="font-weight: bold; margin-bottom: 5px; color: #2E86C1; font-size: 1.1em;">{model}</p>
+                                <div style="font-size: 0.9em; color: #555; line-height: 1.6;">
+                                    {recommendation_text}
+                                </div>
                             </div>
                             """, unsafe_allow_html=True)
                     
@@ -841,7 +860,12 @@ def run_eda():
                     st.warning(f"이 클러스터({selected_cluster})에 대한 추천 모델 데이터가 없습니다.")
             
             # 이메일 발송 버튼
-            if st.button("이메일 발송"):
+            if st.button("이메일 발송", 
+                        key="send_email_button",
+                        help="클릭하면 선택한 클러스터 고객에게 이메일을 발송합니다",
+                        # 버튼 스타일 적용
+                        use_container_width=True,  # 컨테이너 너비에 맞춤
+                        type="primary"):  # 주요 버튼 스타일 적용
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
