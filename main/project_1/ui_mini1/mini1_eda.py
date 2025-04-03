@@ -22,7 +22,7 @@ prod_email = "marurun@naver.com"  # 개발자 이메일
 
 #분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
 def generate_marketing_strategies(country_df):
-    print("generate_marketing_strategies 함수 호출됨")
+    st.write("generate_marketing_strategies 함수 호출됨")
     strategies = {}
     # 클러스터 목록
     clusters = sorted(country_df['고객유형'].unique())
@@ -94,7 +94,7 @@ def generate_marketing_strategies(country_df):
     return strategies, brand_recommendations
 
 def send_email(customer_name, customer_email, message, cluster=None, marketing_strategies=None, brand_recommendations=None, purchased_model=None):
-    print("send_email 함수 호출됨")
+    st.write("send_email 함수 호출됨")
     # 개발자 모드인 경우 모든 이메일을 개발자 이메일로 발송
     if not prod:
         original_email = customer_email  # 원래 고객 이메일 저장 (로그용)
@@ -258,7 +258,7 @@ st_autorefresh(interval=10000, limit=None, key="fizzbuzz")
 
 # 인포 메시지를 세밀하게 표시하는 함수
 def custom_info(message, bg_color, text_color="black"):
-    print("custom_info 함수 호출됨")
+    st.write("custom_info 함수 호출됨")
     st.markdown(
         f'<div style="background-color: {bg_color}; color: {text_color}; padding: 10px; border-radius: 4px; margin-bottom: 10px;">{message}</div>',
         unsafe_allow_html=True
@@ -336,7 +336,7 @@ today = datetime.date.today().strftime("%Y-%m-%d")
 
 # 인사이트 자동 생성 함수
 def generate_gender_insights(gender_pct):
-    print("generate_gender_insights 함수 호출됨")
+    st.write("generate_gender_insights 함수 호출됨")
     insights = ["**📊 성별 분포 인사이트**"]
     
     max_male = gender_pct['남'].idxmax()
@@ -362,7 +362,7 @@ def generate_gender_insights(gender_pct):
     return "\n".join(insights + [""] + marketing)
 
 def generate_age_insights(age_stats):
-    print("generate_age_insights 함수 호출됨")
+    st.write("generate_age_insights 함수 호출됨")
     insights = ["**📊 연령 분포 인사이트**"]
     
     youngest = age_stats['평균 연령'].idxmin()
@@ -388,7 +388,7 @@ def generate_age_insights(age_stats):
     return "\n".join(insights + [""] + marketing)
 
 def generate_transaction_insights(transaction_stats):
-    print("generate_transaction_insights 함수 호출됨")
+    st.write("generate_transaction_insights 함수 호출됨")
     insights = ["**📊 거래 금액 인사이트**"]
     
     high_value = transaction_stats['평균 거래액'].idxmax()
@@ -411,7 +411,7 @@ def generate_transaction_insights(transaction_stats):
     return "\n".join(insights + [""] + marketing)
 
 def generate_frequency_insights(freq_stats):
-    print("generate_frequency_insights 함수 호출됨")
+    st.write("generate_frequency_insights 함수 호출됨")
     insights = ["**📊 구매 빈도 인사이트**"]
     
     frequent = freq_stats['평균 구매 빈도'].idxmax()
@@ -432,7 +432,7 @@ def generate_frequency_insights(freq_stats):
     return "\n".join(insights + [""] + marketing)
 
 def generate_model_insights(model_cluster, selected_model):
-    print("generate_model_insights 함수 호출됨")
+    st.write("generate_model_insights 함수 호출됨")
     insights = [f"**📊 {selected_model} 모델 인사이트**"]
     
     main_cluster = model_cluster.idxmax()
@@ -453,7 +453,7 @@ def generate_model_insights(model_cluster, selected_model):
     return "\n".join(insights + [""] + marketing)
 
 def run_eda():
-    print("run_eda 함수 호출됨")
+    st.write("run_eda 함수 호출됨")
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
 
@@ -482,14 +482,14 @@ def run_eda():
 
     csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
     if os.path.exists(csv_path):
-        print(f"CSV 파일 경로: {csv_path}")
+        st.write(f"CSV 파일 경로: {csv_path}")
         df = pd.read_csv(csv_path)
         country_df = df[df['국가'] == country].copy()
         country_df['Cluster_Display'] = country_df['Cluster'] + 1
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
-            print("클러스터별 성별 분포 분석 선택됨")
+            st.write("클러스터별 성별 분포 분석 선택됨")
             st.subheader(f"{country} - 클러스터별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
