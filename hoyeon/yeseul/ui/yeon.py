@@ -240,7 +240,7 @@ def run_yeon():
             # 단일 국가 데이터 (AND 조건)
             country_data = df_long[
                 (df_long["국가명"] == selected_country) |
-                (df_long["차종 구분"] == selected_car_type) &
+                (df_long["차종 구분"] == selected_car_type) |
                 (df_long["차량 구분"] == selected_car)
             ].sort_values(by="날짜", ascending=False)
             
