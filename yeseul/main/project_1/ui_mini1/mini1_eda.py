@@ -19,10 +19,10 @@ prod = False  # 이 값을 True로 변경하면 실제 고객에게 발송
 prod_email = "marurun@naver.com"  # 개발자 이메일
 brand = st.session_state.get("brand", "현대")
 
+
+
+#분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
 def generate_marketing_strategies(country_df):
-    """
-    분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
-    """
     strategies = {}
     
     # 클러스터 목록
@@ -44,7 +44,6 @@ def generate_marketing_strategies(country_df):
 
     
     
-    
     for cluster in clusters:
         strategy_parts = []
         
@@ -53,41 +52,41 @@ def generate_marketing_strategies(country_df):
         female_pct = gender_pct.loc[cluster, '여']
         
         if male_pct >= 60:
-            strategy_parts.append("남성 타겟 프로모션 (스포츠 모델, 기술 기능 강조)")
+            strategy_parts.append("남성 고객님이 선호하는 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!")
         elif female_pct >= 60:
-            strategy_parts.append("여성 타겟 캠페인 (안전 기능, 가족 친화적 메시지)")
+            strategy_parts.append("안전성과 실용성을 중시하는 고객님을 위한 패밀리 전용 차량 혜택을 제공합니다.")
         else:
-            strategy_parts.append("일반적인 마케팅 접근 (다양한 옵션 제공)")
+            strategy_parts.append("누구나 만족할 수 있는 다양한 트림과 옵션 구성을 제안드립니다.")
         
         # 연령 기반 전략
         avg_age = age_stats.loc[cluster, 'mean']
         
         if avg_age < 35:
-            strategy_parts.append("SNS 마케팅, 트렌디한 디자인/기술 강조")
+            strategy_parts.append("SNS에서도 화제가 된 최신 디자인과 스마트 기능 차량을 추천드립니다.")
         elif avg_age >= 45:
-            strategy_parts.append("안전/편의 기능, 할인 혜택 강조")
+            strategy_parts.append("넉넉한 공간, 편의 사양, 안전 기능까지 갖춘 차량을 특별 할인가에 제공해드립니다.")
         else:
-            strategy_parts.append("다양한 연령층 호소 가능한 메시지")
+            strategy_parts.append("세대 구분 없이 인기 있는 모델로, 스타일과 실용성을 동시에 만족시켜드립니다.")
         
         # 거래 금액 기반 전략
         avg_transaction = transaction_stats.loc[cluster]
         transaction_median = transaction_stats.median()
         
         if avg_transaction >= transaction_median * 1.2:
-            strategy_parts.append("프리미엄 모델 추천, VIP 서비스 제공")
+            strategy_parts.append("프리미엄 모델 고객님 전용, 전담 컨설팅과 VIP 시승 혜택을 제공해드립니다.")
         elif avg_transaction <= transaction_median * 0.8:
-            strategy_parts.append("할인 프로모션, 저비용 모델 추천")
+            strategy_parts.append("실속 있는 가격과 높은 연비를 자랑하는 합리적 모델을 특별 할인과 함께 안내드립니다.")
         else:
-            strategy_parts.append("표준 모델 라인업 제안")
+            strategy_parts.append("안정적인 인기 모델을 합리적인 가격에 만나보세요.")
         
         # 구매 빈도 기반 전략
         avg_freq = freq_stats.loc[cluster]
         freq_median = freq_stats.median()
         
         if avg_freq >= freq_median * 1.5:
-            strategy_parts.append("충성도 프로그램, 정기 구매 혜택")
+            strategy_parts.append("단골 고객님께 감사의 마음을 담아, 멤버십 전용 혜택과 정기 유지관리 쿠폰을 제공합니다.")
         elif avg_freq <= freq_median * 0.7:
-            strategy_parts.append("재구매 유도 프로모션, 첫 구매 할인")
+            strategy_parts.append("차량 구매를 고민 중이신가요? 지금 가입 시 오랜만에 오신 고객님을 위한 특별 할인 혜택을 드립니다.")
         
         # 전략 조합
         strategies[cluster] = "<br>• ".join(strategy_parts)
@@ -703,8 +702,44 @@ def run_eda():
             st.markdown("#### 3. 클러스터별 마케팅 전략 제안")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
-            for cluster, strategy in marketing_strategies.items():
-                st.markdown(f"- **클러스터 {cluster}**: {strategy}")
+            # 클러스터별 카드 생성
+            clusters = sorted(marketing_strategies.keys())
+            cols_per_row = 2  # 한 행에 표시할 카드 수
+
+            for i in range(0, len(clusters), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    if i + j < len(clusters):
+                        cluster = clusters[i + j]
+                        with cols[j]:
+                            # 카드 스타일 적용
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid #e0e0e0;
+                                    background-color: #ffffff;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                                    margin-bottom: 20px;
+                                ">
+                                    <h4 style="
+                                        color: #2E86C1;
+                                        margin-top: 0;
+                                        border-bottom: 2px solid #f0f0f0;
+                                        padding-bottom: 8px;
+                                    ">클러스터 {cluster}</h4>
+                                    <div style="
+                                        font-size: 0.95em;
+                                        line-height: 1.6;
+                                        color: #333;
+                                    ">
+                                        {marketing_strategies[cluster]}
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
             
             # 4. 이메일 발송 기능
             st.markdown("---")
@@ -727,11 +762,11 @@ def run_eda():
             template = f"""
             <p>{brand}자동차의 특별한 프로모션 소식을 전해드립니다!</p>
             
-            <p>고객님의 구매 패턴을 분석한 결과, 다음과 같은 맞춤형 제안을 준비했습니다:</p>
+            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.:</p>
             
             <ul>
-                <li>{marketing_strategies[selected_cluster]}</li>
-                <li>한정 기간 할인 프로모션</li>
+                • {marketing_strategies[selected_cluster]}
+                <br>• 한정 기간 할인 프로모션
             </ul>
             
             <p>자세한 내용은 아래 링크를 확인해주세요. 감사합니다!</p>
