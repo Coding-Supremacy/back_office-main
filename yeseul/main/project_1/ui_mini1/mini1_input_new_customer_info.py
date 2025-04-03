@@ -26,11 +26,6 @@ def get_abs_path(relative_path):
     return Path(__file__).parent.parent / relative_path
 
 
-
-
-
-
-
 # 예측을 위한 입력값을 처리하는 함수
 def run_input_customer_info():
     if "step" not in st.session_state:
