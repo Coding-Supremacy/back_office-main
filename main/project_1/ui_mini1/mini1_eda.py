@@ -416,7 +416,7 @@ def run_eda():
         }
     )
 
-    csv_path = f"../data/{brand}_고객데이터_신규입력용.csv"
+    csv_path =f"/mnt/data/{brand}_고객데이터_신규입력용.csv"
     st.write(f"{csv_path} 파일경로")
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
