@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 import smtplib
 import datetime
 from email.mime.image import MIMEImage
-from ui_mini1.vehicle_recommendations_data import (
+from project_1.ui_mini1.vehicle_recommendations_data import (
     brand_recommendations,
     vehicle_recommendations
 )
