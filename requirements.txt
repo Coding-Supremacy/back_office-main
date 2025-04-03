@@ -22,3 +22,5 @@ fpdf
 fpdf2
 schedule
 streamlit_autorefresh
+email
+smtplib
