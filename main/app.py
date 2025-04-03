@@ -14,6 +14,8 @@ from project_2.ui_mini2.mini2_prediction_climate import run_prediction_climate
 from project_2.ui_mini2.mini2_prediction_region import run_prediction_region
 from project_2.ui_mini2.mini2_trend import run_trend
 from project_2.ui_mini2.mini2_home import run_home2
+from project_2.ui_mini2.yeon import run_yeon
+
 
 
 def main():
@@ -59,14 +61,14 @@ def main():
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드"],
                     icons=["house", "geo-alt", "cloud-sun", "truck", "graph-up"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드"],
                     icons=["house", "geo-alt", "cloud-sun", "car-front", "graph-up"],
                     default_index=0
                 )
@@ -82,13 +84,14 @@ def main():
             run_eda()
 
     elif dashboard_type == "📈 영업 기획·분석 대시보드":
-
         if analysis_menu == "🏠 홈":
             run_home2()
         elif analysis_menu == "📍 지역별 예측":
             run_prediction_region()
-        elif analysis_menu == "🌦️ 기후별 예측":
+        elif analysis_menu == "🌦️ 기아 기후별 예측":
             run_prediction_climate()
+        elif analysis_menu == "🌦️ 현대 기후별 예측":
+            run_yeon()
         elif analysis_menu == "🚗 기아 분석":
             run_eda_kia()
         elif analysis_menu == "🚙 현대 분석":
