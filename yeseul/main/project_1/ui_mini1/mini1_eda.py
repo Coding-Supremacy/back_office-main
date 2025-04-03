@@ -140,30 +140,41 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
                 # 구매한 모델 정보가 없는 경우 전체 추천
                 recommended_models = brand_recommendations[brand][cluster_key]
     
-    # 마케팅 전략이 제공된 경우 메시지에 추가
-    strategy_message = ""
+    # 마케팅 전략과 추천 모델을 하나의 박스로 통합
+    strategy_box_content = ""
+
     if cluster and marketing_strategies and cluster in marketing_strategies:
-        strategy_message = f"""
-        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
-            <h3 style="margin-top: 0; color: {primary_color};">고객님을 위한 맞춤형 제안</h3></div>
+        strategy_box_content += f"""
+        <div style="margin-bottom: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: {primary_color}; font-size: 18px;">고객님을 위한 맞춤형 제안</h3>
+            <div style="font-size: 15px; line-height: 1.6;">
+                {marketing_strategies[cluster].replace('<br>• ', '<br>• ')}
+            </div>
+        </div>
         """
-    
+
     # 추천 모델 목록 추가
     if recommended_models:
-        models_html = "<h3 style='color: {primary_color};'>추천 모델</h3><ul>"
-        models_html += "".join([f"<li>{model}</li>" for model in recommended_models])
+        models_html = "<h3 style='margin-bottom: 15px; color: {}; font-size: 18px;'>추천 모델</h3><ul style='padding-left: 20px; margin-top: 0;'>".format(primary_color)
+        models_html += "".join([f"<li style='margin-bottom: 8px;'>{model}</li>" for model in recommended_models])
         models_html += "</ul>"
         
-        strategy_message += f"""
-        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
+        strategy_box_content += f"""
+        <div style="margin: 25px 0 20px 0;">
             {models_html}
         </div>
         """
-    elif purchased_model:
-        strategy_message += f"""
-        <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {primary_color};">
+
+    # 메인 메시지 박스
+    main_message_box = f"""
+    <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin-top: 20px; border: 1px solid #e0e0e0;">
+        {strategy_box_content}
+        
+        <div style="font-size: 15px; line-height: 1.7; padding-top: 15px; border-top: 1px solid #e0e0e0; margin-top: 20px;">
+            {message}
         </div>
-        """
+    </div>
+    """
 
     html_body = f"""
     <html>
@@ -180,33 +191,32 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
             
             <!-- 본문 내용 -->
             <tr>
-                <td style="padding: 30px; text-align: center;">
-                    
+                <td style="padding: 30px;">
                     <!-- 브랜드 로고 -->
-                    <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" target="_blank">
-                    <img src="cid:{logo_cid}"
-                        alt="{logo_alt}" style="width: 100%; max-width: 500px; border-radius: 10px;">
-                    </a>
-
-                    <p style="font-size: 18px;">안녕하세요, <strong>{customer_name}</strong>님!</p>
-
-                    {strategy_message}
-
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; font-size: 16px; margin-top: 20px;">
-                        {message}
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" target="_blank">
+                        <img src="cid:{logo_cid}"
+                            alt="{logo_alt}" style="width: 100%; max-width: 300px; border-radius: 8px;">
+                        </a>
                     </div>
+
+                    <p style="font-size: 18px; text-align: center; margin-bottom: 25px;">안녕하세요, <strong>{customer_name}</strong>님!</p>
+
+                    {main_message_box}
                     
-                    <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" 
-                        style="display: inline-block; background: {primary_color}; color: white; padding: 15px 30px; 
-                            text-decoration: none; border-radius: 8px; margin-top: 20px; font-size: 16px;">
-                        지금 확인하기
-                    </a>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" 
+                            style="display: inline-block; background: {primary_color}; color: white; padding: 14px 28px; 
+                                text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                            지금 확인하기
+                        </a>
+                    </div>
                 </td>
             </tr>
 
             <!-- 푸터 (고객센터 안내) -->
             <tr>
-                <td style="padding: 15px; font-size: 14px; text-align: center; color: gray;">
+                <td style="padding: 20px 15px 15px 15px; font-size: 13px; text-align: center; color: #777; border-top: 1px solid #eee;">
                     ※ 본 메일은 자동 발송되었으며, 문의는 고객센터를 이용해주세요.
                 </td>
             </tr>
