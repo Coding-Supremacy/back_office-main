@@ -417,11 +417,13 @@ def run_eda():
     )
 
     csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
+    st.write(f"{csv_path} 파일경로")
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
         country_df = df[df['국가'] == country].copy()
         country_df['Cluster_Display'] = country_df['Cluster'] + 1
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
+        st.write(f"## {country} - 고객 데이터")
         
         if selected_analysis == "👥 클러스터별 성별 분포":
             st.write(f"## {country} - 클러스터별 성별 분포 분석")
