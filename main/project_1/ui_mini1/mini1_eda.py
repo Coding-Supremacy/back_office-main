@@ -822,169 +822,41 @@ def run_eda():
                 '일반': '{:.1f}%'
             }).background_gradient(cmap='Blues'))
             
-            # 3. 클러스터별 심층 분석
-            st.markdown("#### 3. 클러스터별 심층 분석")
+
+            st.markdown("## 🎯 클러스터별 통합 전략")
             
-            # 3-1. 세그먼트 분석 결과
-            st.markdown("##### 세그먼트 분석")
-            
-            # 전체 세그먼트 분포 파이 차트
-            st.markdown("###### 전체 세그먼트 분포")
-            total_segment = country_df['세그먼트 이름'].value_counts()
-            pie_fig = px.pie(
-                total_segment, 
-                values=total_segment.values, 
-                names=total_segment.index,
-                title=f'{country} 전체 고객 세그먼트 분포',
-                color_discrete_sequence=px.colors.qualitative.Pastel
-            )
-            st.plotly_chart(pie_fig)
-            
-            # 세그먼트별 주요 특성 분석
-            st.markdown("###### 세그먼트별 주요 특성")
-            
-            # 세그먼트별 평균 연령, 거래 금액, 구매 빈도 계산
-            segment_analysis = country_df.groupby('세그먼트 이름').agg({
-                '연령': 'mean',
-                '거래 금액': ['mean', 'sum'],
-                '제품구매빈도': 'mean',
-                '이름': 'count'
-            }).round(1)
-            segment_analysis.columns = ['평균 연령', '평균 거래액', '총 거래액', '평균 구매 빈도', '고객 수']
-            
-            st.dataframe(segment_analysis.style.format({
-                '평균 연령': '{:.1f}세',
-                '평균 거래액': '{:,.0f}원',
-                '총 거래액': '{:,.0f}원',
-                '평균 구매 빈도': '{:.1f}회',
-                '고객 수': '{:,}명'
-            }).background_gradient(cmap='Blues'))
-            
-            # 세그먼트별 인사이트 생성
-            st.markdown("###### 세그먼트별 마케팅 인사이트")
-            
-            # VIP 고객 분석
-            if 'VIP' in segment_analysis.index:
-                vip_age = segment_analysis.loc['VIP', '평균 연령']
-                vip_spend = segment_analysis.loc['VIP', '평균 거래액']
-                st.markdown(f"""
-                - **VIP 고객**: 평균 {vip_age:.1f}세, 평균 거래액 {vip_spend:,.0f}원
-                - 최우수 고객군으로 브랜드 충성도가 매우 높음
-                - 전용 컨시어지 서비스 제공 및 신제품 사전 예약 권한 부여 필요
-                *추천 전략*: VIP 전용 행사 개최, 한정판 모델 우선 구매권 제공
-                """)
-            
-            # 이탈 가능 고객 분석
-            churn_segment = '이탈가능' if '이탈가능' in segment_analysis.index else '이탈 가능'
-            if churn_segment in segment_analysis.index:
-                churn_age = segment_analysis.loc[churn_segment, '평균 연령']
-                churn_freq = segment_analysis.loc[churn_segment, '평균 구매 빈도']
-                st.markdown(f"""
-                - **이탈 가능 고객**: 평균 {churn_age:.1f}세, 평균 구매 빈도 {churn_freq:.1f}회
-                - 최근 구매 활동이 감소하거나 불만을 표시한 고객
-                - 재구매 유도 프로모션과 고객 만족도 향상 프로그램 필요
-                *추천 전략*: 맞춤형 할인 제공, 고객 만족도 조사 실시 후 개선 조치
-                """)
-            
-            # 신규 고객 분석
-            if '신규' in segment_analysis.index:
-                new_age = segment_analysis.loc['신규', '평균 연령']
-                new_spend = segment_analysis.loc['신규', '평균 거래액']
-                st.markdown(f"""
-                - **신규 고객**: 평균 {new_age:.1f}세, 평균 거래액 {new_spend:,.0f}원
-                - 최근 6개월 이내 첫 구매 고객으로 브랜드 인지도가 낮을 수 있음
-                - 첫 구매 경험을 긍정적으로 만들어 재구매 유도 필요
-                *추천 전략*: 첫 구매 고객 할인, 브랜드 소개 키트 제공, 앱 가입 유도
-                """)
-            
-            # 일반 고객 분석
-            if '일반' in segment_analysis.index:
-                normal_age = segment_analysis.loc['일반', '평균 연령']
-                normal_freq = segment_analysis.loc['일반', '평균 구매 빈도']
-                st.markdown(f"""
-                - **일반 고객**: 평균 {normal_age:.1f}세, 평균 구매 빈도 {normal_freq:.1f}회
-                - 충성도 프로그램에 반응하지 않는 일반적인 고객군
-                - VIP로 전환하기 위한 단계별 혜택 프로그램 필요
-                *추천 전략*: 멤버십 등급 상향 유도, 주기적 프로모션 알림
-                """)
-            
-            # 4. 클러스터별 마케팅 전략 제안 (강화된 버전)
-            st.markdown("#### 4. 클러스터별 통합 마케팅 전략 제안")
-            
-            # 클러스터별 카드 생성 (세그먼트 정보 추가)
-            clusters = sorted(country_df['고객유형'].unique())
-            cols_per_row = 2
-            
-            for i in range(0, len(clusters), cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    if i + j < len(clusters):
-                        cluster = clusters[i + j]
-                        with cols[j]:
-                            # 클러스터의 주요 세그먼트 찾기
-                            main_segment = segment_pct.loc[cluster].idxmax()
-                            segment_ratio = segment_pct.loc[cluster, main_segment]
-                            
-                            # 클러스터 통계 요약
-                            cluster_stats = country_df[country_df['고객유형'] == cluster]
-                            avg_age = cluster_stats['연령'].mean()
-                            avg_spend = cluster_stats['거래 금액'].mean()
-                            gender_ratio = cluster_stats['성별'].value_counts(normalize=True).get('남', 0) * 100
-                            
-                            # 세그먼트 전략 매핑
-                            segment_strategy = {
-                                "VIP": "세그먼트별 추가제안 : VIP 전용 혜택 강화",
-                                "이탈가능": "세그먼트별 추가제안 : 이탈 방지 프로그램",
-                                "이탈 가능": "세그먼트별 추가제안 : 이탈 방지 프로그램",
-                                "신규": "세그먼트별 추가제안 : 신규 고객 환영 프로모션",
-                                "일반": "세그먼트별 추가제안 : 충성도 프로그램 유도"
-                            }.get(main_segment, "일반 마케팅")
-                            
-                            # 마케팅 전략 텍스트 처리
-                            strategy_text = (
-                                marketing_strategies[cluster]
-                                .replace('<br>', '\n')  # <br> 태그를 줄바꿈으로
-                                .replace('• ', '\n• ')   # • 앞에 줄바꿈 추가
-                            )
-                            
-                            # 카드 스타일 적용
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                    border: 1px solid #e0e0e0;
-                                    background-color: #ffffff;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                                    margin-bottom: 20px;
-                                    font-family: Arial, sans-serif;
-                                ">
-                                    <div style="
-                                        display: flex;
-                                        justify-content: space-between;
-                                        align-items: center;
-                                        margin-bottom: 12px;
-                                    ">
-                                        <h4 style="
-                                            color: #2E86C1;
-                                            margin: 0;
-                                            font-size: 1.1em;
-                                        ">클러스터 {cluster}</h4>
-                                        <span style="
-                                            background-color: #f0f7ff;
-                                            color: #2E86C1;
-                                            padding: 4px 8px;
-                                            border-radius: 12px;
-                                            font-size: 0.8em;
-                                            font-weight: bold;
-                                        ">{main_segment} {segment_ratio:.1f}%</span></div>
-                                            {strategy_text}
-                                            {segment_strategy}
-                                    </div>
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
+            # 전략 카드 생성
+            for cluster in sorted(country_df['고객유형'].unique()):
+                with st.expander(f"클러스터 {cluster}번 전략", expanded=True):
+                    col1, col2 = st.columns([1, 3])
+                    
+                    with col1:
+                        # 클러스터 요약 통계
+                        cluster_data = country_df[country_df['고객유형'] == cluster]
+                        st.metric("평균 연령", f"{cluster_data['연령'].mean():.1f}세")
+                        st.metric("평균 거래액", f"{cluster_data['거래 금액'].mean():,.0f}원")
+                        st.metric("주구매 모델", cluster_data['구매한 제품'].mode()[0])
+                        
+                    with col2:
+                        # 마케팅 전략 표시
+                        st.markdown(f"""
+                        <div style="
+                            padding: 15px;
+                            background: #f8f9fa;
+                            border-radius: 10px;
+                            border-left: 4px solid #2E86C1;
+                        ">
+                            <h4>📌 맞춤형 전략</h4>
+                            {marketing_strategies[cluster].replace('<br>•', '<br>•')}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # 추천 모델
+                        if brand in brand_recommendations:
+                            rec_models = brand_recommendations[brand].get(cluster-1 if brand=="현대" else cluster, [])
+                            if rec_models:
+                                st.markdown("**🚗 추천 모델**")
+                                st.write(", ".join(rec_models[:3]))  # 상위 3개만 표시
     
             
             # 4. 이메일 발송 기능
@@ -1052,7 +924,7 @@ def run_eda():
             if 'page' not in st.session_state:
                 st.session_state.page = 1
 
-            page_size = 7
+            page_size = 10
             total_pages = max(1, (len(display_data) - 1)) // page_size + 1
 
             # 컬럼 레이아웃 설정 (6:4 비율로 좌우 분할)
