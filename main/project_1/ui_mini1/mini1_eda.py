@@ -392,7 +392,6 @@ def generate_model_insights(model_cluster, selected_model):
 def run_eda():
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
-    st.markdown(f"선택 브랜드:{brand},선택 나라:{country}")
     # 분석 종류 선택 메뉴
     selected_analysis = option_menu(
         menu_title=None,
@@ -417,13 +416,6 @@ def run_eda():
     )
 
     csv_path = os.path.abspath(f"data/{brand}_고객데이터_신규입력용.csv")
-    st.write(f"현재 작업 디렉토리: {os.getcwd()}")
-    if os.path.exists("data"):
-        st.write("data 디렉토리 내용:", os.listdir("data"))
-    else:
-        st.error("data 디렉토리가 존재하지 않습니다")
-    st.write(f"{csv_path} 파일경로")
-    st.write(f"파일 존재 여부: {os.path.exists(csv_path)}")
     
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
