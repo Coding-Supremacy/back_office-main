@@ -392,7 +392,7 @@ def generate_model_insights(model_cluster, selected_model):
 def run_eda():
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
-
+    st.markdown(f"선택 브랜드:{brand},선택 나라:{country}")
     # 분석 종류 선택 메뉴
     selected_analysis = option_menu(
         menu_title=None,
@@ -424,6 +424,7 @@ def run_eda():
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
+            st.write(f"## {country} - 클러스터별 성별 분포 분석")
             st.subheader(f"{country} - 클러스터별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
