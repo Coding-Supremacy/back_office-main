@@ -108,13 +108,13 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
         logo_alt = "현대 로고"
         logo_cid = "hyundai_logo"
         brand_name = "현대자동차"
-        logo_path = "../project_1/img/hyundai_logo.jpg"
+        logo_path = "main/project_1/img/hyundai_logo.jpg"
     else:  # 기아
         primary_color = "#c10b30"  # 기아 레드
         logo_alt = "기아 로고"
         logo_cid = "kia_logo"
         brand_name = "기아자동차"
-        logo_path = "../project_1/img/kia_logo.png"
+        logo_path = "main/project_1/img/kia_logo.png"
     
     # SMTP 서버 설정
     SMTP_SERVER = "smtp.gmail.com"
@@ -472,7 +472,7 @@ def run_eda():
         }
     )
 
-    csv_path = f"../data/{brand}_고객데이터_신규입력용.csv"
+    csv_path = f"data/{brand}_고객데이터_신규입력용.csv"
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
         country_df = df[df['국가'] == country].copy()
