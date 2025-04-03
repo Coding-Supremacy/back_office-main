@@ -600,7 +600,7 @@ def run_eda():
             if not prod:
                 st.warning(f"⚠️ 개발자 모드 활성화 (모든 이메일은 {prod_email}로 발송됩니다)")
             else:
-                st.success("✅ 운영 모드 (실제 고객에게 이메일 발송)")
+                st.write("")
             
             # 종합 분석 보고서 생성
             st.markdown("### 📊 종합 분석 보고서")
