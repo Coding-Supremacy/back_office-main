@@ -52,7 +52,7 @@ def generate_marketing_strategies(country_df):
         female_pct = gender_pct.loc[cluster, '여']
         
         if male_pct >= 60:
-            strategy_parts.append("남성 고객님이 선호하는 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!.")
+            strategy_parts.append("남성 고객님이 선호하는 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!")
         elif female_pct >= 60:
             strategy_parts.append("안전성과 실용성을 중시하는 고객님을 위한 패밀리 전용 차량 혜택을 제공합니다.")
         else:
@@ -702,9 +702,44 @@ def run_eda():
             st.markdown("#### 3. 클러스터별 마케팅 전략 제안")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
-            for cluster, strategy in marketing_strategies.items():
-                strategy_display = strategy.replace('<br>', '\n')
-                st.markdown(f"- **클러스터 {cluster}**: {strategy_display}", unsafe_allow_html=False)
+            # 클러스터별 카드 생성
+            clusters = sorted(marketing_strategies.keys())
+            cols_per_row = 2  # 한 행에 표시할 카드 수
+
+            for i in range(0, len(clusters), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    if i + j < len(clusters):
+                        cluster = clusters[i + j]
+                        with cols[j]:
+                            # 카드 스타일 적용
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid #e0e0e0;
+                                    background-color: #ffffff;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                                    margin-bottom: 20px;
+                                ">
+                                    <h4 style="
+                                        color: #2E86C1;
+                                        margin-top: 0;
+                                        border-bottom: 2px solid #f0f0f0;
+                                        padding-bottom: 8px;
+                                    ">클러스터 {cluster}</h4>
+                                    <div style="
+                                        font-size: 0.95em;
+                                        line-height: 1.6;
+                                        color: #333;
+                                    ">
+                                        {marketing_strategies[cluster]}
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
             
             # 4. 이메일 발송 기능
             st.markdown("---")
