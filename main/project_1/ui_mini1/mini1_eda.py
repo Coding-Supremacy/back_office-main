@@ -422,7 +422,6 @@ def run_eda():
         country_df = df[df['국가'] == country].copy()
         country_df['Cluster_Display'] = country_df['Cluster'] + 1
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
-        st.dataframe(country_df)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
             st.write(f"## {country} - 클러스터별 성별 분포 분석")
@@ -718,7 +717,7 @@ def run_eda():
             template = f"""
             <p>{brand}자동차의 특별한 프로모션 소식을 전해드립니다!</p>
             
-            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.:</p>
+            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.</p>
             
             <ul>
                 • {marketing_strategies[selected_cluster]}
