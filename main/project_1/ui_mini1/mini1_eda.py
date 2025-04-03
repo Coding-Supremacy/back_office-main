@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import datetime
+import logging
 from email.mime.image import MIMEImage
 from project_1.ui_mini1.vehicle_recommendations_data import (
     brand_recommendations,
@@ -19,7 +20,8 @@ prod = False  # 이 값을 True로 변경하면 실제 고객에게 발송
 prod_email = "marurun@naver.com"  # 개발자 이메일
 brand = st.session_state.get("brand", "현대")
 
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 #분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
 def generate_marketing_strategies(country_df):
