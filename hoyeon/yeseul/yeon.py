@@ -177,7 +177,7 @@ def run_yeon():
     model = joblib.load("main_project/project_2/models/lgbm_tuned_model.pkl")
     scaler = joblib.load("main_project/project_2/models/scaler.pkl")
     model_columns = joblib.load("main_project/project_2/models/model_columns.pkl")
-    df = pd.read_csv("main_project/project_2/ui/data/기아.csv")
+    df = pd.read_csv("main_project/project_2/ui/data/현대1.csv")
     
     st.title("🚗 기후별 수출량 분석 대시보드")
     st.markdown("""

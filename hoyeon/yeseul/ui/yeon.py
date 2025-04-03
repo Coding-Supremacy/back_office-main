@@ -179,7 +179,7 @@ def run_yeon():
     model = joblib.load("hoyeon\h_lgbm_model.pkl")
     scaler = joblib.load("hoyeon\h_scaler.pkl")
     model_columns = joblib.load("hoyeon\h_model_columns.pkl")
-    df = pd.read_csv("hoyeon/현대.csv")
+    df = pd.read_csv("hoyeon/현대1.csv")
     
 
 
