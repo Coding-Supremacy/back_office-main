@@ -9,7 +9,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import datetime
-import logging
 from email.mime.image import MIMEImage
 from project_1.ui_mini1.vehicle_recommendations_data import (
     brand_recommendations,
@@ -18,10 +17,8 @@ from project_1.ui_mini1.vehicle_recommendations_data import (
 # 개발자 모드 설정 (True: 실제 운영, False: 개발자 모드)
 prod = False  # 이 값을 True로 변경하면 실제 고객에게 발송
 prod_email = "marurun@naver.com"  # 개발자 이메일
-brand = st.session_state.get("brand", "현대")
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 #분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
 def generate_marketing_strategies(country_df):
@@ -264,62 +261,62 @@ def custom_info(message, bg_color, text_color="black"):
         unsafe_allow_html=True
     )
 
-# # 기본 스타일 설정
-# st.markdown(
-#     """
-#     <style>
-#     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-#     body {
-#         font-family: 'Roboto', sans-serif;
-#         background: linear-gradient(135deg, #f0f4f8, #e8f5e9);
-#         padding: 20px;
-#     }
-#     .css-18e3th9, .css-1d391kg { background: none; }
-#     .reportview-container .main {
-#         background-color: rgba(255,255,255,0.9);
-#         padding: 40px;
-#         border-radius: 15px;
-#         box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-#     }
-#     h1 {
-#         font-size: 2.5em;
-#         font-weight: 700;
-#         text-align: center;
-#         color: #2E86C1;
-#         margin-bottom: 10px;
-#     }
-#     h4 {
-#         text-align: center;
-#         color: #555;
-#         margin-bottom: 30px;
-#         font-size: 1.1em;
-#     }
-#     hr { border: 1px solid #bbb; margin: 20px 0; }
-#     .nav-link {
-#         transition: background-color 0.3s ease, transform 0.3s ease;
-#         border-radius: 10px;
-#     }
-#     .nav-link:hover {
-#         background-color: #AED6F1 !important;
-#         transform: scale(1.05);
-#     }
-#     .analysis-text {
-#         background-color: #ffffff;
-#         border-left: 4px solid #2E86C1;
-#         padding: 20px;
-#         margin: 30px 0;
-#         border-radius: 8px;
-#         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-#         font-size: 1.1em;
-#         color: #333;
-#         line-height: 1.5;
-#     }
-#     .analysis-text:hover { background-color: #f7f9fa; }
-#     .option-menu .nav-link-selected { background-color: #2E86C1; color: white; }
-#     </style>
-#     """,
-#     unsafe_allow_html=True
-# )
+# 기본 스타일 설정
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    body {
+        font-family: 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #f0f4f8, #e8f5e9);
+        padding: 20px;
+    }
+    .css-18e3th9, .css-1d391kg { background: none; }
+    .reportview-container .main {
+        background-color: rgba(255,255,255,0.9);
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        text-align: center;
+        color: #2E86C1;
+        margin-bottom: 10px;
+    }
+    h4 {
+        text-align: center;
+        color: #555;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+    }
+    hr { border: 1px solid #bbb; margin: 20px 0; }
+    .nav-link {
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        border-radius: 10px;
+    }
+    .nav-link:hover {
+        background-color: #AED6F1 !important;
+        transform: scale(1.05);
+    }
+    .analysis-text {
+        background-color: #ffffff;
+        border-left: 4px solid #2E86C1;
+        padding: 20px;
+        margin: 30px 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-size: 1.1em;
+        color: #333;
+        line-height: 1.5;
+    }
+    .analysis-text:hover { background-color: #f7f9fa; }
+    .option-menu .nav-link-selected { background-color: #2E86C1; color: white; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # 클러스터 색상 매핑
 cluster_color_map = {
