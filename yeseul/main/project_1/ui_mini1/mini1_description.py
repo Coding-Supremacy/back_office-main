@@ -277,3 +277,5 @@ new_customer_data = {
       1번 클러스터 프로모션 메일 예시
         """)
         
+if __name__ == "__main__":
+    run_description_mini1()

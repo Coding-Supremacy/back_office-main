@@ -14,7 +14,7 @@ def run_home():
 
     
 
-    img_path = Path(__file__).parent.parent / "img" / "home.png"
+    img_path = Path(__file__).parent.parent / "img" / "home2.png"
     st.image(str(img_path), width=1000)
 
     # 📦 3개의 카드 형태로 주요 기능 소개
