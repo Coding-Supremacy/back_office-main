@@ -5,6 +5,7 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
+from project_2.ui_mini2.mini2_all_eda import run_all_eda
 from project_1.ui_mini1.Car_insurance import run_car_customer_info
 from project_1.ui_mini1.mini1_description import run_description1
 from project_2.ui_mini2.mini2_description import run_description2
@@ -64,14 +65,14 @@ def main():
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🌎글로벌 고객 데이터 분석", "🚗 기아 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
                     icons=["house", "geo-alt", "cloud-sun", "truck", "graph-up"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🌎글로벌 고객 데이터 분석","🚙 현대 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
                     icons=["house", "geo-alt", "cloud-sun", "car-front", "graph-up"],
                     default_index=0
                 )
@@ -99,6 +100,8 @@ def main():
             run_prediction_climate()
         elif analysis_menu == "🌦️ 현대 기후별 예측":
             run_yeon()
+        elif analysis_menu == "🌎 글로벌 고객 데이터 분석":
+            run_all_eda()
         elif analysis_menu == "🚗 기아 분석":
             run_eda_kia()
         elif analysis_menu == "🚙 현대 분석":
@@ -107,8 +110,7 @@ def main():
             run_trend()
         elif analysis_menu == "🧑‍💻개발과정":
             run_description2()
-        elif dealer_menu == "👩‍💻개발과정":
-            run_description1()
+
 
 
 if __name__ == "__main__":
