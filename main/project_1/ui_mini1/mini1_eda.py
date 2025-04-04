@@ -343,17 +343,17 @@ def generate_gender_insights(gender_pct):
     female_dominant = gender_pct[gender_pct['여'] >= 60].index.tolist()
     balanced = list(set(gender_pct.index) - set(male_dominant) - set(female_dominant))
 
-    insights.append(f"- 가장 남성 비율 높은 클러스터: {max_male}번 ({gender_pct.loc[max_male, '남']:.1f}%)")
-    insights.append(f"- 가장 여성 비율 높은 클러스터: {max_female}번 ({gender_pct.loc[max_female, '여']:.1f}%)")
-    insights.append(f"- 가장 균형 잡힌 클러스터: {balanced_cluster}번 (남성 {gender_pct.loc[balanced_cluster, '남']:.1f}% / 여성 {gender_pct.loc[balanced_cluster, '여']:.1f}%)")
+    insights.append(f"- 가장 남성 비율 높은 고객 유형: {max_male}번 ({gender_pct.loc[max_male, '남']:.1f}%)")
+    insights.append(f"- 가장 여성 비율 높은 고객 유형: {max_female}번 ({gender_pct.loc[max_female, '여']:.1f}%)")
+    insights.append(f"- 가장 균형 잡힌 고객 유형: {balanced_cluster}번 (남성 {gender_pct.loc[balanced_cluster, '남']:.1f}% / 여성 {gender_pct.loc[balanced_cluster, '여']:.1f}%)")
 
     marketing = ["**🎯 마케팅 제안**"]
     if male_dominant:
-        marketing.append(f"- 클러스터 {', '.join(map(str, male_dominant))}: 남성 타겟 프로모션 (스포츠 모델, 기술 기능 강조)")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, male_dominant))}: 남성 타겟 프로모션 (스포츠 모델, 기술 기능 강조)")
     if female_dominant:
-        marketing.append(f"- 클러스터 {', '.join(map(str, female_dominant))}: 여성 타겟 캠페인 (안전 기능, 가족 친화적 메시지)")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, female_dominant))}: 여성 타겟 캠페인 (안전 기능, 가족 친화적 메시지)")
     if balanced:
-        marketing.append(f"- 클러스터 {', '.join(map(str, balanced))}: 일반적인 마케팅 접근 (다양한 옵션 제공)")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, balanced))}: 일반적인 마케팅 접근 (다양한 옵션 제공)")
 
     return "\n".join(insights + [""] + marketing)
 
@@ -368,17 +368,17 @@ def generate_age_insights(age_stats):
     old_clusters = age_stats[age_stats['평균 연령'] >= 40].index.tolist()
     diverse_clusters = age_stats.sort_values('표준편차', ascending=False).head(2).index.tolist()
 
-    insights.append(f"- 가장 젊은 클러스터: {youngest}번 (평균 {age_stats.loc[youngest, '평균 연령']}세)")
-    insights.append(f"- 가장 연장자 클러스터: {oldest}번 (평균 {age_stats.loc[oldest, '평균 연령']}세)")
+    insights.append(f"- 가장 젊은 고객 유형: {youngest}번 (평균 {age_stats.loc[youngest, '평균 연령']}세)")
+    insights.append(f"- 가장 연장자 고객 유형: {oldest}번 (평균 {age_stats.loc[oldest, '평균 연령']}세)")
     insights.append(f"- 가장 다양한 연령대: {diverse}번 (표준편차 {age_stats.loc[diverse, '표준편차']}세)")
 
     marketing = ["**🎯 마케팅 제안**"]
     if young_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, young_clusters))}: SNS 마케팅, 트렌디한 디자인/기술 강조")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, young_clusters))}: SNS 마케팅, 트렌디한 디자인/기술 강조")
     if old_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, old_clusters))}: 안전/편의 기능, 할인 혜택 강조")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, old_clusters))}: 안전/편의 기능, 할인 혜택 강조")
     if diverse_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, diverse_clusters))}: 다양한 연령층 호소 가능한 메시지")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, diverse_clusters))}: 다양한 연령층 호소 가능한 메시지")
 
     return "\n".join(insights + [""] + marketing)
 
@@ -451,12 +451,12 @@ def run_eda():
     selected_analysis = option_menu(
         menu_title=None,
         options=[
-            "👥 클러스터별 성별 분포",
-            "👵 클러스터별 연령 분포",
-            "💰 클러스터별 거래 금액",
-            "🛒 클러스터별 구매 빈도",
+            "👥 고객 유형별 성별 분포",
+            "👵 고객 유형별 연령 분포",
+            "💰 고객 유형별 거래 금액",
+            "🛒 고객 유형별 구매 빈도",
             "🚘 모델별 구매 분석",
-            "🏷️ 클러스터별 고객 세그먼트",
+            "🏷️ 고객 유형별 고객 분류",
             "📝 종합 보고서 및 이메일 발송"
         ],
         icons=["", "", "", ""],
@@ -479,9 +479,9 @@ def run_eda():
         country_df['Cluster_Display'] = country_df['Cluster'] + 1
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
-        if selected_analysis == "👥 클러스터별 성별 분포":
-            st.write(f"## {brand}-{country} - 클러스터별 성별 분포 분석")
-            st.subheader(f"{country} - 클러스터별 성별 분포")
+        if selected_analysis == "👥 고객 유형별 성별 분포":
+            st.write(f"## {brand}-{country} - 고객 유형별 성별 분포 분석")
+            st.subheader(f"{country} - 고객 유형별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
                 # 성별 분포 계산
@@ -491,15 +491,15 @@ def run_eda():
                 # 바 차트
                 bar_fig = px.bar(
                     gender_dist, barmode='group',
-                    title=f'{country} 클러스터별 성별 분포',
+                    title=f'{country} 고객 유형별 성별 분포',
                     labels={'value': '고객 수', '고객유형': '클러스터'},
                     color_discrete_map={'남': '#3498db', '여': '#e74c3c'}
                 )
                 st.plotly_chart(bar_fig)
                 
                 # 비율 표시
-                st.subheader("클러스터별 성별 비율 (%)")
-                st.dataframe(gender_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'),width=300)
+                st.subheader("고객 유형별 성별 비율 (%)")
+                st.dataframe(gender_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'))
                 
                 # 인사이트 제공
                 st.markdown(generate_gender_insights(gender_pct))
@@ -507,14 +507,14 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
-        elif selected_analysis == "👵 클러스터별 연령 분포":
-            st.subheader(f"{brand}-{country} - 클러스터별 연령 분포 분석")
+        elif selected_analysis == "👵 고객 유형별 연령 분포":
+            st.subheader(f"{brand}-{country} - 고객 유형별 연령 분포 분석")
             
             if {'Cluster', '연령'}.issubset(country_df.columns):
                 # 박스플롯
                 box_fig = px.box(
                     country_df, x='고객유형', y='연령',
-                    title=f'{country} 클러스터별 연령 분포',
+                    title=f'{country} 고객 유형별 연령 분포',
                     color='고객유형'
                 )
                 st.plotly_chart(box_fig)
@@ -523,7 +523,7 @@ def run_eda():
                 hist_fig = px.histogram(
                     country_df, x='연령', color='고객유형',
                     nbins=20, barmode='overlay', opacity=0.7,
-                    title=f'{country} 클러스터별 연령 분포 히스토그램'
+                    title=f'{country} 고객 유형별 연령 분포 히스토그램'
                 )
                 st.plotly_chart(hist_fig)
                 
@@ -531,7 +531,7 @@ def run_eda():
                 age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'median', 'std']).round(1)
                 age_stats.columns = ['평균 연령', '중앙값', '표준편차']
                 
-                st.subheader("클러스터별 연령 통계")
+                st.subheader("고객 유형별 연령 통계")
                 st.dataframe(age_stats.style.format({
                     '평균 연령': '{:.1f}세',
                     '중앙값': '{:.1f}세',
@@ -544,14 +544,14 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
-        elif selected_analysis == "💰 클러스터별 거래 금액":
-            st.subheader(f"{brand}-{country} - 클러스터별 거래 금액 분석")
+        elif selected_analysis == "💰 고객 유형별 거래 금액":
+            st.subheader(f"{brand}-{country} - 고객 유형별 거래 금액 분석")
             
             if {'Cluster', '거래 금액'}.issubset(country_df.columns):
                 # 박스플롯
                 box_fig = px.box(
                     country_df, x='고객유형', y='거래 금액',
-                    title=f'{country} 클러스터별 거래 금액 분포',
+                    title=f'{country} 고객 유형별 거래 금액 분포',
                     color='고객유형'
                 )
                 st.plotly_chart(box_fig)
@@ -561,7 +561,7 @@ def run_eda():
                 transaction_stats.rename(columns={'mean': '평균 거래액', 'median': '중앙값', 'sum': '총 거래액'}, inplace=True)
                 transaction_stats.columns = ['평균 거래액', '중앙값', '총 거래액']
                 
-                st.subheader("클러스터별 거래 금액 통계")
+                st.subheader("고객 유형별 거래 금액 통계")
                 st.dataframe(transaction_stats.style.format({
                     '평균 거래액': '{:,.0f}원',
                     '중앙값': '{:,.0f}원',
@@ -574,14 +574,14 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
-        elif selected_analysis == "🛒 클러스터별 구매 빈도":
-            st.subheader(f"{brand}-{country} - 클러스터별 구매 빈도 분석")
+        elif selected_analysis == "🛒 고객 유형별 구매 빈도":
+            st.subheader(f"{brand}-{country} - 고객 유형별 구매 빈도 분석")
             
             if {'Cluster', '제품구매빈도'}.issubset(country_df.columns):
                 # 박스플롯
                 box_fig = px.box(
                     country_df, x='고객유형', y='제품구매빈도',
-                    title=f'{country} 클러스터별 구매 빈도 분포',
+                    title=f'{country} 고객 유형별 구매 빈도 분포',
                     color='고객유형'
                 )
                 st.plotly_chart(box_fig)
@@ -646,8 +646,8 @@ def run_eda():
                 
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
-        elif selected_analysis == "🏷️ 클러스터별 고객 세그먼트":
-            st.subheader(f"{brand}-{country} - 클러스터별 고객 세그먼트 분석")
+        elif selected_analysis == "🏷️ 고객 유형별 고객 세그먼트":
+            st.subheader(f"{brand}-{country} - 고객 유형별 고객 세그먼트 분석")
             
             if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
                 # 세그먼트 매핑 딕셔너리
@@ -674,53 +674,53 @@ def run_eda():
                 segment_pct = segment_dist.div(segment_dist.sum(axis=1), axis=0) * 100
                 
                 # 바 차트
-                st.markdown("### 클러스터별 고객 세그먼트 분포")
+                st.markdown("### 고객 유형별 고객 분류 분포")
                 bar_fig = px.bar(
                     segment_dist, barmode='stack',
-                    title=f'{country} 클러스터별 고객 세그먼트 분포',
+                    title=f'{country} 고객 유형별 고객 고객 분류 분포',
                     labels={'value': '고객 수', '고객유형': '클러스터'},
                     color_discrete_sequence=px.colors.qualitative.Pastel
                 )
                 st.plotly_chart(bar_fig)
                 
                 # 비율 표시
-                st.markdown("### 클러스터별 고객 세그먼트 비율 (%)")
+                st.markdown("### 고객 유형별 고객 분류 비율 (%)")
                 st.dataframe(segment_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'))
                 
                 # 인사이트 제공
-                st.markdown("### 📊 세그먼트 분석 인사이트")
+                st.markdown("### 📊 고객 분류별 분석 인사이트")
                 
                 # 1. VIP 고객이 많은 클러스터 분석
                 if 'VIP' in segment_pct.columns:
                     vip_clusters = segment_pct[segment_pct['VIP'] >= 30].index.tolist()
                     if vip_clusters:
-                        st.markdown(f"**VIP 고객이 많은 클러스터**: {', '.join(map(str, vip_clusters))}번")
-                        st.markdown("  - 해당 클러스터는 브랜드 충성도가 높은 고객이 많아 VIP 전용 혜택을 강화하는 것이 효과적입니다.")
+                        st.markdown(f"**VIP 고객이 많은 고객 유형**: {', '.join(map(str, vip_clusters))}번")
+                        st.markdown("  - 해당 고객 유형은 브랜드 충성도가 높은 고객이 많아 VIP 전용 혜택을 강화하는 것이 효과적입니다.")
                 
                 # 2. 이탈 가능 고객이 많은 클러스터 분석
                 if '이탈가능' in segment_pct.columns or '이탈 가능' in segment_pct.columns:
                     churn_col = '이탈가능' if '이탈가능' in segment_pct.columns else '이탈 가능'
                     churn_clusters = segment_pct[segment_pct[churn_col] >= 40].index.tolist()
                     if churn_clusters:
-                        st.markdown(f"**이탈 가능 고객이 많은 클러스터**: {', '.join(map(str, churn_clusters))}번")
+                        st.markdown(f"**이탈 가능 고객이 많은 고객 유형**: {', '.join(map(str, churn_clusters))}번")
                         st.markdown("  - 재구매 유도 프로모션과 고객 만족도 향상 프로그램이 필요합니다.")
                 
                 # 3. 신규 고객이 많은 클러스터 분석
                 if '신규' in segment_pct.columns:
                     new_clusters = segment_pct[segment_pct['신규'] >= 50].index.tolist()
                     if new_clusters:
-                        st.markdown(f"**신규 고객이 많은 클러스터**: {', '.join(map(str, new_clusters))}번")
+                        st.markdown(f"**신규 고객이 많은 고객 유형**: {', '.join(map(str, new_clusters))}번")
                         st.markdown("  - 브랜드 인지도 향상과 첫 구매 고객을 위한 특별 혜택이 효과적입니다.")
                 
                 # 4. 일반 고객이 많은 클러스터 분석
                 if '일반' in segment_pct.columns:
                     normal_clusters = segment_pct[segment_pct['일반'] >= 60].index.tolist()
                     if normal_clusters:
-                        st.markdown(f"**일반 고객이 많은 클러스터**: {', '.join(map(str, normal_clusters))}번")
+                        st.markdown(f"**일반 고객이 많은 고객 유형**: {', '.join(map(str, normal_clusters))}번")
                         st.markdown("  - 일반 고객을 VIP로 전환하기 위한 단계별 혜택 프로그램을 고려해보세요.")
                 
                 # 클러스터별 세그먼트 전략 제안
-                st.markdown("### 🎯 클러스터별 세그먼트 전략 제안")
+                st.markdown("### 🎯 고객 유형별 고객 분류 전략 제안")
                 
                 clusters = sorted(segment_pct.index)
                 for cluster in clusters:
@@ -729,7 +729,7 @@ def run_eda():
                     main_pct = segment_pct.loc[cluster, main_segment]
                     
                     # 전략 생성
-                    strategy = f"**클러스터 {cluster}번** ({main_segment} {main_pct:.1f}%): "
+                    strategy = f"**고객 유형 {cluster}번** ({main_segment} {main_pct:.1f}%): "
                     
                     if main_segment == "VIP":
                         strategy += "전용 컨시어지 서비스 제공, 신제품 사전 예약 권한 부여, VIP 행사 초대"
@@ -773,7 +773,7 @@ def run_eda():
             col4.metric("평균 거래액", f"{avg_transaction:,.0f}원")
             
             # 2. 클러스터별 주요 특성 요약
-            st.markdown("#### 2. 클러스터별 주요 특성")
+            st.markdown("#### 2. 고객 유형별 주요 특성")
             
             # 성별 분포
             gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
@@ -824,7 +824,7 @@ def run_eda():
             }).background_gradient(cmap='Blues'))
             
 
-            st.markdown("## 🎯 클러스터별 통합 전략")
+            st.markdown("## 🎯 고객 유형별 통합 전략")
             
             # 전략 카드 생성
             for cluster in sorted(country_df['고객유형'].unique()):
@@ -862,7 +862,7 @@ def run_eda():
             
             # 4. 이메일 발송 기능
             st.markdown("---")
-            st.markdown("### ✉️ 클러스터별 타겟 이메일 발송")
+            st.markdown("### ✉️ 고객 유형별 타겟 이메일 발송")
             
             # 클러스터 선택
             selected_cluster = st.selectbox(
@@ -957,7 +957,7 @@ def run_eda():
             # 이메일 발송 버튼
             if st.button("이메일 발송", 
                         key="send_email_button",
-                        help="클릭하면 선택한 클러스터 고객에게 이메일을 발송합니다",
+                        help="클릭하면 선택한 유형의 고객에게 이메일을 발송합니다",
                         # 버튼 스타일 적용
                         use_container_width=True,  # 컨테이너 너비에 맞춤
                         type="primary"):  # 주요 버튼 스타일 적용

@@ -58,7 +58,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
                 border-radius: 10px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             ">
-                <h2 style="text-align: center; margin: 0;">{model} 기본 설명</h2>
+                <h2 style="text-align: center; margin: 0;">{model}</h2>
             </div>
             """, unsafe_allow_html=True)
             
@@ -408,30 +408,15 @@ def run_input_step1(brand):
             st.rerun()
 
 def step2_vehicle_selection(brand):
-    st.title(f"🚗 {brand} 추천 차량 선택")
+    st.title(f"🚗 추천 차량 목록")
 
-    # 세션 상태에서 결과 값 가져오기
-    st.subheader("📊 고객 분석 결과")
+
     customer_segment = st.session_state.get("고객세그먼트", "N/A")
     cluster_id = st.session_state.get("Cluster", "N/A")
     age = st.session_state.get("연령", "N/A")
     gender = st.session_state.get("성별", "N/A")
     transaction_amount = st.session_state.get("거래금액", "N/A")
     
-    # 결과를 2열 레이아웃으로 표시
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.metric(label="고객 세그먼트", value=f"세그먼트 {customer_segment}")
-        st.metric(label="연령", value=f"{age}세")
-        st.metric(label="거래 금액", value=f"{transaction_amount:,}원")
-    
-    with col2:
-        st.metric(label="클러스터", value=f"클러스터 {cluster_id}")
-        st.metric(label="성별", value=gender)
-        st.metric(label="차량 유형", value=st.session_state.get("차량구분", "N/A"))
-    
-    st.markdown("---")  # 구분선
     
     # 추천 차량 목록
     recommended_vehicles = st.session_state.get("recommended_vehicles", [])
@@ -539,13 +524,12 @@ def save_customer_data():
         "가입일": st.session_state.get("registration_date", ""),
         "차량구분": st.session_state.get("차량구분", ""),
         "구매한 제품": st.session_state.get("selected_vehicle", ""),
-        "친환경차": "True" if st.session_state.get("selected_vehicle", "") in eco_friendly_models.get(brand, []) else "False",
+        "친환경차": "여" if st.session_state.get("selected_vehicle", "") in eco_friendly_models.get(brand, []) else "부",
         "제품 구매 날짜": st.session_state.get("제품구매날짜", ""),
         "거래 금액": st.session_state.get("거래금액", ""),
         "거래 방식": st.session_state.get("거래방식", ""),
         "제품 구매 빈도": st.session_state.get("제품구매빈도", ""),
         "제품 출시년월": st.session_state.get("제품출시년월", ""),
-        "국가": st.session_state.get("country", ""),
         "고객세그먼트": st.session_state.get("고객세그먼트", ""),
         "Cluster": st.session_state.get("Cluster", "")
     }
