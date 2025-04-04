@@ -744,7 +744,8 @@ def run_eda():
                 
                 
             else:
-                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")                
+                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
+                              
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
             st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
@@ -927,88 +928,31 @@ def run_eda():
             page_size = 10
             total_pages = max(1, (len(display_data) - 1)) // page_size + 1
 
-            # 컬럼 레이아웃 설정 (6:4 비율로 좌우 분할)
-            col_left, col_right = st.columns([6, 4])
 
-            with col_left:
-                # 왼쪽 컬럼: 고객 데이터 프레임 + 페이지네이션
-                st.markdown("#### 발송 대상 고객 리스트")
-                
-                # 페이지네이션 컨트롤
-                pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
-                with pagination_col1:
-                    if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
-                        st.session_state.page -= 1
-                        st.rerun()
-                with pagination_col2:
-                    st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
-                with pagination_col3:
-                    if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
-                        st.session_state.page += 1
-                        st.rerun()
-                
-                # 데이터 표시
-                start_idx = (st.session_state.page - 1) * page_size
-                end_idx = min(start_idx + page_size, len(display_data))
-                st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
-                st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
-                        (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
 
-            with col_right:
-                # 오른쪽 컬럼: 클러스터 추천 모델
-                st.markdown("#### 고객맞춤 추천 모델")
-                
-                brand = st.session_state.get("brand", "현대")
-                cluster_key = selected_cluster - 1 if brand == "현대" else selected_cluster
-                
-                if brand in brand_recommendations and cluster_key in brand_recommendations[brand]:
-                    recommended_models = brand_recommendations[brand][cluster_key][:3]  # 최대 3개만 표시
-                    
-                    # 카드 형태로 추천 모델 표시
-                    for i, model in enumerate(recommended_models, 1):
-                        with st.expander(f"추천 모델 {i}: {model}", expanded=True):
-                            # vehicle_recommendations에서 추천 이유 가져오기
-                            recommendation_text = ""
-                            
-                            # 클러스터 키 조정 (현대: 1-8 → 0-7, 기아: 0-5 유지)
-                            cluster_key_for_rec = selected_cluster - 1 if brand == "현대" else selected_cluster
-                            
-                            # 추천 이유 조회
-                            if (brand in vehicle_recommendations and 
-                                model in vehicle_recommendations[brand] and 
-                                cluster_key_for_rec in vehicle_recommendations[brand][model]):
-                                
-                                # 줄바꿈 문자를 <br> 태그로 미리 변환
-                                recommendation_text = vehicle_recommendations[brand][model][cluster_key_for_rec].replace('\n', '<br>')
-                                
-                            else:
-                                # 추천 이유가 없는 경우 기본 문구
-                                recommendation_text = f"{model} 모델은 {brand} {selected_cluster}번 클러스터 고객님들께 추천드립니다."
-                            
-                            # HTML로 표시 (이제 f-string 내에 백슬래시 없음)
-                            st.markdown(f"""
-                            <div style="padding: 10px; border-radius: 8px; background-color: #f8f9fa; margin-bottom: 10px;">
-                                <p style="font-weight: bold; margin-bottom: 5px; color: #2E86C1; font-size: 1.1em;">{model}</p>
-                                <div style="font-size: 0.9em; color: #555; line-height: 1.6;">
-                                    {recommendation_text}
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                    
-                    # 추가로 현재 클러스터에서 실제로 많이 팔린 모델도 함께 표시 (옵션)
-                    if '구매한 제품' in country_df.columns:
-                        st.markdown("---")
-                        st.markdown("##### 이 클러스터의 실제 판매 모델 (Top 3)")
-                        top_sold_models = country_df[country_df['고객유형'] == selected_cluster]['구매한 제품'].value_counts().head(3)
-                        if not top_sold_models.empty:
-                            st.dataframe(
-                                top_sold_models.reset_index().rename(
-                                    columns={'구매한 제품': '모델명', 'count': '판매량'}
-                                ),
-                                hide_index=True
-                            )
-                else:
-                    st.warning(f"이 클러스터({selected_cluster})에 대한 추천 모델 데이터가 없습니다.")
+            st.markdown("#### 발송 대상 고객 리스트")
+            
+            # 페이지네이션 컨트롤
+            pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
+            with pagination_col1:
+                if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
+                    st.session_state.page -= 1
+                    st.rerun()
+            with pagination_col2:
+                st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
+            with pagination_col3:
+                if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
+                    st.session_state.page += 1
+                    st.rerun()
+            
+            # 데이터 표시
+            start_idx = (st.session_state.page - 1) * page_size
+            end_idx = min(start_idx + page_size, len(display_data))
+            st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
+            st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
+                    (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
+
+
             
             # 이메일 발송 버튼
             if st.button("이메일 발송", 
