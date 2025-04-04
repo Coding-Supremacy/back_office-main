@@ -16,7 +16,7 @@ def run_home1():
     
 
         
-    img_path = Path(__file__).parent.parent / "img" / "d_home.png"
+    img_path = Path(__file__).parent.parent / "img" / "home2.png"
 
 # 이미지 파일을 읽어 base64 인코딩
     with open(img_path, "rb") as file:
