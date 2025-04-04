@@ -5,19 +5,15 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
-from project_1.ui_mini1.mini1_description import run_description1
-from project_2.ui_mini2.mini2_description import run_description2
 from project_1.ui_mini1.mini1_eda import run_eda
 from project_1.ui_mini1.mini1_home import run_home1
-from hoyeon.main.project_1.ui_mini1.Car_insurance import run_input_customer_info
+from project_1.ui_mini1.mini1_input_new_customer_info import run_input_customer_info
 from project_2.ui_mini2.mini2_eda_hyundai import run_eda_hyundai
 from project_2.ui_mini2.mini2_eda_kia import run_eda_kia
 from project_2.ui_mini2.mini2_prediction_climate import run_prediction_climate
 from project_2.ui_mini2.mini2_prediction_region import run_prediction_region
 from project_2.ui_mini2.mini2_trend import run_trend
 from project_2.ui_mini2.mini2_home import run_home2
-from project_2.ui_mini2.yeon import run_yeon
-
 
 
 def main():
@@ -53,7 +49,7 @@ def main():
             # 딜러 서브 메뉴
             dealer_menu = option_menu(
                 menu_title="딜러 메뉴",
-                options=["🏠 홈", "🧾 고객 상담", "📊 고객 분석","👩‍💻개발과정"],
+                options=["🏠 홈", "🧾 고객 상담", "📊 고객 분석"],
                 icons=["house", "chat-dots", "pie-chart"],
                 default_index=0
             )
@@ -63,14 +59,14 @@ def main():
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기후별 예측", "🚗 기아 분석", "📈 시장 트렌드"],
                     icons=["house", "geo-alt", "cloud-sun", "truck", "graph-up"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드"],
                     icons=["house", "geo-alt", "cloud-sun", "car-front", "graph-up"],
                     default_index=0
                 )
@@ -84,28 +80,21 @@ def main():
             run_input_customer_info()
         elif dealer_menu == "📊 고객 분석":
             run_eda()
-        elif dealer_menu == "👩‍💻개발과정":
-            run_description1()
 
     elif dashboard_type == "📈 영업 기획·분석 대시보드":
+
         if analysis_menu == "🏠 홈":
             run_home2()
         elif analysis_menu == "📍 지역별 예측":
             run_prediction_region()
-        elif analysis_menu == "🌦️ 기아 기후별 예측":
+        elif analysis_menu == "🌦️ 기후별 예측":
             run_prediction_climate()
-        elif analysis_menu == "🌦️ 현대 기후별 예측":
-            run_yeon()
         elif analysis_menu == "🚗 기아 분석":
             run_eda_kia()
         elif analysis_menu == "🚙 현대 분석":
             run_eda_hyundai()
         elif analysis_menu == "📈 시장 트렌드":
             run_trend()
-        elif analysis_menu == "🧑‍💻개발과정":
-            run_description2()
-        elif dealer_menu == "👩‍💻개발과정":
-            run_description1()
 
 
 if __name__ == "__main__":

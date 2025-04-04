@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
 
-def run_description2():
+def run_description():
     
     options=["원본데이터","데이터 전처리","대륙별 판매량 예측모델", "기후별 판매량 예측모델"]
     st.write("")

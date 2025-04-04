@@ -377,7 +377,7 @@ def input_customer_info():
             segment_input = pd.DataFrame([[transaction_method, launch_dates['현대'].get(selected_vehicle), 
                                         purchase_date, transaction_amount, purchase_frequency]],
                                       columns=['거래 방식', '제품 출시년월', '제품 구매 날짜', 
-                                              '거래 금액', '제품 구매 빈도'])
+                                               '거래 금액', '제품 구매 빈도'])
             customer_segment = segment_model.predict(segment_input)[0]
             
             # 클러스터링 예측
@@ -391,23 +391,23 @@ def input_customer_info():
                                                '연령', '거래 금액', '제품 구매 빈도'])
             cluster_id = clustering_model.predict(cluster_input)[0]
             
-            # 세션 상태 저장
+            # 세션 상태 저장 (네임스페이스 적용)
             st.session_state.update({
-                "step": 2,
-                "cluster_id": cluster_id,
-                "selected_vehicle": selected_vehicle,
-                "driving_exp_session": driving_exp,
-                "accident_history_session": accident_history,
-                "car_age_session": car_age,
-                "gender_session": gender,
-                "birth_date_session": birth_date,
-                "transaction_amount_session": transaction_amount,
-                "purchase_frequency_session": purchase_frequency,
-                "car_type_session": car_type,
-                "transaction_method_session": transaction_method,
-                "purchase_date_session": purchase_date,
-                "age_session": age,
-                "is_eco_friendly": selected_vehicle in eco_friendly_models['현대']
+                "car_insurance_step": 2,
+                "car_insurance_cluster_id": cluster_id,
+                "car_insurance_selected_vehicle": selected_vehicle,
+                "car_insurance_driving_exp": driving_exp,
+                "car_insurance_accident_history": accident_history,
+                "car_insurance_car_age": car_age,
+                "car_insurance_gender": gender,
+                "car_insurance_birth_date": birth_date,
+                "car_insurance_transaction_amount": transaction_amount,
+                "car_insurance_purchase_frequency": purchase_frequency,
+                "car_insurance_car_type": car_type,
+                "car_insurance_transaction_method": transaction_method,
+                "car_insurance_purchase_date": purchase_date,
+                "car_insurance_age": age,
+                "car_insurance_is_eco_friendly": selected_vehicle in eco_friendly_models['현대']
             })
             
             st.rerun()
@@ -416,13 +416,13 @@ def Car_insurance_recommendation():
     """보험 추천 정보 표시"""
     st.title("🚗 현대 맞춤형 자동차 보험 추천")
     
-    # 세션에서 고객 정보 가져오기
-    cluster_id = st.session_state.get("cluster_id", 0)
-    selected_vehicle = st.session_state.get("selected_vehicle", "")
-    is_eco_friendly = st.session_state.get("is_eco_friendly", False)
-    driving_exp = st.session_state.get("driving_exp_session", "3~5년")
-    accident_history = st.session_state.get("accident_history_session", "무사고")
-    car_age = st.session_state.get("car_age_session", "신차")
+    # 세션에서 고객 정보 가져오기 (네임스페이스 적용)
+    cluster_id = st.session_state.get("car_insurance_cluster_id", 0)
+    selected_vehicle = st.session_state.get("car_insurance_selected_vehicle", "")
+    is_eco_friendly = st.session_state.get("car_insurance_is_eco_friendly", False)
+    driving_exp = st.session_state.get("car_insurance_driving_exp", "3~5년")
+    accident_history = st.session_state.get("car_insurance_accident_history", "무사고")
+    car_age = st.session_state.get("car_insurance_car_age", "신차")
     
     # 보험사 추천 섹션
     with st.container():
@@ -438,8 +438,6 @@ def Car_insurance_recommendation():
             with cols[idx]:
                 info = insurance_companies.get(insurance, {})
                 with st.container():
-                    
-                    
                     # 보험사 로고
                     st.image(info.get("logo", ""), use_container_width=True)
                     
@@ -595,21 +593,21 @@ def Car_insurance_recommendation():
 
     # 다시 입력하기 버튼
     if st.button("다시 입력하기", use_container_width=True):
-        st.session_state["step"] = 1
+        st.session_state["car_insurance_step"] = 1
         st.rerun()
 
 def run_car_customer_info():
-    """메인 앱 실행"""
+    """메인 앱 실행 (네임스페이스 적용)"""
     load_css()
     
-    # 세션 상태 초기화
-    if "step" not in st.session_state:
-        st.session_state["step"] = 1
+    # 네임스페이스를 사용한 세션 상태 초기화
+    if "car_insurance_step" not in st.session_state:
+        st.session_state["car_insurance_step"] = 1
     
     # 단계별 페이지 표시
-    if st.session_state["step"] == 1:
+    if st.session_state["car_insurance_step"] == 1:
         input_customer_info()
-    elif st.session_state["step"] == 2:
+    elif st.session_state["car_insurance_step"] == 2:
         Car_insurance_recommendation()
 
 if __name__ == "__main__":
