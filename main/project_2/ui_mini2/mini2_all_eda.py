@@ -180,8 +180,8 @@ def analyze_sales_trend(filtered_df, brand, selected_models):
         # 계절성 인사이트
         seasonal_insights = []
         for model in selected_models:
-            peak_month = seasonal_df[model].idxmax()
-            low_month = seasonal_df[model].idxmin()
+            peak_month = int(seasonal_df[model].idxmax())
+            low_month = int(seasonal_df[model].idxmin())
             seasonal_insights.append(f"- {model}: 최고 판매월 {peak_month}월, 최저 판매월 {low_month}월")
         
         st.markdown("#### 🔍 계절성 주요 인사이트\n" + "\n".join(seasonal_insights))
