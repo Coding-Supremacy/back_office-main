@@ -1,12 +1,23 @@
 import streamlit as st
 
+from PIL import Image
+import streamlit as st
+
 def run_home2():
     # 타이틀 및 소개
     st.markdown("""
-    <h1 style='text-align: center; color: #2E86C1;'>🏠 현대 & 기아 판매현황 분석 시스템</h1>
-    <h4 style='text-align: center;'>📊 브랜드별 판매 데이터 자동 분석 및 전략 보고서 제공</h4>
-    <hr>
+        <h1 style='text-align: center; color: #2E86C1;'>🏠 현대 & 기아 판매현황 분석 시스템</h1>
+        <h4 style='text-align: center;'>📊 브랜드별 판매 데이터 자동 분석 및 전략 보고서 제공</h4>
+        <hr>
     """, unsafe_allow_html=True)
+
+    # 이미지 불러오기 및 가운데 정렬
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    image = Image.open("main/project_1/img/home1.png")
+    st.image(image, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    
 
     # KPI 카드
     col1, col2, col3 = st.columns(3)
