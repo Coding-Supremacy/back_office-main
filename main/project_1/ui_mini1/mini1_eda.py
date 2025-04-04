@@ -480,7 +480,7 @@ def run_eda():
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
-            st.write(f"## {country} - 클러스터별 성별 분포 분석")
+            st.write(f"## {brand}-{country} - 클러스터별 성별 분포 분석")
             st.subheader(f"{country} - 클러스터별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
@@ -508,7 +508,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "👵 클러스터별 연령 분포":
-            st.subheader(f"{country} - 클러스터별 연령 분포 분석")
+            st.subheader(f"{brand}-{country} - 클러스터별 연령 분포 분석")
             
             if {'Cluster', '연령'}.issubset(country_df.columns):
                 # 박스플롯
@@ -545,7 +545,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "💰 클러스터별 거래 금액":
-            st.subheader(f"{country} - 클러스터별 거래 금액 분석")
+            st.subheader(f"{brand}-{country} - 클러스터별 거래 금액 분석")
             
             if {'Cluster', '거래 금액'}.issubset(country_df.columns):
                 # 박스플롯
@@ -575,7 +575,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "🛒 클러스터별 구매 빈도":
-            st.subheader(f"{country} - 클러스터별 구매 빈도 분석")
+            st.subheader(f"{brand}-{country} - 클러스터별 구매 빈도 분석")
             
             if {'Cluster', '제품구매빈도'}.issubset(country_df.columns):
                 # 박스플롯
@@ -603,7 +603,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "🚘 모델별 구매 분석":
-            st.subheader(f"{country} - 모델별 구매 분석")
+            st.subheader(f"{brand}-{country} - 모델별 구매 분석")
             
             if {'구매한 제품', 'Cluster'}.issubset(country_df.columns):
                 # 모델별 판매량
@@ -647,7 +647,7 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
         elif selected_analysis == "🏷️ 클러스터별 고객 세그먼트":
-            st.subheader(f"{country} - 클러스터별 고객 세그먼트 분석")
+            st.subheader(f"{brand}-{country} - 클러스터별 고객 세그먼트 분석")
             
             if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
                 # 세그먼트 매핑 딕셔너리
@@ -747,7 +747,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
                               
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
-            st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
+            st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
             # 개발자 모드 상태 표시
