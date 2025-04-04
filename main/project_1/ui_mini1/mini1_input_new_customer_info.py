@@ -38,7 +38,8 @@ def display_vehicle_recommendation(brand, model, cluster_id):
     recommendation = vehicle_recommendations.get(brand, {}).get(model, {}).get(cluster_id, {})
     
     if not recommendation:
-        basic_rec = str(basic_recommendations).get(brand, {}).get(model, {})
+        basic_rec = basic_recommendations.get(brand, {}).get(model, {})
+        print(type(basic_rec))
         
         if basic_rec:
             # 차량 이미지 표시
@@ -64,7 +65,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
             
             # 가격 정보 표시
             with st.expander("💰 **가격 정보**", expanded=True):
-                price_info = basic_rec.get("가격", "정보 없음")
+                price_info = dict(basic_rec).get("가격", "정보 없음")
                 st.markdown(f"""
                 <div style="
                     background: #f8f9fa;
@@ -226,7 +227,8 @@ def display_vehicle_recommendation(brand, model, cluster_id):
     with col2:
         # 추천 이유 섹션 (아이콘과 함께)
         with st.expander("✨ **추천 이유**", expanded=True):
-            reasons = recommendation.get("추천이유", [])
+            reasons = recommendation.get("추천이유", "")
+            print(reasons)
             for reason in reasons:
                 # **텍스트** 를 <strong>텍스트</strong>로 바꿔주는 처리
                 reason_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', reason)
