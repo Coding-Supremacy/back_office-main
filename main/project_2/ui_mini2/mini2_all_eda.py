@@ -50,41 +50,88 @@ def preprocess_model_name(model_name):
     return model_name
 
 def create_cluster_info_df(df, brand):
-    # 클러스터 기본 정보
-    cluster_info = {
-        "Cluster": [1, 2, 3, 4, 5],
-        "특징": [
-            "남성, 중장년층, VIP 집중",
-            "성별균형, 젊은층, 이탈 가능성 높음",
-            "성별균형, 고령층, 이탈 가능성 높음",
-            "성별균형, 고령층, 안정적 고객군",
-            "성별균형, 젊은층, 안정적 고객군"
-        ],
-        "고객 비율(%)": [15, 25, 20, 20, 20]  # 예시 비율 (실제 데이터에 맞게 조정 필요)
+    # 고객 세그먼트 매핑 정보
+    segment_mapping = {
+        "현대": {
+            0: "VIP",
+            1: "이탈가능",
+            2: "신규",
+            3: "일반"
+        },
+        "기아": {
+            0: "VIP",
+            1: "일반",
+            2: "신규",
+            3: "이탈가능"
+        }
     }
-    
-    # 클러스터별 선호 모델 계산 (상위 3개)
-    cluster_model_preference = df.groupby(['Cluster', '구매한 제품']).size().groupby(level=0).nlargest(3)
-    
-    # 각 클러스터별 선호 모델 문자열 생성
-    preferred_models = {}
-    for cluster in cluster_info["Cluster"]:
-        try:
-            models = cluster_model_preference[cluster].index.get_level_values(1).tolist()
-            preferred_models[cluster] = ", ".join(models[:3])  # 상위 3개 모델만 표시
-        except KeyError:
-            preferred_models[cluster] = "데이터 없음"
-    
-    # 데이터프레임에 선호 모델 컬럼 추가
-    cluster_info["선호 모델"] = [preferred_models[c] for c in cluster_info["Cluster"]]
-    
-    # 데이터프레임 생성
-    cluster_df = pd.DataFrame(cluster_info)
-    
-    # 클러스터 번호를 인덱스로 설정
+
+    cluster_stats = []
+
+    for cluster_num in sorted(df['Cluster'].unique()):
+        cluster_data = df[df['Cluster'] == cluster_num]
+
+        # ✅ 세그먼트명 변환
+        if '고객 세그먼트' in cluster_data.columns:
+            mapped_segment_names = (
+                cluster_data['고객 세그먼트']
+                .map(segment_mapping.get(brand, {}))
+                .dropna()
+            )
+            if not mapped_segment_names.empty:
+                dominant_segment = mapped_segment_names.value_counts().idxmax()
+            else:
+                dominant_segment = "세그먼트 미지정"
+        else:
+            dominant_segment = "세그먼트 없음"
+
+        # 🔹 성별 분석
+        if '성별' in cluster_data.columns:
+            gender_dist = cluster_data['성별'].value_counts(normalize=True) * 100
+            dominant_gender = gender_dist.idxmax() if not gender_dist.empty else None
+            gender_ratio = f"{dominant_gender} {gender_dist.max():.0f}%" if dominant_gender else "성별 데이터 없음"
+        else:
+            gender_ratio = "성별 데이터 없음"
+
+        # 🔹 연령대 분석
+        if '연령' in cluster_data.columns:
+            cluster_data = cluster_data.copy()
+            cluster_data['연령대'] = cluster_data['연령'].apply(lambda x: '고연령층' if x >= 40 else '젊은세대')
+            age_dist = cluster_data['연령대'].value_counts()
+            if not age_dist.empty:
+                dominant_age = age_dist.idxmax()
+            else:
+                dominant_age = "연령 데이터 없음"
+        else:
+            dominant_age = "연령 데이터 없음"
+
+        # 🔹 특징 조합
+        characteristics_parts = [dominant_segment]
+        if gender_ratio != "성별 데이터 없음":
+            characteristics_parts.append(gender_ratio)
+        if dominant_age != "연령 데이터 없음":
+            characteristics_parts.append(dominant_age)
+
+        characteristics = ", ".join(characteristics_parts)
+
+        # 🔹 선호 모델
+        top_models = cluster_data['구매한 제품'].value_counts().nlargest(3)
+        preferred_models = ", ".join(top_models.index.tolist()) if not top_models.empty else "데이터 없음"
+
+        # 🔹 고객 비율
+        customer_ratio = (len(cluster_data) / len(df)) * 100
+
+        cluster_stats.append({
+            "Cluster": cluster_num,
+            "특징": characteristics,
+            "고객 비율(%)": round(customer_ratio, 1),
+            "선호 모델": preferred_models
+        })
+
+    cluster_df = pd.DataFrame(cluster_stats)
     cluster_df.set_index("Cluster", inplace=True)
-    
     return cluster_df
+
 
 
 # 생산량 추천 계산 함수
@@ -255,7 +302,7 @@ def analyze_regional_preference(region_df, selected_region, df):
         if model in total_avg_sales.index:
             diff = (region_avg_sales.get(model, 0) - total_avg_sales.get(model, 0)) * 100
             if diff > 5:  # 5% 이상 높은 경우
-                over_performing.append(f"- {model}: 지역 평균보다 {diff:.1f}% 높음")
+                over_performing.append(f"- {model}: 평균보다 {diff:.1f}% 높음")
     
     if over_performing:
         st.markdown(f"#### 📌 {selected_region}에서 특별히 잘 팔리는 모델:\n" + "\n".join(over_performing))
