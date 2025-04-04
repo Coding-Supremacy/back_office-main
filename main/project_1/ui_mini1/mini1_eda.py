@@ -956,7 +956,7 @@ def run_eda():
 
             with col_right:
                 # 오른쪽 컬럼: 클러스터 추천 모델
-                st.markdown("#### 클러스터 추천 모델")
+                st.markdown("#### 고객맞춤 추천 모델")
                 
                 brand = st.session_state.get("brand", "현대")
                 cluster_key = selected_cluster - 1 if brand == "현대" else selected_cluster
