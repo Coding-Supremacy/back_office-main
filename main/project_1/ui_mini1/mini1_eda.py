@@ -946,7 +946,7 @@ def run_eda():
             # 데이터 표시
             start_idx = (st.session_state.page - 1) * page_size
             end_idx = min(start_idx + page_size, len(display_data))
-            st.dataframe(display_data.iloc[start_idx:end_idx], height=300, width=1300)
+            st.dataframe(display_data.iloc[start_idx:end_idx], height=300, width=1100)
             st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
                     (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
 
