@@ -100,7 +100,7 @@ def main():
             run_prediction_climate()
         elif analysis_menu == "🌦️ 현대 기후별 예측":
             run_yeon()
-        elif analysis_menu == "🌎 글로벌 고객 데이터 분석":
+        elif analysis_menu == "🌎글로벌 고객 데이터 분석":
             run_all_eda()
         elif analysis_menu == "🚗 기아 분석":
             run_eda_kia()

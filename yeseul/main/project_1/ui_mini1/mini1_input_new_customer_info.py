@@ -138,7 +138,7 @@ def run_input_step1(brand):
                 "연령": 연령,
                 "제품구매빈도": 구매빈도,
                 "제품출시년월": launch_dates[brand].get(구매한제품),
-                "친환경차": "여" if 구매한제품 in eco_friendly_models[brand] else "부"
+                "친환경차": "True" if 구매한제품 in eco_friendly_models[brand] else "False",
             })
 
             # 1단계: 세그먼트 분류

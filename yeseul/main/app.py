@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+import pandas as pd
 
 # 페이지 설정은 항상 먼저
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
@@ -95,6 +96,8 @@ def main():
             run_eda_hyundai()
         elif analysis_menu == "📈 시장 트렌드":
             run_trend()
+
+
 
 
 if __name__ == "__main__":
