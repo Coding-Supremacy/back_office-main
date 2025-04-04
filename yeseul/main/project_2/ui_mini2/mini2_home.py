@@ -8,6 +8,11 @@ def run_home2():
     <hr>
     """, unsafe_allow_html=True)
 
+
+   
+
+
+
     # KPI 카드
     col1, col2, col3 = st.columns(3)
     with col1:
