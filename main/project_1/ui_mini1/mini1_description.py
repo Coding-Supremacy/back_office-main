@@ -241,7 +241,7 @@ def run_description1():
         "제품 구매 빈도": [2]
     }""")
         with col2:
-            st.image('main_project/project_1/img/sc4.png', use_column_width=True)
+            st.image('main_project/project_1/img/sc4.png', use_container_width=True)
 
     elif selected == "이메일 발송":
         st.subheader("고객 세그먼트별 프로모션 이메일 발송")
@@ -250,8 +250,8 @@ def run_description1():
     """)
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main_project/project_1/img/sc1.png', use_column_width=True)
+            st.image('main_project/project_1/img/sc1.png', use_container_width=True)
             st.markdown("0번 클러스터 프로모션 메일 예시")
         with col2:
-            st.image('main_project/project_1/img/sc2.png', use_column_width=True)
+            st.image('main_project/project_1/img/sc2.png', use_container_width=True)
             st.markdown("1번 클러스터 프로모션 메일 예시")
