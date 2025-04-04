@@ -10,7 +10,6 @@ from email.mime.text import MIMEText
 import smtplib
 import datetime
 from email.mime.image import MIMEImage
-import time
 from project_1.ui_mini1.vehicle_recommendations_data import (
     brand_recommendations,
     vehicle_recommendations
@@ -254,7 +253,7 @@ def send_email(customer_name, customer_email, message, cluster=None, marketing_s
     server.sendmail(EMAIL_ADDRESS, customer_email, text)
     server.quit()
 # 10초마다 자동 새로고침 (10000 밀리초)
-st_autorefresh(interval=10000, limit=None, key=f"fizzbuzz_{time.time()}") 
+st_autorefresh(interval=10000, limit=None, key="fizzbuzz")
 
 # 인포 메시지를 세밀하게 표시하는 함수
 def custom_info(message, bg_color, text_color="black"):
@@ -443,7 +442,7 @@ def generate_model_insights(model_cluster, selected_model):
 
     return "\n".join(insights + [""] + marketing)
 
-def run_eda():
+def run_all_eda():
     brand = st.session_state.get("brand", "현대")
     country = st.session_state.get("country", "")
     # 분석 종류 선택 메뉴
