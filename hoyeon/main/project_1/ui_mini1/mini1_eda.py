@@ -52,11 +52,11 @@ def generate_marketing_strategies(country_df):
         female_pct = gender_pct.loc[cluster, '여']
         
         if male_pct >= 60:
-            strategy_parts.append("• 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!")
+            strategy_parts.append("남성 고객님이 선호하는 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!")
         elif female_pct >= 60:
-            strategy_parts.append("• 안전성과 실용성을 중시하는 고객님을 위한 패밀리 전용 차량 혜택을 제공합니다.")
+            strategy_parts.append("안전성과 실용성을 중시하는 고객님을 위한 패밀리 전용 차량 혜택을 제공합니다.")
         else:
-            strategy_parts.append("• 누구나 만족할 수 있는 다양한 트림과 옵션 구성을 제안드립니다.")
+            strategy_parts.append("누구나 만족할 수 있는 다양한 트림과 옵션 구성을 제안드립니다.")
         
         # 연령 기반 전략
         avg_age = age_stats.loc[cluster, 'mean']
@@ -480,7 +480,7 @@ def run_eda():
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 클러스터별 성별 분포":
-            st.write(f"## {brand}-{country} - 클러스터별 성별 분포 분석")
+            st.write(f"## {country} - 클러스터별 성별 분포 분석")
             st.subheader(f"{country} - 클러스터별 성별 분포")
             
             if {'Cluster', '성별'}.issubset(country_df.columns):
@@ -508,7 +508,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "👵 클러스터별 연령 분포":
-            st.subheader(f"{brand}-{country} - 클러스터별 연령 분포 분석")
+            st.subheader(f"{country} - 클러스터별 연령 분포 분석")
             
             if {'Cluster', '연령'}.issubset(country_df.columns):
                 # 박스플롯
@@ -545,7 +545,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "💰 클러스터별 거래 금액":
-            st.subheader(f"{brand}-{country} - 클러스터별 거래 금액 분석")
+            st.subheader(f"{country} - 클러스터별 거래 금액 분석")
             
             if {'Cluster', '거래 금액'}.issubset(country_df.columns):
                 # 박스플롯
@@ -575,7 +575,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "🛒 클러스터별 구매 빈도":
-            st.subheader(f"{brand}-{country} - 클러스터별 구매 빈도 분석")
+            st.subheader(f"{country} - 클러스터별 구매 빈도 분석")
             
             if {'Cluster', '제품구매빈도'}.issubset(country_df.columns):
                 # 박스플롯
@@ -603,7 +603,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다.")
 
         elif selected_analysis == "🚘 모델별 구매 분석":
-            st.subheader(f"{brand}-{country} - 모델별 구매 분석")
+            st.subheader(f"{country} - 모델별 구매 분석")
             
             if {'구매한 제품', 'Cluster'}.issubset(country_df.columns):
                 # 모델별 판매량
@@ -647,7 +647,7 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
         elif selected_analysis == "🏷️ 클러스터별 고객 세그먼트":
-            st.subheader(f"{brand}-{country} - 클러스터별 고객 세그먼트 분석")
+            st.subheader(f"{country} - 클러스터별 고객 세그먼트 분석")
             
             if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
                 # 세그먼트 매핑 딕셔너리
@@ -709,14 +709,14 @@ def run_eda():
                 if '신규' in segment_pct.columns:
                     new_clusters = segment_pct[segment_pct['신규'] >= 50].index.tolist()
                     if new_clusters:
-                        st.markdown(f"**신규 고객이 많은 클러스터**: {', '.join(map(str, new_clusters))}번")
+                        st.markdown(f"- **신규 고객이 많은 클러스터**: {', '.join(map(str, new_clusters))}번")
                         st.markdown("  - 브랜드 인지도 향상과 첫 구매 고객을 위한 특별 혜택이 효과적입니다.")
                 
                 # 4. 일반 고객이 많은 클러스터 분석
                 if '일반' in segment_pct.columns:
                     normal_clusters = segment_pct[segment_pct['일반'] >= 60].index.tolist()
                     if normal_clusters:
-                        st.markdown(f"**일반 고객이 많은 클러스터**: {', '.join(map(str, normal_clusters))}번")
+                        st.markdown(f"- **일반 고객이 많은 클러스터**: {', '.join(map(str, normal_clusters))}번")
                         st.markdown("  - 일반 고객을 VIP로 전환하기 위한 단계별 혜택 프로그램을 고려해보세요.")
                 
                 # 클러스터별 세그먼트 전략 제안
@@ -742,12 +742,29 @@ def run_eda():
                     
                     st.markdown(strategy)
                 
+                # 세그먼트 정의 설명
+                st.markdown("---")
+                st.markdown("#### 세그먼트 정의")
+                
+                if brand == "현대":
+                    st.markdown("""
+                    - **VIP**: 브랜드 충성도가 매우 높고 고가 모델을 구매하는 고객
+                    - **이탈가능**: 최근 구매 빈도가 감소하거나 불만을 표시한 고객
+                    - **신규**: 최근 6개월 이내 첫 구매 고객
+                    - **일반**: VIP도 아니고 이탈 위험도 없는 일반 고객
+                    """)
+                else:  # 기아
+                    st.markdown("""
+                    - **VIP**: 브랜드 충성도가 매우 높고 고가 모델을 구매하는 고객
+                    - **이탈 가능**: 최근 구매 빈도가 감소하거나 불만을 표시한 고객
+                    - **신규**: 최근 6개월 이내 첫 구매 고객
+                    - **일반**: VIP도 아니고 이탈 위험도 없는 일반 고객
+                    """)
                 
             else:
-                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
-                              
+                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")                
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
-            st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
+            st.subheader(f"{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
             # 개발자 모드 상태 표시
@@ -790,22 +807,12 @@ def run_eda():
             # 구매 빈도 통계
             freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean().round(2)
             
-            # 세그먼트 분석 추가
-            segment_mapping = {
-                "현대": {0: "VIP", 1: "이탈가능", 2: "신규", 3: "일반"},
-                "기아": {0: "VIP", 1: "일반", 2: "신규", 3: "이탈 가능"}
-            }
-            country_df['세그먼트 이름'] = country_df['고객 세그먼트'].map(segment_mapping[brand])
-            segment_dist = country_df.groupby(['고객유형', '세그먼트 이름']).size().unstack(fill_value=0)
-            segment_pct = segment_dist.div(segment_dist.sum(axis=1), axis=0) * 100
-            
-            # 모든 통계를 하나의 데이터프레임으로 결합 (세그먼트 정보 추가)
+            # 모든 통계를 하나의 데이터프레임으로 결합
             summary_df = pd.concat([
                 gender_pct,
                 age_stats,
                 transaction_stats,
-                freq_stats.rename('평균 구매 빈도'),
-                segment_pct
+                freq_stats.rename('평균 구매 빈도')
             ], axis=1)
             
             st.dataframe(summary_df.style.format({
@@ -815,50 +822,51 @@ def run_eda():
                 '표준편차': '{:.1f}세',
                 '평균 거래액': '{:,.0f}원',
                 '총 거래액': '{:,.0f}원',
-                '평균 구매 빈도': '{:.2f}회',
-                'VIP': '{:.1f}%',
-                '이탈가능': '{:.1f}%',
-                '이탈 가능': '{:.1f}%',
-                '신규': '{:.1f}%',
-                '일반': '{:.1f}%'
+                '평균 구매 빈도': '{:.2f}회'
             }).background_gradient(cmap='Blues'))
             
+            # 3. 마케팅 전략 제안
+            st.markdown("#### 3. 클러스터별 마케팅 전략 제안")
+            marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
-            st.markdown("## 🎯 클러스터별 통합 전략")
-            
-            # 전략 카드 생성
-            for cluster in sorted(country_df['고객유형'].unique()):
-                with st.expander(f"클러스터 {cluster}번 전략", expanded=True):
-                    col1, col2 = st.columns([1, 3])
-                    
-                    with col1:
-                        # 클러스터 요약 통계
-                        cluster_data = country_df[country_df['고객유형'] == cluster]
-                        st.metric("평균 연령", f"{cluster_data['연령'].mean():.1f}세")
-                        st.metric("평균 거래액", f"{cluster_data['거래 금액'].mean():,.0f}원")
-                        st.metric("주구매 모델", cluster_data['구매한 제품'].mode()[0])
-                        
-                    with col2:
-                        # 마케팅 전략 표시
-                        st.markdown(f"""
-                        <div style="
-                            padding: 15px;
-                            background: #f8f9fa;
-                            border-radius: 10px;
-                            border-left: 4px solid #2E86C1;
-                        ">
-                            <h4>📌 맞춤형 전략</h4>
-                            {marketing_strategies[cluster].replace('<br>•', '<br>•')}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # 추천 모델
-                        if brand in brand_recommendations:
-                            rec_models = brand_recommendations[brand].get(cluster-1 if brand=="현대" else cluster, [])
-                            if rec_models:
-                                st.markdown("**🚗 추천 모델**")
-                                st.write(", ".join(rec_models[:3]))  # 상위 3개만 표시
-    
+            # 클러스터별 카드 생성
+            clusters = sorted(marketing_strategies.keys())
+            cols_per_row = 2  # 한 행에 표시할 카드 수
+
+            for i in range(0, len(clusters), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    if i + j < len(clusters):
+                        cluster = clusters[i + j]
+                        with cols[j]:
+                            # 카드 스타일 적용
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid #e0e0e0;
+                                    background-color: #ffffff;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                                    margin-bottom: 20px;
+                                ">
+                                    <h4 style="
+                                        color: #2E86C1;
+                                        margin-top: 0;
+                                        border-bottom: 2px solid #f0f0f0;
+                                        padding-bottom: 8px;
+                                    ">클러스터 {cluster}</h4>
+                                    <div style="
+                                        font-size: 0.95em;
+                                        line-height: 1.6;
+                                        color: #333;
+                                    ">
+                                        {marketing_strategies[cluster]}
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
             
             # 4. 이메일 발송 기능
             st.markdown("---")
@@ -884,7 +892,7 @@ def run_eda():
             <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.</p>
             
             <ul>
-                {marketing_strategies[selected_cluster]}
+                • {marketing_strategies[selected_cluster]}
                 <br>• 한정 기간 할인 프로모션
             </ul>
             
@@ -910,6 +918,8 @@ def run_eda():
                 st.markdown(f"**제목**: {email_subject}")
                 st.markdown(email_content, unsafe_allow_html=True)
             
+            # 발송 대상 확인
+            st.markdown("#### 발송 대상 고객")
             
             # 개발자 모드인 경우 이메일 주소를 개발자 이메일로 표시
             if not prod:
@@ -925,34 +935,91 @@ def run_eda():
             if 'page' not in st.session_state:
                 st.session_state.page = 1
 
-            page_size = 10
+            page_size = 7
             total_pages = max(1, (len(display_data) - 1)) // page_size + 1
 
+            # 컬럼 레이아웃 설정 (6:4 비율로 좌우 분할)
+            col_left, col_right = st.columns([6, 4])
 
+            with col_left:
+                # 왼쪽 컬럼: 고객 데이터 프레임 + 페이지네이션
+                st.markdown("#### 발송 대상 고객 리스트")
+                
+                # 페이지네이션 컨트롤
+                pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
+                with pagination_col1:
+                    if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
+                        st.session_state.page -= 1
+                        st.rerun()
+                with pagination_col2:
+                    st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
+                with pagination_col3:
+                    if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
+                        st.session_state.page += 1
+                        st.rerun()
+                
+                # 데이터 표시
+                start_idx = (st.session_state.page - 1) * page_size
+                end_idx = min(start_idx + page_size, len(display_data))
+                st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
+                st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
+                        (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
 
-            st.markdown("#### 발송 대상 고객 리스트")
-            
-            # 페이지네이션 컨트롤
-            pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
-            with pagination_col1:
-                if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
-                    st.session_state.page -= 1
-                    st.rerun()
-            with pagination_col2:
-                st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
-            with pagination_col3:
-                if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
-                    st.session_state.page += 1
-                    st.rerun()
-            
-            # 데이터 표시
-            start_idx = (st.session_state.page - 1) * page_size
-            end_idx = min(start_idx + page_size, len(display_data))
-            st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
-            st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
-                    (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
-
-
+            with col_right:
+                # 오른쪽 컬럼: 클러스터 추천 모델
+                st.markdown("#### 클러스터 추천 모델")
+                
+                brand = st.session_state.get("brand", "현대")
+                cluster_key = selected_cluster - 1 if brand == "현대" else selected_cluster
+                
+                if brand in brand_recommendations and cluster_key in brand_recommendations[brand]:
+                    recommended_models = brand_recommendations[brand][cluster_key][:3]  # 최대 3개만 표시
+                    
+                    # 카드 형태로 추천 모델 표시
+                    for i, model in enumerate(recommended_models, 1):
+                        with st.expander(f"추천 모델 {i}: {model}", expanded=True):
+                            # vehicle_recommendations에서 추천 이유 가져오기
+                            recommendation_text = ""
+                            
+                            # 클러스터 키 조정 (현대: 1-8 → 0-7, 기아: 0-5 유지)
+                            cluster_key_for_rec = selected_cluster - 1 if brand == "현대" else selected_cluster
+                            
+                            # 추천 이유 조회
+                            if (brand in vehicle_recommendations and 
+                                model in vehicle_recommendations[brand] and 
+                                cluster_key_for_rec in vehicle_recommendations[brand][model]):
+                                
+                                # 줄바꿈 문자를 <br> 태그로 미리 변환
+                                recommendation_text = vehicle_recommendations[brand][model][cluster_key_for_rec].replace('\n', '<br>')
+                                
+                            else:
+                                # 추천 이유가 없는 경우 기본 문구
+                                recommendation_text = f"{model} 모델은 {brand} {selected_cluster}번 클러스터 고객님들께 추천드립니다."
+                            
+                            # HTML로 표시 (이제 f-string 내에 백슬래시 없음)
+                            st.markdown(f"""
+                            <div style="padding: 10px; border-radius: 8px; background-color: #f8f9fa; margin-bottom: 10px;">
+                                <p style="font-weight: bold; margin-bottom: 5px; color: #2E86C1; font-size: 1.1em;">{model}</p>
+                                <div style="font-size: 0.9em; color: #555; line-height: 1.6;">
+                                    {recommendation_text}
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    # 추가로 현재 클러스터에서 실제로 많이 팔린 모델도 함께 표시 (옵션)
+                    if '구매한 제품' in country_df.columns:
+                        st.markdown("---")
+                        st.markdown("##### 이 클러스터의 실제 판매 모델 (Top 3)")
+                        top_sold_models = country_df[country_df['고객유형'] == selected_cluster]['구매한 제품'].value_counts().head(3)
+                        if not top_sold_models.empty:
+                            st.dataframe(
+                                top_sold_models.reset_index().rename(
+                                    columns={'구매한 제품': '모델명', 'count': '판매량'}
+                                ),
+                                hide_index=True
+                            )
+                else:
+                    st.warning(f"이 클러스터({selected_cluster})에 대한 추천 모델 데이터가 없습니다.")
             
             # 이메일 발송 버튼
             if st.button("이메일 발송", 

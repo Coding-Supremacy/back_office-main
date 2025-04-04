@@ -133,15 +133,15 @@ def run_description1():
         st.subheader('클러스터링을 위한 X 데이터 선정')
         st.markdown("""
     위의 가공 데이터를 바탕으로 클러스터링을 위한 X 데이터를 선정하였습니다.
-    - 연령 (Age)
-    - 거래 금액 (Transaction Amount)
-    - 제품 구매 빈도 (Purchase Frequency)
-    - 성별 (Gender),차량구분(vehicle types)
-    - 거래 방식 (Transaction Method)
-    - 제품 출시년월 (Launch Date)
-    - 제품 구매 날짜 (Purchase Date)
-    - 고객 세그먼트 (Customer Segment)
-    - 친환경차 (Eco-friendly Product)    
+    - 연령
+    - 거래 금액
+    - 제품 구매 빈도
+    - 성별,차량구분
+    - 거래 방식
+    - 제품 출시년월
+    - 제품 구매 날짜
+    - 고객 세그먼트
+    - 친환경차 
         """)
 
         st.markdown("""<b>고객 세그먼트 (Customer Segment)를 클러스터링 결과로 보지 않고 X 값으로 활용한 이유:</b><br>

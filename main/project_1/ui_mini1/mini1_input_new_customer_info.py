@@ -9,7 +9,7 @@ from pathlib import Path
 import base64
 import requests
 import project_1.ui_mini1.mini1_promo_email as promo_email
-from project_1.ui_mini1.vehicle_recommendations_data import vehicle_recommendations, vehicle_prices, vehicle_links, launch_dates, eco_friendly_models, brand_recommendations, basic_recommendations
+from project_1.ui_mini1.vehicle_recommendations_data import (vehicle_recommendations, vehicle_prices, vehicle_links, launch_dates, eco_friendly_models, brand_recommendations, basic_recommendations)
     
 
 def get_abs_path(relative_path):
@@ -405,6 +405,8 @@ def run_input_step1(brand):
 
             st.session_state["step"] = 2
             st.session_state["recommended_vehicles"] = brand_recommendations[brand].get(cluster_id, [])
+            st.write(f"추천 차량 목록: {st.session_state['recommended_vehicles']}")
+            st.write(cluster_id)
             st.rerun()
 
 def step2_vehicle_selection(brand):

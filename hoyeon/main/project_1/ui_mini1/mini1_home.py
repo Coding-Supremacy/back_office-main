@@ -1,6 +1,5 @@
 import streamlit as st
 from pathlib import Path
-import base64
 
 def run_home1():
     
@@ -15,24 +14,8 @@ def run_home1():
 
     
 
-        
-    img_path = Path(__file__).parent.parent / "img" / "home2.png"
-
-# 이미지 파일을 읽어 base64 인코딩
-    with open(img_path, "rb") as file:
-        contents = file.read()
-        data_url = base64.b64encode(contents).decode("utf-8")
-
-    # HTML 코드로 중앙 정렬하여 표시
-    st.markdown(
-        f"""
-        <div style="display: flex; justify-content: center;">
-            <img src="data:image/png;base64,{data_url}" width="500">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
+    img_path = Path(__file__).parent.parent / "img" / "home.png"
+    st.image(str(img_path), width=1000)
 
     # 📦 3개의 카드 형태로 주요 기능 소개
     col1, col2, col3 = st.columns(3)
