@@ -183,7 +183,7 @@ def run_yeon():
     
 
 
-    st.title("🚗 기후별 수출량 분석 대시보드")
+    st.title("🚗 현대 자동차 수출량 분석 대시보드")
     st.markdown("""
     <div style="margin-bottom: 2rem; color: #666;">
         기아 자동차의 글로벌 수출량을 분석하고 예측하는 대시보드입니다. 단일 국가 예측과 다중 국가 비교 기능을 제공합니다.

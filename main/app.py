@@ -5,6 +5,7 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
 
 # 화면 모듈 임포트
+from project_1.ui_mini1.Car_insurance import run_car_customer_info
 from project_1.ui_mini1.mini1_description import run_description1
 from project_2.ui_mini2.mini2_description import run_description2
 from project_1.ui_mini1.mini1_eda import run_eda
@@ -53,7 +54,7 @@ def main():
             # 딜러 서브 메뉴
             dealer_menu = option_menu(
                 menu_title="딜러 메뉴",
-                options=["🏠 홈", "🧾 고객 상담", "📊 고객 분석","👩‍💻개발과정"],
+                options=["🏠 홈", "🧾 고객 상담","🧾 보험 상담" ,"📊 고객 분석","👩‍💻개발과정"],
                 icons=["house", "chat-dots", "pie-chart"],
                 default_index=0
             )
@@ -82,6 +83,8 @@ def main():
             run_home1()
         elif dealer_menu == "🧾 고객 상담":
             run_input_customer_info()
+        elif dealer_menu == "🧾 보험 상담":
+            run_car_customer_info()
         elif dealer_menu == "📊 고객 분석":
             run_eda()
         elif dealer_menu == "👩‍💻개발과정":
