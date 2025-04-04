@@ -70,7 +70,7 @@ def main():
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🚙 현대 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
                     icons=["house", "geo-alt", "cloud-sun", "car-front", "graph-up"],
                     default_index=0
                 )
@@ -104,6 +104,8 @@ def main():
             run_trend()
         elif analysis_menu == "🧑‍💻개발과정":
             run_description2()
+        elif dealer_menu == "👩‍💻개발과정":
+            run_description1()
 
 
 if __name__ == "__main__":
