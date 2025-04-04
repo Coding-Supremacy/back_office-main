@@ -1,463 +1,783 @@
 import streamlit as st
-import os
 import pandas as pd
 import plotly.express as px
-import plotly.colors as pc
+from datetime import datetime, timedelta
 from streamlit_option_menu import option_menu
-from streamlit_autorefresh import st_autorefresh
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import smtplib
-import datetime
-from email.mime.image import MIMEImage
-from project_1.ui_mini1.vehicle_recommendations_data import (
-    brand_recommendations,
-    vehicle_recommendations
-)
-# 개발자 모드 설정 (True: 실제 운영, False: 개발자 모드)
-prod = True  # 이 값을 True로 변경하면 실제 고객에게 발송
-prod_email = "marurun@naver.com"  # 개발자 이메일
-brand = st.session_state.get("brand", "현대")
+import numpy as np
 
-
-
-#분석 결과를 기반으로 클러스터별 마케팅 전략 자동 생성
-def generate_marketing_strategies(country_df):
-    strategies = {}
-    
-    # 클러스터 목록
-    clusters = sorted(country_df['고객유형'].unique())
-    
-    # 1. 성별 분석 기반 전략
-    gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
-    gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
-    
-    # 2. 연령 분석 기반 전략
-    age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'std'])
-    
-    # 3. 거래 금액 분석 기반 전략
-    transaction_stats = country_df.groupby('고객유형')['거래 금액'].mean()
-    
-    # 4. 구매 빈도 분석 기반 전략
-    freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean()
-    
-
-    
-    
-    for cluster in clusters:
-        strategy_parts = []
-        
-        # 성별 기반 전략
-        male_pct = gender_pct.loc[cluster, '남']
-        female_pct = gender_pct.loc[cluster, '여']
-        
-        if male_pct >= 60:
-            strategy_parts.append("• 스포츠 디자인과 첨단 기술이 집약된 모델 특별 프로모션!")
-        elif female_pct >= 60:
-            strategy_parts.append("• 안전성과 실용성을 중시하는 고객님을 위한 패밀리 전용 차량 혜택을 제공합니다.")
-        else:
-            strategy_parts.append("• 누구나 만족할 수 있는 다양한 트림과 옵션 구성을 제안드립니다.")
-        
-        # 연령 기반 전략
-        avg_age = age_stats.loc[cluster, 'mean']
-        
-        if avg_age < 35:
-            strategy_parts.append("SNS에서도 화제가 된 최신 디자인과 스마트 기능 차량을 추천드립니다.")
-        elif avg_age >= 45:
-            strategy_parts.append("넉넉한 공간, 편의 사양, 안전 기능까지 갖춘 차량을 특별 할인가에 제공해드립니다.")
-        else:
-            strategy_parts.append("세대 구분 없이 인기 있는 모델로, 스타일과 실용성을 동시에 만족시켜드립니다.")
-        
-        # 거래 금액 기반 전략
-        avg_transaction = transaction_stats.loc[cluster]
-        transaction_median = transaction_stats.median()
-        
-        if avg_transaction >= transaction_median * 1.2:
-            strategy_parts.append("프리미엄 모델 고객님 전용, 전담 컨설팅과 VIP 시승 혜택을 제공해드립니다.")
-        elif avg_transaction <= transaction_median * 0.8:
-            strategy_parts.append("실속 있는 가격과 높은 연비를 자랑하는 합리적 모델을 특별 할인과 함께 안내드립니다.")
-        else:
-            strategy_parts.append("안정적인 인기 모델을 합리적인 가격에 만나보세요.")
-        
-        # 구매 빈도 기반 전략
-        avg_freq = freq_stats.loc[cluster]
-        freq_median = freq_stats.median()
-        
-        if avg_freq >= freq_median * 1.5:
-            strategy_parts.append("단골 고객님께 감사의 마음을 담아, 멤버십 전용 혜택과 정기 유지관리 쿠폰을 제공합니다.")
-        elif avg_freq <= freq_median * 0.7:
-            strategy_parts.append("차량 구매를 고민 중이신가요? 지금 가입 시 오랜만에 오신 고객님을 위한 특별 할인 혜택을 드립니다.")
-        
-        # 전략 조합
-        strategies[cluster] = "<br>• ".join(strategy_parts)
-    
-    return strategies, brand_recommendations
-
-def send_email(customer_name, customer_email, message, cluster=None, marketing_strategies=None, brand_recommendations=None, purchased_model=None):
-    # 개발자 모드인 경우 모든 이메일을 개발자 이메일로 발송
-    if not prod:
-        original_email = customer_email  # 원래 고객 이메일 저장 (로그용)
-        customer_email = prod_email  # 개발자 이메일로 변경
-        message = f"[개발자 모드] 원래 수신자: {original_email}<br><br>{message}"
-    
-    # 브랜드별 테마 설정
-    brand = st.session_state.get("brand", "현대")
-    
-    if brand == "현대":
-        primary_color = "#005bac"  # 현대 블루
-        logo_alt = "현대 로고"
-        logo_cid = "hyundai_logo"
-        brand_name = "현대자동차"
-        logo_path = "main/project_1/img/hyundai_logo.jpg"
-    else:  # 기아
-        primary_color = "#c10b30"  # 기아 레드
-        logo_alt = "기아 로고"
-        logo_cid = "kia_logo"
-        brand_name = "기아자동차"
-        logo_path = "main/project_1/img/kia_logo.png"
-    
-    # SMTP 서버 설정
-    SMTP_SERVER = "smtp.gmail.com"
-    SMTP_PORT = 587
-    EMAIL_ADDRESS = "vhzkflfltm6@gmail.com"
-    EMAIL_PASSWORD = "cnvc dpea ldyv pfgq" 
-    
-    msg = MIMEMultipart()
-    msg['From'] = EMAIL_ADDRESS
-    msg['To'] = customer_email
-    msg['Subject'] = f"{customer_name}님, 프로모션 안내" if prod else f"[테스트] {customer_name}님, 프로모션 안내"
-
-    # 고객에게 추천할 모델 목록 생성 (구매한 모델 제외)
-    recommended_models = []
-    if cluster and brand_recommendations and brand in brand_recommendations:
-        cluster_key = cluster - 1 if brand == "현대" else cluster  # 현대는 1-8, 기아는 0-5
-        if cluster_key in brand_recommendations[brand]:
-            if purchased_model:
-                # 구매한 모델을 제외한 추천 모델 목록
-                recommended_models = [model for model in brand_recommendations[brand][cluster_key] 
-                                      if model != purchased_model]
-            else:
-                # 구매한 모델 정보가 없는 경우 전체 추천
-                recommended_models = brand_recommendations[brand][cluster_key]
-    
-    # 마케팅 전략과 추천 모델을 하나의 박스로 통합
-    strategy_box_content = ""
-
-    if cluster and marketing_strategies and cluster in marketing_strategies:
-        strategy_box_content += f"""
-        <div style="margin-bottom: 20px;">
-            <h3 style="margin-top: 0; margin-bottom: 15px; color: {primary_color}; font-size: 18px;">고객님을 위한 맞춤형 제안</h3>
-            <div style="font-size: 15px; line-height: 1.6;">
-                {marketing_strategies[cluster].replace('<br>• ', '<br>• ')}
-            </div>
-        </div>
-        """
-
-    # 추천 모델 목록 추가
-    if recommended_models:
-        models_html = "<h3 style='margin-bottom: 15px; color: {}; font-size: 18px;'>추천 모델</h3><ul style='padding-left: 20px; margin-top: 0;'>".format(primary_color)
-        models_html += "".join([f"<li style='margin-bottom: 8px;'>{model}</li>" for model in recommended_models])
-        models_html += "</ul>"
-        
-        strategy_box_content += f"""
-        <div style="margin: 25px 0 20px 0;">
-            {models_html}
-        </div>
-        """
-
-    # 메인 메시지 박스
-    main_message_box = f"""
-    <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin-top: 20px; border: 1px solid #e0e0e0;">
-        {strategy_box_content}
-        
-        <div style="font-size: 15px; line-height: 1.7; padding-top: 15px; border-top: 1px solid #e0e0e0; margin-top: 20px;">
-            {message}
-        </div>
-    </div>
-    """
-
-    html_body = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
-        <table style="width: 100%; max-width: 800px; margin: auto; background: white; padding: 30px; 
-                    border-radius: 15px; box-shadow: 0px 5px 15px rgba(0,0,0,0.1);">
-            <!-- 헤더 영역 (로고) -->
-            <tr>
-                <td style="text-align: center; padding: 20px; background: {primary_color}; color: white; 
-                        border-top-left-radius: 15px; border-top-right-radius: 15px;">
-                    <h1 style="margin: 0;">🚗 {brand_name} 프로모션 🚗</h1>
-                </td>
-            </tr>
-            
-            <!-- 본문 내용 -->
-            <tr>
-                <td style="padding: 30px;">
-                    <!-- 브랜드 로고 -->
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" target="_blank">
-                        <img src="cid:{logo_cid}"
-                            alt="{logo_alt}" style="width: 100%; max-width: 300px; border-radius: 8px;">
-                        </a>
-                    </div>
-
-                    <p style="font-size: 18px; text-align: center; margin-bottom: 25px;">안녕하세요, <strong>{customer_name}</strong>님!</p>
-
-                    {main_message_box}
-                    
-                    <div style="text-align: center; margin-top: 30px;">
-                        <a href="https://www.{'hyundai' if brand == '현대' else 'kia'}.com" 
-                            style="display: inline-block; background: {primary_color}; color: white; padding: 14px 28px; 
-                                text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
-                            지금 확인하기
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <!-- 푸터 (고객센터 안내) -->
-            <tr>
-                <td style="padding: 20px 15px 15px 15px; font-size: 13px; text-align: center; color: #777; border-top: 1px solid #eee;">
-                    ※ 본 메일은 자동 발송되었으며, 문의는 고객센터를 이용해주세요.
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
-    """
-
-    # HTML 본문 첨부
-    msg.attach(MIMEText(html_body, 'html'))
-
-    # 로고 이미지 첨부
+# 데이터 로드 및 전처리 함수
+@st.cache_data
+def load_data(brand):
     try:
-        with open(logo_path, 'rb') as img_file:
-            img_data = img_file.read()
-            img = MIMEImage(img_data)
-            img.add_header('Content-ID', f'<{logo_cid}>')
-            img.add_header('Content-Disposition', 'inline', filename=os.path.basename(logo_path))
-            msg.attach(img)
-    except Exception as e:
-        st.error(f"로고 이미지 첨부 실패: {str(e)}")
-        # 이미지 첨부 실패 시 대체 텍스트 사용
-        html_body = html_body.replace(f'src="cid:{logo_cid}"', f'alt="{logo_alt}" style="display:none;"')
-        msg = MIMEMultipart()  # 기존 메시지 재생성
-        msg['From'] = EMAIL_ADDRESS
-        msg['To'] = customer_email
-        msg['Subject'] = f"{customer_name}님, 프로모션 안내" if prod else f"[테스트] {customer_name}님, 프로모션 안내"
-        msg.attach(MIMEText(html_body, 'html'))
+        df = pd.read_csv(f"data/{brand}_고객데이터_신규입력용.csv")
+        df['제품 구매 날짜'] = pd.to_datetime(df['제품 구매 날짜'])
+        df['구매월'] = df['제품 구매 날짜'].dt.to_period('M').astype(str)
+        df['구매월_num'] = df['제품 구매 날짜'].dt.month
+        df['Cluster'] = df['Cluster'] + 1  # 클러스터 번호 1부터 시작
+        df['구매한 제품'] = df['구매한 제품'].apply(preprocess_model_name)# 모델명 전처리 적용
+        
+        # 실시간 데이터 누적을 위한 가상 데이터 생성 (실제 시스템에서는 DB에서 최신 데이터 불러옴)
+        today = datetime.now()
+        new_data = []
+        for _ in range(np.random.randint(5, 15)):  # 5~15개의 새 데이터 생성
+            random_days = np.random.randint(1, 30)
+            new_date = today - timedelta(days=random_days)
+            random_model = np.random.choice(df['구매한 제품'].unique())
+            random_region = np.random.choice(df['국가'].unique())
+            random_cluster = np.random.choice(df['Cluster'].unique())
+            
+            new_data.append({
+                '제품 구매 날짜': new_date,
+                '구매한 제품': random_model,
+                '국가': random_region,
+                'Cluster': random_cluster,
+                '거래 금액': np.random.randint(20000, 100000),
+                '제품구매빈도': np.random.randint(1, 10)
+            })
+        
+        new_df = pd.DataFrame(new_data)
+        df = pd.concat([df, new_df], ignore_index=True)
+        
+        return df
+    except FileNotFoundError:
+        st.error(f"{brand} 데이터 파일을 찾을 수 없습니다.")
+        return pd.DataFrame()
+    
+def preprocess_model_name(model_name):
+    """모델명에서 괄호 앞의 기본 모델명만 추출"""
+    if '(' in model_name:
+        return model_name.split('(')[0].strip()
+    return model_name
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)  # Gmail SMTP 서버 사용
-    server.starttls()
-    server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-    text = msg.as_string()
-    server.sendmail(EMAIL_ADDRESS, customer_email, text)
-    server.quit()
-# 10초마다 자동 새로고침 (10000 밀리초)
-st_autorefresh(interval=10000, limit=None, key="fizzbuzz")
+def create_cluster_info_df(df, brand):
+    # 고객 세그먼트 매핑 정보
+    segment_mapping = {
+        "현대": {
+            0: "VIP",
+            1: "이탈가능",
+            2: "신규",
+            3: "일반"
+        },
+        "기아": {
+            0: "VIP",
+            1: "일반",
+            2: "신규",
+            3: "이탈가능"
+        }
+    }
 
-# 인포 메시지를 세밀하게 표시하는 함수
-def custom_info(message, bg_color, text_color="black"):
-    st.markdown(
-        f'<div style="background-color: {bg_color}; color: {text_color}; padding: 10px; border-radius: 4px; margin-bottom: 10px;">{message}</div>',
-        unsafe_allow_html=True
+    cluster_stats = []
+
+    for cluster_num in sorted(df['Cluster'].unique()):
+        cluster_data = df[df['Cluster'] == cluster_num]
+
+        # ✅ 세그먼트명 변환
+        if '고객 세그먼트' in cluster_data.columns:
+            mapped_segment_names = (
+                cluster_data['고객 세그먼트']
+                .map(segment_mapping.get(brand, {}))
+                .dropna()
+            )
+            if not mapped_segment_names.empty:
+                dominant_segment = mapped_segment_names.value_counts().idxmax()
+            else:
+                dominant_segment = "세그먼트 미지정"
+        else:
+            dominant_segment = "세그먼트 없음"
+
+        # 🔹 성별 분석
+        if '성별' in cluster_data.columns:
+            gender_dist = cluster_data['성별'].value_counts(normalize=True) * 100
+            dominant_gender = gender_dist.idxmax() if not gender_dist.empty else None
+            gender_ratio = f"{dominant_gender} {gender_dist.max():.0f}%" if dominant_gender else "성별 데이터 없음"
+        else:
+            gender_ratio = "성별 데이터 없음"
+
+        # 🔹 연령대 분석
+        if '연령' in cluster_data.columns:
+            cluster_data = cluster_data.copy()
+            cluster_data['연령대'] = cluster_data['연령'].apply(lambda x: '고연령층' if x >= 40 else '젊은세대')
+            age_dist = cluster_data['연령대'].value_counts()
+            if not age_dist.empty:
+                dominant_age = age_dist.idxmax()
+            else:
+                dominant_age = "연령 데이터 없음"
+        else:
+            dominant_age = "연령 데이터 없음"
+
+        # 🔹 특징 조합
+        characteristics_parts = [dominant_segment]
+        if gender_ratio != "성별 데이터 없음":
+            characteristics_parts.append(gender_ratio)
+        if dominant_age != "연령 데이터 없음":
+            characteristics_parts.append(dominant_age)
+
+        characteristics = ", ".join(characteristics_parts)
+
+        # 🔹 선호 모델
+        top_models = cluster_data['구매한 제품'].value_counts().nlargest(3)
+        preferred_models = ", ".join(top_models.index.tolist()) if not top_models.empty else "데이터 없음"
+
+        # 🔹 고객 비율
+        customer_ratio = (len(cluster_data) / len(df)) * 100
+
+        cluster_stats.append({
+            "Cluster": cluster_num,
+            "특징": characteristics,
+            "고객 비율(%)": round(customer_ratio, 1),
+            "선호 모델": preferred_models
+        })
+
+    cluster_df = pd.DataFrame(cluster_stats)
+    cluster_df.set_index("Cluster", inplace=True)
+    return cluster_df
+
+
+
+# 생산량 추천 계산 함수
+def calculate_production_recommendation(sales_trend, current_inventory, safety_stock=0.2):
+    avg_sales = sales_trend.mean()
+    recommended_production = avg_sales * (1 + safety_stock) - current_inventory
+    return max(0, recommended_production)
+
+# 모델별 생산 우선순위 계산
+def calculate_model_priority(df):
+    # 1. 기본 통계 계산
+    model_stats = df.groupby('구매한 제품').agg({
+        '거래 금액': 'mean',
+        '제품 구매 날짜': 'count',
+        '제품구매경로': lambda x: (x == '오프라인').mean() if '오프라인' in x.values else 0  # 오프라인 구매 비율
+    }).rename(columns={'제품 구매 날짜': '판매량'}).fillna(0)
+
+    # 2. 최근 3개월 판매 비중 계산
+    recent_date = df['제품 구매 날짜'].max()
+    recent_mask = df['제품 구매 날짜'] >= (recent_date - pd.DateOffset(months=3))
+    recent_sales = df[recent_mask].groupby('구매한 제품').size()
+    model_stats['최근_판매_비중'] = (recent_sales / model_stats['판매량']).fillna(0)
+
+    # 3. 점수 계산 (가중치 적용 후 정수 변환)
+    model_stats['수익성 점수'] = ((model_stats['거래 금액'] / model_stats['거래 금액'].max()) * 40).round().astype(int)
+
+    model_stats['충성도 점수'] = (
+        (model_stats['최근_판매_비중'].fillna(0) * 0.6 +
+         model_stats['제품구매경로'] * 0.4) * 30
+    ).round().astype(int)
+
+    model_stats['인기 점수'] = ((model_stats['판매량'] / model_stats['판매량'].max()) * 30).round().astype(int)
+
+    # 4. 종합 점수 계산 (100점 만점 기준)
+    model_stats['종합 점수'] = model_stats[['수익성 점수', '충성도 점수', '인기 점수']].sum(axis=1)
+
+    return model_stats.sort_values('종합 점수', ascending=False)
+
+
+# 판매 트렌드 분석 및 인사이트 생성
+def analyze_sales_trend(filtered_df, brand, selected_models):
+    st.subheader("📊 판매 트렌드 분석 결과")
+    
+    # 월별 판매량 집계
+    monthly_sales = filtered_df.groupby(['구매월', '구매한 제품']).size().unstack().fillna(0)
+    
+    # 판매 트렌드 시각화
+    fig = px.line(
+        monthly_sales, 
+        x=monthly_sales.index, 
+        y=selected_models,
+        title=f"{brand} 모델별 월별 판매 추이",
+        labels={"value": "판매량", "구매월": "월", "variable": "모델"}
     )
-# 기본 스타일 설정
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-    body {
-        font-family: 'Roboto', sans-serif;
-        background: linear-gradient(135deg, #f0f4f8, #e8f5e9);
-        padding: 20px;
-    }
-    .css-18e3th9, .css-1d391kg { background: none; }
-    .reportview-container .main {
-        background-color: rgba(255,255,255,0.9);
-        padding: 40px;
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-    }
-    h1 {
-        font-size: 2.5em;
-        font-weight: 700;
-        text-align: center;
-        color: #2E86C1;
-        margin-bottom: 10px;
-    }
-    h4 {
-        text-align: center;
-        color: #555;
-        margin-bottom: 30px;
-        font-size: 1.1em;
-    }
-    hr { border: 1px solid #bbb; margin: 20px 0; }
-    .nav-link {
-        transition: background-color 0.3s ease, transform 0.3s ease;
-        border-radius: 10px;
-    }
-    .nav-link:hover {
-        background-color: #AED6F1 !important;
-        transform: scale(1.05);
-    }
-    .analysis-text {
-        background-color: #ffffff;
-        border-left: 4px solid #2E86C1;
-        padding: 20px;
-        margin: 30px 0;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        font-size: 1.1em;
-        color: #333;
-        line-height: 1.5;
-    }
-    .analysis-text:hover { background-color: #f7f9fa; }
-    .option-menu .nav-link-selected { background-color: #2E86C1; color: white; }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# 클러스터 색상 매핑
-cluster_color_map = {
-    1: "#A8E6CF",  # 연두색
-    2: "#FFF9B0",  # 연노랑
-    3: "#AECBFA",  # 연파랑
-    4: "#FFD3B6",  # 연주황
-    5: "#D5AAFF",  # 연보라
-    6: "#FFB3BA",  # 연핑크
-}
-today = datetime.date.today().strftime("%Y-%m-%d")
-
-# 인사이트 자동 생성 함수
-def generate_gender_insights(gender_pct):
-    insights = ["**📊 성별 분포 인사이트**"]
+    st.plotly_chart(fig)
     
-    max_male = gender_pct['남'].idxmax()
-    max_female = gender_pct['여'].idxmax()
-    balanced_cluster = (gender_pct['남'] - gender_pct['여']).abs().idxmin()
-
-    male_dominant = gender_pct[gender_pct['남'] >= 60].index.tolist()
-    female_dominant = gender_pct[gender_pct['여'] >= 60].index.tolist()
-    balanced = list(set(gender_pct.index) - set(male_dominant) - set(female_dominant))
-
-    insights.append(f"- 가장 남성 비율 높은 고객 유형: {max_male}번 ({gender_pct.loc[max_male, '남']:.1f}%)")
-    insights.append(f"- 가장 여성 비율 높은 고객 유형: {max_female}번 ({gender_pct.loc[max_female, '여']:.1f}%)")
-    insights.append(f"- 가장 균형 잡힌 고객 유형: {balanced_cluster}번 (남성 {gender_pct.loc[balanced_cluster, '남']:.1f}% / 여성 {gender_pct.loc[balanced_cluster, '여']:.1f}%)")
-
-    marketing = ["**🎯 마케팅 제안**"]
-    if male_dominant:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, male_dominant))}: 남성 타겟 프로모션 (스포츠 모델, 기술 기능 강조)")
-    if female_dominant:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, female_dominant))}: 여성 타겟 캠페인 (안전 기능, 가족 친화적 메시지)")
-    if balanced:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, balanced))}: 일반적인 마케팅 접근 (다양한 옵션 제공)")
-
-    return "\n".join(insights + [""] + marketing)
-
-def generate_age_insights(age_stats):
-    insights = ["**📊 연령 분포 인사이트**"]
+    # 판매 트렌드 인사이트
+    st.markdown("### 🔍 판매 트렌드 주요 인사이트")
     
-    youngest = age_stats['평균 연령'].idxmin()
-    oldest = age_stats['평균 연령'].idxmax()
-    diverse = age_stats['표준편차'].idxmax()
+    # 모델별 성장률 계산 (최근 3개월 vs 이전 3개월)
+    if len(monthly_sales) >= 6:
+        recent_months = monthly_sales.index[-3:]
+        previous_months = monthly_sales.index[-6:-3]
+        
+        growth_rates = {}
+        for model in selected_models:
+            recent_sales = monthly_sales.loc[recent_months, model].mean()
+            previous_sales = monthly_sales.loc[previous_months, model].mean()
+            growth_rate = ((recent_sales - previous_sales) / previous_sales * 100) if previous_sales != 0 else 0
+            growth_rates[model] = growth_rate
+        
+        fastest_growing = max(growth_rates, key=growth_rates.get)
+        fastest_declining = min(growth_rates, key=growth_rates.get)
+        
+        st.markdown(f"""
+        - **가장 빠르게 성장하는 모델**: {fastest_growing} (성장률: {growth_rates[fastest_growing]:.1f}%)
+        - **판매 감소 중인 모델**: {fastest_declining} (감소율: {abs(growth_rates[fastest_declining]):.1f}%)
+        """)
+        
+        # 계절성 패턴 분석
+        st.markdown("### 📅 계절성 패턴 분석")
+        seasonal_df = filtered_df.groupby(['구매월_num', '구매한 제품']).size().unstack().fillna(0)
+        
+        fig_seasonal = px.line(
+            seasonal_df,
+            x=seasonal_df.index,
+            y=selected_models,
+            title="월별 계절성 패턴 (전체 기간)",
+            labels={"value": "평균 판매량", "구매월_num": "월", "variable": "모델"}
+        )
+        st.plotly_chart(fig_seasonal)
+        
+        # 계절성 인사이트
+        seasonal_insights = []
+        for model in selected_models:
+            peak_month = int(seasonal_df[model].idxmax())
+            low_month = int(seasonal_df[model].idxmin())
+            seasonal_insights.append(f"- {model}: 최고 판매월 {peak_month}월, 최저 판매월 {low_month}월")
+        
+        st.markdown("#### 🔍 계절성 주요 인사이트\n" + "\n".join(seasonal_insights))
     
-    young_clusters = age_stats[age_stats['평균 연령'] < 40].index.tolist()
-    old_clusters = age_stats[age_stats['평균 연령'] >= 40].index.tolist()
-    diverse_clusters = age_stats.sort_values('표준편차', ascending=False).head(2).index.tolist()
-
-    insights.append(f"- 가장 젊은 고객 유형: {youngest}번 (평균 {age_stats.loc[youngest, '평균 연령']}세)")
-    insights.append(f"- 가장 연장자 고객 유형: {oldest}번 (평균 {age_stats.loc[oldest, '평균 연령']}세)")
-    insights.append(f"- 가장 다양한 연령대: {diverse}번 (표준편차 {age_stats.loc[diverse, '표준편차']}세)")
-
-    marketing = ["**🎯 마케팅 제안**"]
-    if young_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, young_clusters))}: SNS 마케팅, 트렌디한 디자인/기술 강조")
-    if old_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, old_clusters))}: 안전/편의 기능, 할인 혜택 강조")
-    if diverse_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, diverse_clusters))}: 다양한 연령층 호소 가능한 메시지")
-
-    return "\n".join(insights + [""] + marketing)
-
-def generate_transaction_insights(transaction_stats):
-    insights = ["**📊 거래 금액 인사이트**"]
+    # 최근 3개월 판매 통계
+    st.subheader("📈 최근 3개월 판매 통계")
+    recent_months = monthly_sales.index[-3:] if len(monthly_sales) >= 3 else monthly_sales.index
+    recent_sales = monthly_sales.loc[recent_months]
     
-    high_value = transaction_stats['평균 거래액'].idxmax()
-    low_value = transaction_stats['평균 거래액'].idxmin()
-    total_sales = transaction_stats['총 거래액'].sum()
+    col1, col2, col3 = st.columns(3)
+    col1.metric("평균 판매량", f"{recent_sales.mean().mean():.1f}대")
+    col2.metric("최대 판매량", f"{recent_sales.max().max()}대")
+    col3.metric("최소 판매량", f"{recent_sales.min().min()}대")
     
-    high_value_clusters = transaction_stats[transaction_stats['평균 거래액'] >= transaction_stats['평균 거래액'].quantile(0.75)].index.tolist()
-    low_value_clusters = transaction_stats[transaction_stats['평균 거래액'] <= transaction_stats['평균 거래액'].quantile(0.25)].index.tolist()
-
-    insights.append(f"- 최고 평균 거래액 고객 유형: {high_value}번 ({transaction_stats.loc[high_value, '평균 거래액']:,.0f}원)")
-    insights.append(f"- 최저 평균 거래액 고객 유형: {low_value}번 ({transaction_stats.loc[low_value, '평균 거래액']:,.0f}원)")
-    insights.append(f"- 총 거래액 ({today} 기준): {total_sales:,.0f}원")
-
-    marketing = ["**🎯 마케팅 제안**"]
-    if high_value_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, high_value_clusters))}: 프리미엄 모델 추천, VIP 서비스 제공")
-    if low_value_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, low_value_clusters))}: 할인 프로모션, 저비용 모델 추천")
-
-    return "\n".join(insights + [""] + marketing)
-
-def generate_frequency_insights(freq_stats):
-    insights = ["**📊 구매 빈도 인사이트**"]
+    st.dataframe(recent_sales.style.format("{:.0f}대").background_gradient(cmap='Blues'))
     
-    frequent = freq_stats['평균 구매 빈도'].idxmax()
-    rare = freq_stats['평균 구매 빈도'].idxmin()
+    # 판매 추세에 따른 생산 권장 사항
+    st.markdown("### 🏭 생산 계획 권장 사항")
+    for model in selected_models:
+        model_sales = monthly_sales[model]
+        if len(model_sales) >= 3:
+            trend = (model_sales.iloc[-1] - model_sales.iloc[-3]) / 3  # 월평균 변화량
+            if trend > 0:
+                st.success(f"{model}: 판매량이 월평균 {trend:.1f}대 증가 중 → 생산량 점진적 증가 권장")
+            elif trend < 0:
+                st.warning(f"{model}: 판매량이 월평균 {abs(trend):.1f}대 감소 중 → 생산량 조정 필요")
+            else:
+                st.info(f"{model}: 판매량 안정적 → 현재 생산량 유지 권장")
+
+# 지역별 선호 모델 분석 및 인사이트 생성
+def analyze_regional_preference(region_df, selected_region, df):
+    st.subheader("🌍 지역별 선호 모델 분석 결과")
     
-    frequent_clusters = freq_stats[freq_stats['평균 구매 빈도'] >= freq_stats['평균 구매 빈도'].quantile(0.75)].index.tolist()
-    rare_clusters = freq_stats[freq_stats['평균 구매 빈도'] <= freq_stats['평균 구매 빈도'].quantile(0.25)].index.tolist()
-
-    insights.append(f"- 최고 구매 빈도 고객 유형: {frequent}번 (평균 {freq_stats.loc[frequent, '평균 구매 빈도']:.2f}회)")
-    insights.append(f"- 최저 구매 빈도 고객 유형: {rare}번 (평균 {freq_stats.loc[rare, '평균 구매 빈도']:.2f}회)")
-
-    marketing = ["**🎯 마케팅 제안**"]
-    if frequent_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, frequent_clusters))}: 충성도 프로그램, 정기 구매 혜택")
-    if rare_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, rare_clusters))}: 재구매 유도 프로모션, 첫 구매 할인")
-
-    return "\n".join(insights + [""] + marketing)
-
-def generate_model_insights(model_cluster, selected_model):
-    insights = [f"**📊 {selected_model} 모델 인사이트**"]
+    # 모델별 판매량
+    model_sales = region_df['구매한 제품'].value_counts().reset_index()
+    model_sales.columns = ['모델', '판매량']
+    top_models = model_sales.head(10)
     
-    main_cluster = model_cluster.idxmax()
-    main_ratio = (model_cluster[main_cluster] / model_cluster.sum()) * 100
+    col1, col2 = st.columns(2)
     
-    top_clusters = model_cluster.nlargest(2).index.tolist()  # 상위 2개 클러스터
-    other_clusters = list(set(model_cluster.index) - set(top_clusters))
+    with col1:
+        st.markdown("### 🏆 인기 모델 Top 10")
+        fig = px.bar(
+            top_models,
+            x='모델',
+            y='판매량',
+            color='모델',
+            title=f"{selected_region} 인기 모델"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.markdown("### 📊 판매 비율")
+        fig = px.pie(
+            top_models,
+            names='모델',
+            values='판매량',
+            title=f"{selected_region} 모델별 판매 비율"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # 지역별 인사이트
+    st.markdown("### 🔍 지역별 주요 인사이트")
+    
+    # 전체 평균과 비교
+    total_avg_sales = df['구매한 제품'].value_counts(normalize=True)
+    region_avg_sales = region_df['구매한 제품'].value_counts(normalize=True)
+    
+    over_performing = []
+    for model in top_models['모델']:
+        if model in total_avg_sales.index:
+            diff = (region_avg_sales.get(model, 0) - total_avg_sales.get(model, 0)) * 100
+            if diff > 5:  # 5% 이상 높은 경우
+                over_performing.append(f"- {model}: 평균보다 {diff:.1f}% 높음")
+    
+    if over_performing:
+        st.markdown(f"#### 📌 {selected_region}에서 특별히 잘 팔리는 모델:\n" + "\n".join(over_performing))
+    else:
+        st.info("이 지역의 모델 선호도는 전체 평균과 유사합니다.")
+    
+    # 지역별 비교 분석
+    st.subheader("🌐 지역별 Top5 모델 선호도 비교")
+    
+    regions = df['국가'].unique()
+    compare_regions = st.multiselect(
+        "비교할 지역 선택",
+        regions,
+        default=list(dict.fromkeys([selected_region] + list(regions[:2]))))
+    
+    if compare_regions:
+        compare_df = df[df['국가'].isin(compare_regions)]
+        model_region_sales = compare_df.groupby(['구매한 제품', '국가']).size().unstack().fillna(0)
+        
+        # 상위 5개 모델만 표시
+        top_5_models = model_region_sales.sum(axis=1).nlargest(5).index
+        model_region_sales = model_region_sales.loc[top_5_models]
+        def highlight_zero(val):
+            color = 'red' if val == 0 else 'white'
+            return f'background-color: {color}'
+        st.dataframe(
+            model_region_sales.style
+                .applymap(highlight_zero)  # 0대는 빨간색 강조
+                .background_gradient(cmap='Blues', axis=1)  # 그 외는 블루 그라데이션
+                .format("{:.0f}대")  # 단위 표시
+        )
+        
+        # 히트맵 시각화
+        fig = px.imshow(
+            model_region_sales,
+            labels=dict(x="지역", y="모델", color="판매량"),
+            title="지역별 Top5 모델 선호도 비교"
+        )
+        st.plotly_chart(fig)
+        
+        # 지역 비교 인사이트
+        st.markdown("### 🔍 지역 비교 주요 인사이트")
+        
+        insights = []
+        for model in top_5_models:
+            if model in model_region_sales.index:  # 모델 존재 확인 추가
+                best_region = model_region_sales.loc[model].idxmax()
+                worst_region = model_region_sales.loc[model].idxmin()
+                best_sales = model_region_sales.loc[model, best_region]
+                worst_sales = model_region_sales.loc[model, worst_region]
+                
+                # 조건 완화: 0대 판매 또는 2배 이상 차이 시 인사이트 생성
+                if worst_sales == 0:
+                    insights.append(f"- {model}: {best_region}에서 단독 판매 (타지역 0대)")
+                elif best_sales >= 2 * worst_sales:  # 2배 이상 차이 시
+                    ratio = best_sales / worst_sales
+                    insights.append(f"- {model}: {best_region}에서 {worst_region}보다 {ratio:.1f}배 더 많이 팔림")
+        
+        # 인사이트 표시 로직 변경
+        if insights:
+            st.markdown("#### 📌 지역별 차이가 큰 모델:")
+            for insight in insights:
+                st.markdown(insight)
+        else:
+            st.info("선택한 지역 간 모델 선호도 차이가 크지 않습니다.")
 
-    insights.append(f"- 주 구매 고객 유형: {main_cluster}번 ({main_ratio:.1f}%)")
-    insights.append(f"- 총 판매량: {model_cluster.sum()}대")
+# 고객 유형별 모델 선호도 분석 및 인사이트 생성
+def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
+    st.subheader("👥 고객 유형별 모델 선호도 분석 결과")
+    
+    # 선택한 클러스터의 모델 선호도
+    cluster_preference = cluster_model.loc[selected_cluster].sort_values(ascending=False)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"### 🏆 고객 유형 {selected_cluster} 선호 모델 Top 10")
+        fig = px.bar(
+            cluster_preference.head(10),
+            x=cluster_preference.head(10).index,
+            y=cluster_preference.head(10).values,
+            color=cluster_preference.head(10).index,
+            title=f"고객 유형 {selected_cluster} Top 10 모델"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # 클러스터 정보 데이터프레임 생성
+        cluster_df = create_cluster_info_df(df, brand)
+        
+        st.markdown("### 📊 고객 유형별 특징 및 선호 모델")
+        
+        # 전체 클러스터 정보 표시
+        st.dataframe(
+            cluster_df.style.apply(
+                lambda x: ["background: #EAF2F8" if x.name == selected_cluster else "" for i in x], 
+                axis=1
+            )
+        )
+    
+    # 고객 유형별 인사이트
+    st.markdown("### 🔍 고객 유형별 주요 인사이트")
+    
+    # 전체 평균과 비교
+    total_avg_sales = df['구매한 제품'].value_counts(normalize=True)
+    cluster_avg_sales = df[df['Cluster'] == selected_cluster]['구매한 제품'].value_counts(normalize=True)
+    
+    unique_preferences = []
+    for model in cluster_preference.head(5).index:
+        diff = (cluster_avg_sales.get(model, 0) - total_avg_sales.get(model, 0)) * 100
+        if diff > 5:  # 5% 이상 높은 경우
+            unique_preferences.append(f"- {model}: 일반 고객 대비 {diff:.1f}% 더 높은 선호도를 보여줌")
+    
+    # 클러스터 특징 가져오기
+    cluster_features = cluster_df.loc[selected_cluster, "특징"]
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if unique_preferences:
+            st.markdown(f"""
+            #### 📌 고객 유형 {selected_cluster} 특징:
+            {cluster_features}
+            
+            #### 특별히 선호하는 모델:
+            {cluster_df.loc[selected_cluster, "선호 모델"]}
+            """)
+        else:
+            st.info(f"""
+            이 고객 유형의 선호도는 전체 평균과 유사합니다.
+            
+            #### 고객 유형 {selected_cluster} 특징:
+            {cluster_features}
+            """)
+    
+    # 모든 클러스터에 대한 모델 선호도 비교
+    st.subheader("👥 고객 유형별 모델 선호도 비교")
+    
+    compare_models = st.multiselect(
+        "비교할 모델 선택 (기본값은 선택중인 고객 유형별 판매량 상위 3개 모델입니다.)",
+        df['구매한 제품'].unique(),
+        default=df['구매한 제품'].value_counts().head(3).index.tolist()
+    )
+    
+    if compare_models:
+        model_cluster = df[df['구매한 제품'].isin(compare_models)]
+        model_cluster = model_cluster.groupby(['구매한 제품', 'Cluster']).size().unstack().fillna(0)
+        
+        # 정수형으로 포매팅하여 출력
+        st.dataframe(
+            model_cluster.style.format("{:.0f}")  # 소수점 없이 정수로 표시
+            .background_gradient(cmap='Blues', axis=1)
+        )
+        
+        # 클러스터별 모델 선호도 시각화
+        fig = px.bar(
+            model_cluster.T,
+            barmode='group',
+            title="고객 유형별 모델 선호도 비교"
+        )
+        st.plotly_chart(fig)
+        
+        # 고객 유형 비교 인사이트
+        st.markdown("### 🔍 고객 유형별 모델 선호도 인사이트")
 
-    marketing = ["**🎯 마케팅 제안**"]
-    if top_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, top_clusters))}: 해당 클러스터 특성에 맞는 맞춤형 프로모션")
-    if other_clusters:
-        marketing.append(f"- 고객 유형 {', '.join(map(str, other_clusters))}: 판매 확장을 위한 타겟 마케팅 테스트")
+        insights = []
+        for model in compare_models:
+            if model in model_cluster.index:
+                best_cluster = model_cluster.loc[model].idxmax()
+                worst_cluster = model_cluster.loc[model].idxmin()
+                max_sales = model_cluster.loc[model, best_cluster]
+                min_sales = model_cluster.loc[model, worst_cluster]
+                
+                if min_sales == 0:
+                    # 최소 판매량이 0인 경우 (inf 방지)
+                    insight = f"- {model}: 유형 {best_cluster}에서만 {max_sales}건 판매 (유형 {worst_cluster}에서는 판매 없음)"
+                else:
+                    ratio = max_sales / min_sales
+                    if ratio > 3:  # 3배 이상 차이나는 경우
+                        insight = f"- {model}: 유형 {best_cluster}에서 유형 {worst_cluster}보다 {ratio:.1f}배 더 선호"
+                    else:
+                        continue  # 3배 미만 차이는 인사이트에서 제외
+                
+                insights.append(insight)
 
-    return "\n".join(insights + [""] + marketing)
+        if insights:
+            st.markdown("#### 📌 고객 유형별 선호도 차이가 큰 모델:\n" + "\n".join(insights))
+        else:
+            st.info("선택한 모델들의 고객 유형별 선호도 차이가 크지 않습니다.")
 
+# 생산량 추천 시스템 분석 및 인사이트 생성
+def analyze_production_recommendation(df, selected_model, current_inventory, safety_stock):
+    st.subheader("🏭 생산량 추천 시스템 분석 결과")
+    
+    # 최근 1년 판매 데이터
+    recent_date = df['제품 구매 날짜'].max()
+    one_year_ago = recent_date - timedelta(days=365)
+    recent_sales = df[(df['구매한 제품'] == selected_model) & 
+                     (df['제품 구매 날짜'] >= one_year_ago)]
+    
+    if recent_sales.empty:
+        st.error("최근 1년 내 판매 데이터가 없습니다.")
+        return
+    
+    # 월별 판매량 계산
+    monthly_sales = recent_sales.groupby('구매월').size()
+    
+    # 생산량 추천 계산
+    recommended_production = calculate_production_recommendation(
+        monthly_sales,
+        current_inventory,
+        safety_stock
+    )
+    
+    st.markdown("### 📊 생산량 추천 결과")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("최근 12개월 평균 판매량", f"{monthly_sales.mean():.1f}대/월")
+    col2.metric("현재 재고량", f"{current_inventory}대")
+    col3.metric("추천 생산량", f"{recommended_production:.0f}대")
+    
+    # 판매 추이 그래프
+    st.markdown("### 📈 최근 12개월 판매 추이")
+    fig = px.line(
+        x=monthly_sales.index,
+        y=monthly_sales.values,
+        title=f"{selected_model} 월별 판매량",
+        labels={"x": "월", "y": "판매량"}
+    )
+    st.plotly_chart(fig)
+    
+    # 생산 추천 인사이트
+    st.markdown("### 🔍 생산 계획 인사이트")
+    
+    inventory_coverage = current_inventory / monthly_sales.mean() if monthly_sales.mean() > 0 else float('inf')
+    
+    if inventory_coverage < 1:
+        st.error(f"⚠️ 위험: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량밖에 안됩니다. 즉시 생산 필요!")
+    elif inventory_coverage < 2:
+        st.warning(f"⚠️ 주의: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량입니다. 생산 계획 수립 필요.")
+    else:
+        st.success(f"✅ 안정적: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량입니다.")
+    
+    # 계절성 패턴 분석
+    st.markdown("### 📅 계절성 패턴 분석 (전체 기간)")
+    
+    seasonal_pattern = df[df['구매한 제품'] == selected_model].groupby('구매월_num').size()
+    
+    fig = px.line(
+        x=seasonal_pattern.index,
+        y=seasonal_pattern.values,
+        title=f"{selected_model} 월별 평균 판매 패턴",
+        labels={"x": "월", "y": "평균 판매량"}
+    )
+    st.plotly_chart(fig)
+    
+    # 계절성 인사이트
+    peak_month = int(seasonal_pattern.idxmax())
+    low_month = int(seasonal_pattern.idxmin())
+    peak_sales = int(seasonal_pattern.max())
+    low_sales = seasonal_pattern.min()
+    seasonality_ratio = peak_sales / low_sales if low_sales != 0 else float('inf')
+    # 생산 계획 범위 계산
+    start_month = max(1, peak_month - 2)
+    end_month = max(1, peak_month - 1)
+
+    if start_month == end_month:
+        production_month_text = f"{start_month}월"
+    else:
+        production_month_text = f"{start_month}~{end_month}월"
+
+    st.markdown(f"""
+    #### 🔍 계절성 주요 인사이트
+    - **최고 판매월**: {peak_month}월 (평균 {peak_sales:.1f}대)
+    - **최저 판매월**: {low_month}월 (평균 {low_sales:.1f}대)
+    - **계절성 차이**: {seasonality_ratio:.1f}배 차이
+    
+    💡 **생산 계획 제안**: {peak_month}월 수요 대비를 위해 **{production_month_text}**에 생산량 증대 필요
+""")
+
+def analyze_model_priority(df, model_priority):
+    st.subheader("📊 모델별 생산 우선순위 분석 결과 (최신 충성도 지표 반영)")
+    with st.expander("ℹ️ 생산 우선순위 계산 방법 (클릭하여 상세보기)", expanded=False):
+        st.markdown("""
+        ### 📝 모델 평가 지표 계산 공식
+        
+        각 모델은 **3가지 핵심 지표**로 평가되며, 가중치를 적용해 종합 점수를 계산합니다:
+        
+        <div style="background-color:#f5f5f5; padding:15px; border-radius:10px; margin-bottom:20px;">
+        <b>종합 점수 = (수익성 점수 × 40%) + (충성도 점수 × 30%) + (인기 점수 × 30%)</b>
+        </div>
+        
+        #### 1️⃣ 수익성 점수 (40% 가중치)
+        - 계산식: <code>(모델 평균 거래 금액 ÷ 최고 평균 거래 금액) × 0.4</code>
+        - 모델별 평균 매출액을 기준으로 비교
+        - 고가 모델일수록 유리한 지표
+        
+        #### 2️⃣ 충성도 점수 (30% 가중치)
+        - 일반적으로는 재구매율이나 고객 유지율을 활용해 충성도를 평가하지만, 이번 분석에서는 관련 이력 데이터가 제한적이므로 대체 지표를 적용
+        - 최근 3개월 판매 비중과 오프라인 구매율을 결합하여, 지속적인 수요 유지 가능성과 고객 접점 강도를 함께 반영하였습니다.
+        - 계산식: <code>(최근 3개월 판매 비중 × 60% + 오프라인 구매율 × 40%) × 0.3</code>
+        - 최근성(60%): 해당 모델의 최근 3개월 판매량 비율
+        - 오프라인 구매(40%): 대리점 방문 고객 비율
+        - 안정적인 고객 기반을 보유한 모델 평가
+        
+        #### 3️⃣ 인기 점수 (30% 가중치)
+        - 계산식: <code>(모델 총 판매량 ÷ 최다 판매 모델 판매량) × 0.3</code>
+        - 전체 판매량을 기준으로 비교
+        - 시장 점유율이 높은 모델 평가
+        """, unsafe_allow_html=True)
+        
+        # 계산 예시 시각화
+        example_model = model_priority.index[0]
+        example_data = model_priority.loc[example_model]
+        
+        st.markdown(f"""
+        ### 📊 예시: {example_model} 모델 점수 계산
+        <div style="background-color:#e8f4f8; padding:15px; border-radius:10px;">
+        - 평균 거래 금액: {example_data['거래 금액']:,.0f}원 (최대 대비 {example_data['거래 금액']/model_priority['거래 금액'].max():.0%}) → <b>수익성 점수: {example_data['수익성 점수']:.0f}</b><br>
+        - 최근 3개월 판매: {example_data['최근_판매_비중']:.0%}, 오프라인 구매: {example_data['제품구매경로']:.0%} → <b>충성도 점수: {example_data['충성도 점수']:.0f}</b><br>
+        - 총 판매량: {int(example_data['판매량'])}대 (최대 대비 {example_data['판매량']/model_priority['판매량'].max():.0%}) → <b>인기 점수: {example_data['인기 점수']:.0f}</b><br>
+        <div style="border-top:1px solid #ddd; margin:10px 0;"></div>
+        → <b>종합 점수: {example_data['종합 점수']:.2f}</b>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # --------------------------
+    # 기존 분석 결과 표시 부분
+    # --------------------------
+    # 상위 10개 모델 시각화
+    top_models = model_priority.head(10)
+    fig = px.bar(
+        top_models,
+        x=top_models.index,
+        y='종합 점수',
+        color='종합 점수',
+        title="모델별 생산 우선순위 (종합 점수)",
+        hover_data=['최근_판매_비중', '제품구매경로'],
+        labels={'최근_판매_비중': '최근 3개월 비중', '제품구매경로': '오프라인 구매율'}
+    )
+    st.plotly_chart(fig)
+    
+    # 인사이트 생성 로직
+    top_model = top_models.index[0]
+    bottom_model = top_models.index[-1]
+    
+    st.markdown(f"""
+    ## 🏆 모델별 평가 결과
+    
+    ### 최우선 생산 모델 (TOP 1)
+    <div style="background-color:#e8f4f8; padding:15px; border-radius:10px; margin-bottom:20px;">
+    <b>{top_model}</b>
+    <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+    <tr><td style="padding:5px; width:30%;">종합 점수</td><td style="padding:5px;">{top_models.loc[top_model, '종합 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">수익성 점수</td><td style="padding:5px;">{top_models.loc[top_model, '수익성 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">충성도 점수</td><td style="padding:5px;">{top_models.loc[top_model, '충성도 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">인기 점수</td><td style="padding:5px;">{top_models.loc[top_model, '인기 점수']:.0f}</td></tr>
+    </table>
+    </div>
+    
+    ### 생산 조정 필요 모델 (Bottom 1)
+    <div style="background-color:#fff4f4; padding:15px; border-radius:10px;">
+    <b>{bottom_model}</b>
+    <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+    <tr><td style="padding:5px; width:30%;">종합 점수</td><td style="padding:5px;">{top_models.loc[bottom_model, '종합 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">수익성 점수</td><td style="padding:5px;">{top_models.loc[bottom_model, '수익성 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">충성도 점수</td><td style="padding:5px;">{top_models.loc[bottom_model, '충성도 점수']:.0f}</td></tr>
+    <tr><td style="padding:5px;">인기 점수</td><td style="padding:5px;">{top_models.loc[bottom_model, '인기 점수']:.0f}</td></tr>
+    </table>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 모델 비교 섹션
+    compare_models = st.multiselect(
+        "비교할 모델 선택 (최대 5개)",
+        model_priority.index,
+        default=model_priority.head(3).index.tolist(),
+        key="model_compare"
+    )
+    
+    if compare_models:
+        compare_df = model_priority.loc[compare_models]
+        
+        # 지표 비교 차트
+        fig = px.bar(
+            compare_df,
+            x=compare_df.index,
+            y=['수익성 점수', '충성도 점수', '인기 점수'],
+            barmode='group',
+            title="모델별 평가 지표 비교",
+            labels={'value': '점수', 'variable': '지표'}
+        )
+        st.plotly_chart(fig)
+        
+        # 강점 분석
+        insights = []
+        for model in compare_models:
+            strengths = []
+            if compare_df.loc[model, '수익성 점수'] > 0.7:
+                strengths.append("고수익")
+            if compare_df.loc[model, '충성도 점수'] > 0.7:
+                strengths.append("충성도 높음")
+            if compare_df.loc[model, '인기 점수'] > 0.7:
+                strengths.append("인기 급상승")
+                
+            if strengths:
+                insights.append(f"- **{model}**: {', '.join(strengths)}")
+        
+        if insights:
+            with st.expander("🔍 모델별 강점 상세 분석", expanded=True):
+                st.markdown("\n".join(insights))
+        
+        # 재고 관리 섹션
+        st.markdown("### 📦 재고 현황 반영 생산 계획")
+        inventory_data = {
+            model: st.number_input(
+                f"현재 {model} 재고량을 입력하세요.",
+                min_value=0,
+                value=10,
+                step=1,
+                key=f"inventory_{model}"
+            ) for model in compare_models
+        }
+        
+        inventory_df = pd.DataFrame({
+            '모델': compare_models,
+            '주간 평균 판매량': [model_priority.loc[m, '판매량']/52 for m in compare_models],
+            '현재 재고': [inventory_data[m] for m in compare_models],
+            '재고 주수': [inventory_data[m]/(model_priority.loc[m, '판매량']/52) for m in compare_models]
+        }).set_index('모델')
+        
+        st.dataframe(
+            inventory_df.style.format("{:.1f}").background_gradient(
+                subset=['재고 주수'], 
+                cmap='RdYlGn',  # 녹색(안전) ~ 빨강(위험)
+                vmin=2, vmax=8    # 2주 미만: 위험, 8주 이상: 과잉
+            )
+        )
+        
+        # 생산 권장사항
+        st.markdown("#### 📌 생산 계획 권장")
+        for model in compare_models:
+            weeks = inventory_df.loc[model, '재고 주수']
+            if weeks < 2:
+                st.warning(f"{model}: 재고 부족 (현재 {weeks:.1f}주 분) → **긴급 생산 필요**")
+            elif weeks > 8:
+                st.info(f"{model}: 재고 과다 (현재 {weeks:.1f}주 분) → 생산 감소 검토")
+            else:
+                st.success(f"{model}: 재고 적정 (현재 {weeks:.1f}주 분)")
+
+# 메인 분석 함수
 def run_all_eda():
+    st.title("🚗 차량 생산량 최적화 분석 with 인사이트")
     brand = st.session_state.get("brand", "현대")
-    country = st.session_state.get("country", "")
-    # 분석 종류 선택 메뉴
+    
+    df = load_data(brand)
+    
+    if df.empty:
+        st.warning("데이터를 불러오는 데 실패했습니다.")
+        return
+    
+    # 최신 데이터 업데이트 알림
+    latest_date = df['제품 구매 날짜'].max().strftime('%Y-%m-%d')
+    st.sidebar.success(f"최신 데이터 업데이트: {latest_date} (총 {len(df)}건)")
+    
+    # 분석 메뉴 선택
     selected_analysis = option_menu(
         menu_title=None,
         options=[
-            "👥 고객 유형별 성별 분포",
-            "👵 고객 유형별 연령 분포",
-            "💰 고객 유형별 거래 금액",
-            "🛒 고객 유형별 구매 빈도",
-            "🚘 모델별 구매 분석",
-            "🏷️ 고객 유형별 고객 분류",
-            "📝 종합 보고서 및 이메일 발송"
+            "📈 모델별 판매 트렌드",
+            "🌍 지역별 선호 모델", 
+            "👥 고객 유형별 모델 선호도",
+            "🏭 생산량 추천 시스템",
+            "📊 모델별 생산 우선순위"
         ],
-        icons=["", "", "", ""],
+        icons=["", "", "", "", ""],
         menu_icon="cast",
         default_index=0,
         orientation="horizontal",
@@ -468,535 +788,100 @@ def run_all_eda():
             "nav-link-selected": {"background-color": "#2E86C1", "color": "white"},
         }
     )
-
-    csv_path = os.path.abspath(f"data/{brand}_고객데이터_신규입력용.csv")
     
-    if os.path.exists(csv_path):
-        df = pd.read_csv(csv_path)
-        country_df = df[df['국가'] == country].copy()
-        country_df['Cluster_Display'] = country_df['Cluster'] + 1
-        country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
+    if selected_analysis == "📈 모델별 판매 트렌드":
+        st.header(f"{brand} 모델별 판매 트렌드 분석")
         
-        if selected_analysis == "👥 고객 유형별 성별 분포":
-            st.write(f"## {brand}-{country} - 고객 유형별 성별 분포 분석")
-            st.subheader(f"{country} - 고객 유형별 성별 분포")
-            
-            if {'Cluster', '성별'}.issubset(country_df.columns):
-                # 성별 분포 계산
-                gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
-                gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
-                
-                # 바 차트
-                bar_fig = px.bar(
-                    gender_dist, barmode='group',
-                    title=f'{country} 고객 유형별 성별 분포',
-                    labels={'value': '고객 수', '고객유형': '클러스터'},
-                    color_discrete_map={'남': '#3498db', '여': '#e74c3c'}
-                )
-                st.plotly_chart(bar_fig)
-                
-                # 비율 표시
-                st.subheader("고객 유형별 성별 비율 (%)")
-                st.dataframe(gender_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'),width=500)
-                
-                # 인사이트 제공
-                st.markdown(generate_gender_insights(gender_pct))
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다.")
-
-        elif selected_analysis == "👵 고객 유형별 연령 분포":
-            st.subheader(f"{brand}-{country} - 고객 유형별 연령 분포 분석")
-            
-            if {'Cluster', '연령'}.issubset(country_df.columns):
-                # 박스플롯
-                box_fig = px.box(
-                    country_df, x='고객유형', y='연령',
-                    title=f'{country} 고객 유형별 연령 분포',
-                    color='고객유형'
-                )
-                st.plotly_chart(box_fig)
-                
-                # 히스토그램
-                hist_fig = px.histogram(
-                    country_df, x='연령', color='고객유형',
-                    nbins=20, barmode='overlay', opacity=0.7,
-                    title=f'{country} 고객 유형별 연령 분포 히스토그램'
-                )
-                st.plotly_chart(hist_fig)
-                
-                # 연령 통계
-                age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'median', 'std']).round(1)
-                age_stats.columns = ['평균 연령', '중앙값', '표준편차']
-                
-                st.subheader("고객 유형별 연령 통계")
-                st.dataframe(age_stats.style.format({
-                    '평균 연령': '{:.1f}세',
-                    '중앙값': '{:.1f}세',
-                    '표준편차': '{:.1f}세'
-                }).background_gradient(cmap='Blues'), width=500)
-                
-                # 인사이트 제공
-                st.markdown(generate_age_insights(age_stats))
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다.")
-
-        elif selected_analysis == "💰 고객 유형별 거래 금액":
-            st.subheader(f"{brand}-{country} - 고객 유형별 거래 금액 분석")
-            
-            if {'Cluster', '거래 금액'}.issubset(country_df.columns):
-                # 박스플롯
-                box_fig = px.box(
-                    country_df, x='고객유형', y='거래 금액',
-                    title=f'{country} 고객 유형별 거래 금액 분포',
-                    color='고객유형'
-                )
-                st.plotly_chart(box_fig)
-                
-                # 거래 금액 통계
-                transaction_stats = country_df.groupby('고객유형')['거래 금액'].agg(['mean', 'median', 'sum']).round()
-                transaction_stats.rename(columns={'mean': '평균 거래액', 'median': '중앙값', 'sum': '총 거래액'}, inplace=True)
-                transaction_stats.columns = ['평균 거래액', '중앙값', '총 거래액']
-                
-                st.subheader("고객 유형별 거래 금액 통계")
-                st.dataframe(transaction_stats.style.format({
-                    '평균 거래액': '{:,.0f}원',
-                    '중앙값': '{:,.0f}원',
-                    '총 거래액': '{:,.0f}원'
-                }).background_gradient(cmap='Blues'), width=500)
-                
-                # 인사이트 제공
-                st.markdown(generate_transaction_insights(transaction_stats))
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다.")
-
-        elif selected_analysis == "🛒 고객 유형별 구매 빈도":
-            st.subheader(f"{brand}-{country} - 고객 유형별 구매 빈도 분석")
-            
-            if {'Cluster', '제품구매빈도'}.issubset(country_df.columns):
-                # 박스플롯
-                box_fig = px.box(
-                    country_df, x='고객유형', y='제품구매빈도',
-                    title=f'{country} 고객 유형별 구매 빈도 분포',
-                    color='고객유형'
-                )
-                st.plotly_chart(box_fig)
-                
-                # 구매 빈도 통계
-                freq_stats = country_df.groupby('고객유형')['제품구매빈도'].agg(['mean', 'median']).round(2)
-                freq_stats.columns = ['평균 구매 빈도', '중앙값']
-                
-                st.subheader("고객 유형별 구매 빈도 통계")
-                st.dataframe(freq_stats.style.format({
-                    '평균 구매 빈도': '{:.2f}회',
-                    '중앙값': '{:.2f}회'
-                }).background_gradient(cmap='Blues'), width=500)
-                
-                # 인사이트 제공
-                st.markdown(generate_frequency_insights(freq_stats))
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다.")
-
-        elif selected_analysis == "🚘 모델별 구매 분석":
-            st.subheader(f"{brand}-{country} - 모델별 구매 분석")
-            
-            if {'구매한 제품', 'Cluster'}.issubset(country_df.columns):
-                # 모델별 판매량
-                model_sales = country_df['구매한 제품'].value_counts().reset_index().head(10)
-                model_sales.columns = ['모델', '판매량']
-                
-                # 바 차트
-                bar_fig = px.bar(
-                    model_sales, x='모델', y='판매량',
-                    title=f'{country} 모델별 Top10 판매량',
-                    color='모델',
-                    color_discrete_sequence=px.colors.sequential.Sunset
-                )
-                st.plotly_chart(bar_fig)
-                
-                # 모델 선택
-                selected_model = st.selectbox(
-                    "모델 선택",
-                    country_df['구매한 제품'].unique(),
-                    key='model_select'
-                )
-                
-                # 선택 모델의 클러스터 분포
-                model_cluster = country_df[country_df['구매한 제품'] == selected_model]['고객유형'].value_counts()
-                
-                # 파이 차트
-                pie_fig = px.pie(
-                    model_cluster, names=model_cluster.index, values=model_cluster.values,
-                    title=f'{selected_model} 모델 구매 고객의 고객 유형 분포',
-                    color_discrete_sequence=px.colors.sequential.Sunset
-                )
-                st.plotly_chart(pie_fig)
-                
-                # 클러스터 분포 표시
-                st.subheader(f"{selected_model} 모델 구매 고객 고객 유형 분포")
-                st.dataframe(model_cluster.to_frame('고객 수').style.format({"고객 수": "{:,}명"}), width=500)
-                
-                # 인사이트 제공
-                st.markdown(generate_model_insights(model_cluster, selected_model))
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다.")
-        elif selected_analysis == "🏷️ 고객 유형별 고객 분류":
-            st.subheader(f"{brand}-{country} - 고객 유형별 고객 분류 분석")
-            
-            if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
-                # 세그먼트 매핑 딕셔너리
-                segment_mapping = {
-                    "현대": {
-                        0: "VIP",
-                        1: "이탈가능",
-                        2: "신규",
-                        3: "일반"
-                    },
-                    "기아": {
-                        0: "VIP",
-                        1: "일반",
-                        2: "신규",
-                        3: "이탈 가능"
-                    }
-                }
-                
-                # 세그먼트 이름 변환
-                country_df['세그먼트 이름'] = country_df['고객 세그먼트'].map(segment_mapping[brand])
-                
-                # 클러스터별 세그먼트 분포
-                segment_dist = country_df.groupby(['고객유형', '세그먼트 이름']).size().unstack(fill_value=0)
-                segment_pct = segment_dist.div(segment_dist.sum(axis=1), axis=0) * 100
-                
-                # 바 차트
-                st.markdown("### 고객 유형별 고객 분류 분포")
-                bar_fig = px.bar(
-                    segment_dist, barmode='stack',
-                    title=f'{country} 고객 유형별 고객 고객 분류 분포',
-                    labels={'value': '고객 수', '고객유형': '클러스터'},
-                    color_discrete_sequence=px.colors.qualitative.Pastel
-                )
-                st.plotly_chart(bar_fig)
-                
-                # 비율 표시
-                st.markdown("### 고객 유형별 고객 분류 비율 (%)")
-                st.dataframe(segment_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'), width=500)
-                
-                # 인사이트 제공
-                st.markdown("### 📊 고객 분류별 분석 인사이트")
-                
-                # 1. VIP 고객이 많은 클러스터 분석
-                if 'VIP' in segment_pct.columns:
-                    vip_clusters = segment_pct[segment_pct['VIP'] >= 30].index.tolist()
-                    if vip_clusters:
-                        st.markdown(f"**VIP 고객이 많은 고객 유형**: {', '.join(map(str, vip_clusters))}번")
-                        st.markdown("  - 해당 고객 유형은 브랜드 충성도가 높은 고객이 많아 VIP 전용 혜택을 강화하는 것이 효과적입니다.")
-                
-                # 2. 이탈 가능 고객이 많은 클러스터 분석
-                if '이탈가능' in segment_pct.columns or '이탈 가능' in segment_pct.columns:
-                    churn_col = '이탈가능' if '이탈가능' in segment_pct.columns else '이탈 가능'
-                    churn_clusters = segment_pct[segment_pct[churn_col] >= 40].index.tolist()
-                    if churn_clusters:
-                        st.markdown(f"**이탈 가능 고객이 많은 고객 유형**: {', '.join(map(str, churn_clusters))}번")
-                        st.markdown("  - 재구매 유도 프로모션과 고객 만족도 향상 프로그램이 필요합니다.")
-                
-                # 3. 신규 고객이 많은 클러스터 분석
-                if '신규' in segment_pct.columns:
-                    new_clusters = segment_pct[segment_pct['신규'] >= 50].index.tolist()
-                    if new_clusters:
-                        st.markdown(f"**신규 고객이 많은 고객 유형**: {', '.join(map(str, new_clusters))}번")
-                        st.markdown("  - 브랜드 인지도 향상과 첫 구매 고객을 위한 특별 혜택이 효과적입니다.")
-                
-                # 4. 일반 고객이 많은 클러스터 분석
-                if '일반' in segment_pct.columns:
-                    normal_clusters = segment_pct[segment_pct['일반'] >= 60].index.tolist()
-                    if normal_clusters:
-                        st.markdown(f"**일반 고객이 많은 고객 유형**: {', '.join(map(str, normal_clusters))}번")
-                        st.markdown("  - 일반 고객을 VIP로 전환하기 위한 단계별 혜택 프로그램을 고려해보세요.")
-                
-                # 클러스터별 세그먼트 전략 제안
-                st.markdown("### 🎯 고객 유형별 고객 분류 전략 제안")
-                
-                clusters = sorted(segment_pct.index)
-                for cluster in clusters:
-                    # 가장 많은 세그먼트 찾기
-                    main_segment = segment_pct.loc[cluster].idxmax()
-                    main_pct = segment_pct.loc[cluster, main_segment]
-                    
-                    # 전략 생성
-                    strategy = f"**고객 유형 {cluster}번** ({main_segment} {main_pct:.1f}%): "
-                    
-                    if main_segment == "VIP":
-                        strategy += "전용 컨시어지 서비스 제공, 신제품 사전 예약 권한 부여, VIP 행사 초대"
-                    elif main_segment in ["이탈가능", "이탈 가능"]:
-                        strategy += "재구매 유도 할인, 고객 만족도 조사 실시, 맞춤형 프로모션 제공"
-                    elif main_segment == "신규":
-                        strategy += "첫 구매 고객 할인, 브랜드 소개 자료 동봉, 앱 가입 유도"
-                    else:  # 일반
-                        strategy += "멤버십 등급 상향 유도, 주기적 프로모션 알림, 충성도 프로그램 소개"
-                    
-                    st.markdown(strategy)
-                
-                
-            else:
-                st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
-                              
-        elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
-            st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 고객 유형별 마케팅 이메일 발송")
-            marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
-
-            # 개발자 모드 상태 표시
-            if not prod:
-                st.warning(f"⚠️ 개발자 모드 활성화 (모든 이메일은 {prod_email}로 발송됩니다)")
-            else:
-                st.write("")
-            
-            # 종합 분석 보고서 생성
-            st.markdown("### 📊 종합 분석 보고서")
-            
-            # 1. 기본 통계
-            st.markdown("#### 1. 기본 통계")
-            total_customers = len(country_df)
-            clusters = country_df['고객유형'].nunique()
-            avg_age = country_df['연령'].mean()
-            avg_transaction = country_df['거래 금액'].mean()
-            
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("총 고객 수", f"{total_customers:,}명")
-            col2.metric("고객 유형 수", clusters)
-            col3.metric("평균 연령", f"{avg_age:.1f}세")
-            col4.metric("평균 거래액", f"{avg_transaction:,.0f}원")
-            
-            # 2. 클러스터별 주요 특성 요약
-            st.markdown("#### 2. 고객 유형별 주요 특성")
-            
-            # 성별 분포
-            gender_dist = country_df.groupby(['고객유형', '성별']).size().unstack(fill_value=0)
-            gender_pct = gender_dist.div(gender_dist.sum(axis=1), axis=0) * 100
-            
-            # 연령 통계
-            age_stats = country_df.groupby('고객유형')['연령'].agg(['mean', 'std']).round(1)
-            age_stats.columns = ['평균 연령', '표준편차']
-            
-            # 거래 금액 통계
-            transaction_stats = country_df.groupby('고객유형')['거래 금액'].agg(['mean', 'sum']).round()
-            transaction_stats.columns = ['평균 거래액', '총 거래액']
-            
-            # 구매 빈도 통계
-            freq_stats = country_df.groupby('고객유형')['제품구매빈도'].mean().round(2)
-            
-            # 세그먼트 분석 추가
-            segment_mapping = {
-                "현대": {0: "VIP", 1: "이탈가능", 2: "신규", 3: "일반"},
-                "기아": {0: "VIP", 1: "일반", 2: "신규", 3: "이탈 가능"}
-            }
-            country_df['세그먼트 이름'] = country_df['고객 세그먼트'].map(segment_mapping[brand])
-            segment_dist = country_df.groupby(['고객유형', '세그먼트 이름']).size().unstack(fill_value=0)
-            segment_pct = segment_dist.div(segment_dist.sum(axis=1), axis=0) * 100
-            
-            # 모든 통계를 하나의 데이터프레임으로 결합 (세그먼트 정보 추가)
-            summary_df = pd.concat([
-                gender_pct,
-                age_stats,
-                transaction_stats,
-                freq_stats.rename('평균 구매 빈도'),
-                segment_pct
-            ], axis=1)
-            
-            st.dataframe(summary_df.style.format({
-                '남': '{:.1f}%',
-                '여': '{:.1f}%',
-                '평균 연령': '{:.1f}세',
-                '표준편차': '{:.1f}세',
-                '평균 거래액': '{:,.0f}원',
-                '총 거래액': '{:,.0f}원',
-                '평균 구매 빈도': '{:.2f}회',
-                'VIP': '{:.1f}%',
-                '이탈가능': '{:.1f}%',
-                '이탈 가능': '{:.1f}%',
-                '신규': '{:.1f}%',
-                '일반': '{:.1f}%'
-            }).background_gradient(cmap='Blues'), width=500)
-            
-
-            st.markdown("## 🎯 고객 유형별 통합 전략")
-            
-            # 전략 카드 생성
-            for cluster in sorted(country_df['고객유형'].unique()):
-                with st.expander(f"고객 유형 {cluster}번 전략", expanded=True):
-                    col1, col2 = st.columns([1, 3])
-                    
-                    with col1:
-                        # 클러스터 요약 통계
-                        cluster_data = country_df[country_df['고객유형'] == cluster]
-                        st.metric("평균 연령", f"{cluster_data['연령'].mean():.1f}세")
-                        st.metric("평균 거래액", f"{cluster_data['거래 금액'].mean():,.0f}원")
-                        st.metric("주구매 모델", cluster_data['구매한 제품'].mode()[0])
-                        
-                    with col2:
-                        # 마케팅 전략 표시
-                        st.markdown(f"""
-                        <div style="
-                            padding: 15px;
-                            background: #f8f9fa;
-                            border-radius: 10px;
-                            border-left: 4px solid #2E86C1;
-                        ">
-                            <h4>📌 맞춤형 전략</h4>
-                            {marketing_strategies[cluster].replace('<br>•', '<br>•')}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # 추천 모델
-                        if brand in brand_recommendations:
-                            rec_models = brand_recommendations[brand].get(cluster-1 if brand=="현대" else cluster, [])
-                            if rec_models:
-                                st.markdown("**🚗 추천 모델**")
-                                st.write(", ".join(rec_models[:3]))  # 상위 3개만 표시
+        # 모델 선택
+        selected_models = st.multiselect(
+            "분석할 모델 선택",
+            df['구매한 제품'].unique(),
+            default=df['구매한 제품'].value_counts().head(3).index.tolist()
+        )
+        
+        if not selected_models:
+            st.warning("최소 한 개 이상의 모델을 선택해주세요.")
+            return
+        
+        # 기간 선택
+        min_date = df['제품 구매 날짜'].min().to_pydatetime()
+        max_date = df['제품 구매 날짜'].max().to_pydatetime()
+        date_range = st.slider(
+            "분석 기간 선택",
+            min_value=min_date,
+            max_value=max_date,
+            value=(max_date - timedelta(days=365), max_date))
+        
+        filtered_df = df[(df['구매한 제품'].isin(selected_models)) & 
+                        (df['제품 구매 날짜'] >= date_range[0]) & 
+                        (df['제품 구매 날짜'] <= date_range[1])]
+        
+        if filtered_df.empty:
+            st.error("선택한 조건에 해당하는 데이터가 없습니다.")
+            return
+        
+        analyze_sales_trend(filtered_df, brand, selected_models)
     
-            
-            # 4. 이메일 발송 기능
-            st.markdown("---")
-            st.markdown("### ✉️ 고객 유형별 타겟 이메일 발송")
-            
-            # 클러스터 선택
-            selected_cluster = st.selectbox(
-                "고객 유형 선택",
-                sorted(country_df['고객유형'].unique()),
-                key='email_cluster'
-            )
-            
-            # 해당 클러스터 고객 필터링
-            cluster_customers = country_df[country_df['고객유형'] == selected_cluster]
-            
-            # 이메일 내용 작성
-            st.markdown("#### 이메일 내용 작성")
-            
-            # 기본 메시지 템플릿
-            template = f"""
-            <p>{brand}자동차의 특별한 프로모션 소식을 전해드립니다!</p>
-            
-            <p>요즘 차량 구입 고민이 많으시죠? 고객님께 꼭 맞는 특별 혜택을 안내드립니다.</p>
-            
-            <ul>
-                {marketing_strategies[selected_cluster]}
-                <br>• 한정 기간 할인 프로모션
-            </ul>
-            
-            <p>자세한 내용은 아래 링크를 확인해주세요. 감사합니다!</p>
-            """
-            
-            email_subject = st.text_input(
-                "이메일 제목",
-                f"[{brand}자동차] 고객님을 위한 맞춤 특별 혜택!",
-                key='email_subject'
-            )
-            
-            email_content = st.text_area(
-                "이메일 내용 (HTML 형식)",
-                template,
-                height=300,
-                key='email_content'
-            )
-            
-            # 미리보기
-            if st.checkbox("이메일 미리보기"):
-                st.markdown("### 이메일 미리보기")
-                st.markdown(f"**제목**: {email_subject}")
-                st.markdown(email_content, unsafe_allow_html=True)
-            
-            
-            # 개발자 모드인 경우 이메일 주소를 개발자 이메일로 표시
-            if not prod:
-                display_data = cluster_customers[['이름', '성별', '연령', '거래 금액','구매한 제품']].copy()
-                display_data['이메일'] = prod_email  # 개발자 이메일로 표시
-                display_data = display_data[['이름', '이메일', '성별', '연령', '거래 금액','구매한 제품']]
-                st.warning(f"개발자 모드: 실제 고객 대신 {prod_email}로 발송됩니다")
-            else:
-                display_data = cluster_customers[['이름', '이메일', '성별', '연령', '거래 금액','구매한 제품']]
-            
-            # 페이지네이션 설정
-            # 페이지네이션 설정
-            if 'page' not in st.session_state:
-                st.session_state.page = 1
-
-            page_size = 10
-            total_pages = max(1, (len(display_data) - 1)) // page_size + 1
-
-
-
-            st.markdown("#### 발송 대상 고객 리스트")
-            
-            # 페이지네이션 컨트롤
-            pagination_col1, pagination_col2, pagination_col3 = st.columns([1, 2, 1])
-            with pagination_col1:
-                if st.button('◀ 이전', disabled=(st.session_state.page <= 1), key='prev_page'):
-                    st.session_state.page -= 1
-                    st.rerun()
-            with pagination_col2:
-                st.markdown(f"<div style='text-align: center;'>페이지 {st.session_state.page} / {total_pages}</div>", unsafe_allow_html=True)
-            with pagination_col3:
-                if st.button('다음 ▶', disabled=(st.session_state.page >= total_pages), key='next_page'):
-                    st.session_state.page += 1
-                    st.rerun()
-            
-            # 데이터 표시
-            start_idx = (st.session_state.page - 1) * page_size
-            end_idx = min(start_idx + page_size, len(display_data))
-            st.dataframe(display_data.iloc[start_idx:end_idx], height=300, width=1100)
-            st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
-                    (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
-
-
-            
-            # 이메일 발송 버튼
-            if st.button("이메일 발송", 
-                        key="send_email_button",
-                        help="클릭하면 선택한 유형의 고객에게 이메일을 발송합니다",
-                        # 버튼 스타일 적용
-                        use_container_width=True,  # 컨테이너 너비에 맞춤
-                        type="primary"):  # 주요 버튼 스타일 적용
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                success_count = 0
-                fail_count = 0
-                
-                for i, (_, row) in enumerate(cluster_customers.iterrows()):
-                    try:
-                        send_email(
-                            customer_name=row['이름'],
-                            customer_email=row['이메일'],
-                            message=email_content,
-                            cluster=selected_cluster,
-                            marketing_strategies=marketing_strategies,
-                            brand_recommendations=brand_recommendations,  # 추가된 인자
-                            purchased_model=row['구매한 제품']  # 추가된 인자
-                        )
-                        success_count += 1
-                        
-                        # 개발자 모드 알림
-                        if not prod:
-                            st.info(f"개발자 모드: {row['이름']} 고객 대신 {prod_email}로 테스트 이메일 발송됨")
-                            
-                    except Exception as e:
-                        st.error(f"{row['이름']} 고객에게 이메일 발송 실패: {str(e)}")
-                        fail_count += 1
-                    
-                    progress = (i + 1) / len(cluster_customers)
-                    progress_bar.progress(progress)
-                    status_text.text(f"진행 중: {i + 1}/{len(cluster_customers)} (성공: {success_count}, 실패: {fail_count})")
-                
-                progress_bar.empty()
-                if fail_count == 0:
-                    st.success(f"모든 이메일({success_count}건)이 성공적으로 발송되었습니다!")
-                    if not prod:
-                        st.warning("개발자 모드 활성화 상태 - 실제 고객 대신 개발자 이메일로 발송되었습니다")
-                else:
-                    st.warning(f"이메일 발송 완료 (성공: {success_count}건, 실패: {fail_count}건)")
-                    
-        else:
-            st.error(f"CSV 파일을 찾을 수 없습니다: {csv_path}")
+    elif selected_analysis == "🌍 지역별 선호 모델":
+        st.header(f"{brand} 지역별 선호 모델 분석")
+        
+        # 지역 선택
+        regions = df['국가'].unique()
+        selected_region = st.selectbox("지역 선택", regions)
+        
+        # 해당 지역 데이터 필터링
+        region_df = df[df['국가'] == selected_region]
+        
+        analyze_regional_preference(region_df, selected_region, df)
+    
+    elif selected_analysis == "👥 고객 유형별 모델 선호도":
+        st.header(f"{brand} 고객 유형별 모델 선호도 분석")
+        
+        # 클러스터별 모델 선호도
+        cluster_model = df.groupby(['Cluster', '구매한 제품']).size().unstack().fillna(0)
+        
+        # 클러스터 선택
+        selected_cluster = st.selectbox(
+            "고객 유형 선택",
+            sorted(cluster_model.index.unique()),
+            key='cluster_select'
+        )
+        
+        analyze_cluster_preference(cluster_model, selected_cluster, df, brand)
+    
+    elif selected_analysis == "🏭 생산량 추천 시스템":
+        st.header(f"{brand} 생산량 추천 시스템")
+        
+        # 모델 선택
+        selected_model = st.selectbox(
+            "모델 선택",
+            df['구매한 제품'].unique(),
+            key='model_production_select'
+        )
+        
+        # 현재 재고량 입력
+        current_inventory = st.number_input(
+            f"현재 {selected_model} 재고량 입력",
+            min_value=0,
+            value=5,
+            step=1
+        )
+        
+        # 안전 재고율 설정
+        safety_stock = st.slider(
+            "안전 재고율 설정 (%)",
+            min_value=0,
+            max_value=50,
+            value=20,
+            step=5
+        ) / 100
+        
+        analyze_production_recommendation(df, selected_model, current_inventory, safety_stock)
+    
+    elif selected_analysis == "📊 모델별 생산 우선순위":
+        st.header(f"{brand} 모델별 생산 우선순위")
+        
+        # 모델별 우선순위 계산
+        model_priority = calculate_model_priority(df)
+        
+        analyze_model_priority(df, model_priority)
