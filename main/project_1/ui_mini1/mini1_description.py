@@ -209,7 +209,7 @@ def run_description1():
         
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main/project_1/img/elbow.png', use_column_width=True)
+            st.image('main/project_1/img/elbow.png', use_container_width=True)
         with col2:
             st.markdown("""<br><br><br><br><br><br>
     엘보우 기법 분석 결과 클러스터 수를 8개로 선정하여 KMeans 클러스터링을 진행하였습니다.<br>
@@ -219,7 +219,7 @@ def run_description1():
         st.subheader("SVC 모델을 활용한 신규 고객 클러스터링 분류")
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main_project/project_1/img/sc3.png', use_column_width=True)
+            st.image('main_project/project_1/img/sc3.png', use_container_width=True)
         with col2:
             st.markdown("""
     파이프라인을 구축하여 새 고객 데이터가 입력되면 카테고리컬 데이터는 인코딩, 수치형 데이터는 스케일링이 자동으로 수행과, SVC 모델을 통해 클러스터링 및 분류가 이루어지도록 설계하였습니다.
