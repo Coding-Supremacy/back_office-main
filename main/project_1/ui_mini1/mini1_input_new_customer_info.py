@@ -357,7 +357,7 @@ def run_input_step1(brand):
         with col2:
             차량구분 = st.selectbox("희망 차량 구분 선택", ["준중형 세단", "중형 세단", "대형 세단", "SUV", "픽업트럭"])
             거래방식 = st.selectbox("거래 방식 선택", ["카드", "현금", "계좌이체"])
-            구매한제품 = st.selectbox("구입 희망 모델 선택", list(brand_recommendations[brand].keys()))
+            구매한제품 = st.selectbox("구입 희망 모델 선택", list(launch_dates[brand].keys()))
             제품구매날짜 = st.date_input("제품 구매 날짜 입력")
 
         submitted = st.form_submit_button("예측하기")
