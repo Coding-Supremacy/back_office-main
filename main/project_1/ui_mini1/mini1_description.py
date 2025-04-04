@@ -7,9 +7,10 @@ def run_description1():
     st.title('데이터 전처리')
     
     # 데이터 로드
-    df = pd.read_csv('main/project_1/data_mini1/고객db_확장본3.csv')
+    df = pd.read_csv('data/현대_고객_데이터_완성.csv')
     df1 = pd.read_csv('main/project_1/data_mini1/description1.csv')
     df2 = pd.read_csv("main/project_1/data_mini1/description2.csv")
+    df3=pd.read_csv("data/기아_고객데이터_신규입력용.csv")
     
     # 옵션 메뉴 설정
     selected = option_menu(
@@ -28,8 +29,10 @@ def run_description1():
     )
 
     if selected == "원본 데이터":
-        st.subheader('원본 데이터 확인')
+        st.subheader('현대 고객 데이터')
         st.dataframe(df.head(), hide_index=True)
+        st.subheader('기아 고객 데이터')
+        st.dataframe(df3.head(), hide_index=True)
 
     elif selected == "차종 분석":
         st.subheader('같은 차종, 다른 차량구분 🚗')
