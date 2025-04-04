@@ -499,7 +499,7 @@ def run_eda():
                 
                 # 비율 표시
                 st.subheader("클러스터별 성별 비율 (%)")
-                st.dataframe(gender_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'))
+                st.dataframe(gender_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'),width=300)
                 
                 # 인사이트 제공
                 st.markdown(generate_gender_insights(gender_pct))

@@ -539,12 +539,13 @@ def save_customer_data():
         "가입일": st.session_state.get("registration_date", ""),
         "차량구분": st.session_state.get("차량구분", ""),
         "구매한 제품": st.session_state.get("selected_vehicle", ""),
-        "친환경차": "여" if st.session_state.get("selected_vehicle", "") in eco_friendly_models.get(brand, []) else "부",
+        "친환경차": "True" if st.session_state.get("selected_vehicle", "") in eco_friendly_models.get(brand, []) else "False",
         "제품 구매 날짜": st.session_state.get("제품구매날짜", ""),
         "거래 금액": st.session_state.get("거래금액", ""),
         "거래 방식": st.session_state.get("거래방식", ""),
         "제품 구매 빈도": st.session_state.get("제품구매빈도", ""),
         "제품 출시년월": st.session_state.get("제품출시년월", ""),
+        "국가": st.session_state.get("country", ""),
         "고객세그먼트": st.session_state.get("고객세그먼트", ""),
         "Cluster": st.session_state.get("Cluster", "")
     }
