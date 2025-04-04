@@ -534,7 +534,7 @@ def run_eda():
                     '평균 연령': '{:.1f}세',
                     '중앙값': '{:.1f}세',
                     '표준편차': '{:.1f}세'
-                }).background_gradient(cmap='Blues'))
+                }).background_gradient(cmap='Blues'), width=500)
                 
                 # 인사이트 제공
                 st.markdown(generate_age_insights(age_stats))
@@ -564,7 +564,7 @@ def run_eda():
                     '평균 거래액': '{:,.0f}원',
                     '중앙값': '{:,.0f}원',
                     '총 거래액': '{:,.0f}원'
-                }).background_gradient(cmap='Blues'))
+                }).background_gradient(cmap='Blues'), width=500)
                 
                 # 인사이트 제공
                 st.markdown(generate_transaction_insights(transaction_stats))
@@ -592,7 +592,7 @@ def run_eda():
                 st.dataframe(freq_stats.style.format({
                     '평균 구매 빈도': '{:.2f}회',
                     '중앙값': '{:.2f}회'
-                }).background_gradient(cmap='Blues'))
+                }).background_gradient(cmap='Blues'), width=500)
                 
                 # 인사이트 제공
                 st.markdown(generate_frequency_insights(freq_stats))
@@ -637,7 +637,7 @@ def run_eda():
                 
                 # 클러스터 분포 표시
                 st.subheader(f"{selected_model} 모델 구매 고객 고객 유형 분포")
-                st.dataframe(model_cluster.to_frame('고객 수').style.format({"고객 수": "{:,}명"}))
+                st.dataframe(model_cluster.to_frame('고객 수').style.format({"고객 수": "{:,}명"}), width=500)
                 
                 # 인사이트 제공
                 st.markdown(generate_model_insights(model_cluster, selected_model))
@@ -683,7 +683,7 @@ def run_eda():
                 
                 # 비율 표시
                 st.markdown("### 고객 유형별 고객 분류 비율 (%)")
-                st.dataframe(segment_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'))
+                st.dataframe(segment_pct.style.format("{:.1f}%").background_gradient(cmap='Blues'), width=500)
                 
                 # 인사이트 제공
                 st.markdown("### 📊 고객 분류별 분석 인사이트")
@@ -819,7 +819,7 @@ def run_eda():
                 '이탈 가능': '{:.1f}%',
                 '신규': '{:.1f}%',
                 '일반': '{:.1f}%'
-            }).background_gradient(cmap='Blues'))
+            }).background_gradient(cmap='Blues'), width=500)
             
 
             st.markdown("## 🎯 고객 유형별 통합 전략")
@@ -946,7 +946,7 @@ def run_eda():
             # 데이터 표시
             start_idx = (st.session_state.page - 1) * page_size
             end_idx = min(start_idx + page_size, len(display_data))
-            st.dataframe(display_data.iloc[start_idx:end_idx], height=300)
+            st.dataframe(display_data.iloc[start_idx:end_idx], height=300, width=1300)
             st.caption(f"총 {len(cluster_customers)}명의 고객에게 발송됩니다." + 
                     (" (개발자 모드 - 실제 발송되지 않음)" if not prod else ""))
 
