@@ -84,9 +84,9 @@ def generate_marketing_strategies(country_df):
         avg_freq = freq_stats.loc[cluster]
         freq_median = freq_stats.median()
         
-        if avg_freq >= freq_median * 1.5:
+        if avg_freq >= freq_median * 1.5:# 중앙값보다 1.5배 이상 자주 구매
             strategy_parts.append("단골 고객님께 감사의 마음을 담아, 멤버십 전용 혜택과 정기 유지관리 쿠폰을 제공합니다.")
-        elif avg_freq <= freq_median * 0.7:
+        elif avg_freq <= freq_median * 0.7:# 중앙값보다 30% 이하로 적게 구매
             strategy_parts.append("차량 구매를 고민 중이신가요? 지금 가입 시 오랜만에 오신 고객님을 위한 특별 할인 혜택을 드립니다.")
         
         # 전략 조합
@@ -455,7 +455,7 @@ def run_eda():
             "💰 고객 유형별 거래 금액",
             "🛒 고객 유형별 구매 빈도",
             "🚘 모델별 구매 분석",
-            "🏷️ 고객 유형별 고객 분류",
+            "🏷️ RFM 별 고객 분류",
             "📝 종합 보고서 및 이메일 발송"
         ],
         icons=["", "", "", ""],
@@ -645,7 +645,7 @@ def run_eda():
                 
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
-        elif selected_analysis == "🏷️ 고객 유형별 고객 분류":
+        elif selected_analysis == "🏷️ RFM 별 고객 분류":
             st.subheader(f"{brand}-{country} - 고객 유형별 고객 분류 분석")
             
             if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
