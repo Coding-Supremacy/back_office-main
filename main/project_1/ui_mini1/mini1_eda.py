@@ -326,8 +326,6 @@ cluster_color_map = {
     4: "#FFD3B6",  # 연주황
     5: "#D5AAFF",  # 연보라
     6: "#FFB3BA",  # 연핑크
-    7: "#B5EAD7",  # 민트
-    8: "#E2F0CB",  # 연연두
 }
 today = datetime.date.today().strftime("%Y-%m-%d")
 
@@ -392,15 +390,15 @@ def generate_transaction_insights(transaction_stats):
     high_value_clusters = transaction_stats[transaction_stats['평균 거래액'] >= transaction_stats['평균 거래액'].quantile(0.75)].index.tolist()
     low_value_clusters = transaction_stats[transaction_stats['평균 거래액'] <= transaction_stats['평균 거래액'].quantile(0.25)].index.tolist()
 
-    insights.append(f"- 최고 평균 거래액 클러스터: {high_value}번 ({transaction_stats.loc[high_value, '평균 거래액']:,.0f}원)")
-    insights.append(f"- 최저 평균 거래액 클러스터: {low_value}번 ({transaction_stats.loc[low_value, '평균 거래액']:,.0f}원)")
+    insights.append(f"- 최고 평균 거래액 고객 유형: {high_value}번 ({transaction_stats.loc[high_value, '평균 거래액']:,.0f}원)")
+    insights.append(f"- 최저 평균 거래액 고객 유형: {low_value}번 ({transaction_stats.loc[low_value, '평균 거래액']:,.0f}원)")
     insights.append(f"- 총 거래액 ({today} 기준): {total_sales:,.0f}원")
 
     marketing = ["**🎯 마케팅 제안**"]
     if high_value_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, high_value_clusters))}: 프리미엄 모델 추천, VIP 서비스 제공")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, high_value_clusters))}: 프리미엄 모델 추천, VIP 서비스 제공")
     if low_value_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, low_value_clusters))}: 할인 프로모션, 저비용 모델 추천")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, low_value_clusters))}: 할인 프로모션, 저비용 모델 추천")
 
     return "\n".join(insights + [""] + marketing)
 
@@ -413,14 +411,14 @@ def generate_frequency_insights(freq_stats):
     frequent_clusters = freq_stats[freq_stats['평균 구매 빈도'] >= freq_stats['평균 구매 빈도'].quantile(0.75)].index.tolist()
     rare_clusters = freq_stats[freq_stats['평균 구매 빈도'] <= freq_stats['평균 구매 빈도'].quantile(0.25)].index.tolist()
 
-    insights.append(f"- 최고 구매 빈도 클러스터: {frequent}번 (평균 {freq_stats.loc[frequent, '평균 구매 빈도']:.2f}회)")
-    insights.append(f"- 최저 구매 빈도 클러스터: {rare}번 (평균 {freq_stats.loc[rare, '평균 구매 빈도']:.2f}회)")
+    insights.append(f"- 최고 구매 빈도 고객 유형: {frequent}번 (평균 {freq_stats.loc[frequent, '평균 구매 빈도']:.2f}회)")
+    insights.append(f"- 최저 구매 빈도 고객 유형: {rare}번 (평균 {freq_stats.loc[rare, '평균 구매 빈도']:.2f}회)")
 
     marketing = ["**🎯 마케팅 제안**"]
     if frequent_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, frequent_clusters))}: 충성도 프로그램, 정기 구매 혜택")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, frequent_clusters))}: 충성도 프로그램, 정기 구매 혜택")
     if rare_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, rare_clusters))}: 재구매 유도 프로모션, 첫 구매 할인")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, rare_clusters))}: 재구매 유도 프로모션, 첫 구매 할인")
 
     return "\n".join(insights + [""] + marketing)
 
@@ -433,14 +431,14 @@ def generate_model_insights(model_cluster, selected_model):
     top_clusters = model_cluster.nlargest(2).index.tolist()  # 상위 2개 클러스터
     other_clusters = list(set(model_cluster.index) - set(top_clusters))
 
-    insights.append(f"- 주 구매 클러스터: {main_cluster}번 ({main_ratio:.1f}%)")
+    insights.append(f"- 주 구매 고객 유형: {main_cluster}번 ({main_ratio:.1f}%)")
     insights.append(f"- 총 판매량: {model_cluster.sum()}대")
 
     marketing = ["**🎯 마케팅 제안**"]
     if top_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, top_clusters))}: 해당 클러스터 특성에 맞는 맞춤형 프로모션")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, top_clusters))}: 해당 클러스터 특성에 맞는 맞춤형 프로모션")
     if other_clusters:
-        marketing.append(f"- 클러스터 {', '.join(map(str, other_clusters))}: 판매 확장을 위한 타겟 마케팅 테스트")
+        marketing.append(f"- 고객 유형 {', '.join(map(str, other_clusters))}: 판매 확장을 위한 타겟 마케팅 테스트")
 
     return "\n".join(insights + [""] + marketing)
 
@@ -590,7 +588,7 @@ def run_eda():
                 freq_stats = country_df.groupby('고객유형')['제품구매빈도'].agg(['mean', 'median']).round(2)
                 freq_stats.columns = ['평균 구매 빈도', '중앙값']
                 
-                st.subheader("클러스터별 구매 빈도 통계")
+                st.subheader("고객 유형별 구매 빈도 통계")
                 st.dataframe(freq_stats.style.format({
                     '평균 구매 빈도': '{:.2f}회',
                     '중앙값': '{:.2f}회'
@@ -632,13 +630,13 @@ def run_eda():
                 # 파이 차트
                 pie_fig = px.pie(
                     model_cluster, names=model_cluster.index, values=model_cluster.values,
-                    title=f'{selected_model} 모델 구매 고객의 클러스터 분포',
+                    title=f'{selected_model} 모델 구매 고객의 고객 유형 분포',
                     color_discrete_sequence=px.colors.sequential.Sunset
                 )
                 st.plotly_chart(pie_fig)
                 
                 # 클러스터 분포 표시
-                st.subheader(f"{selected_model} 모델 구매 고객 클러스터 분포")
+                st.subheader(f"{selected_model} 모델 구매 고객 고객 유형 분포")
                 st.dataframe(model_cluster.to_frame('고객 수').style.format({"고객 수": "{:,}명"}))
                 
                 # 인사이트 제공
@@ -646,8 +644,8 @@ def run_eda():
                 
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다.")
-        elif selected_analysis == "🏷️ 고객 유형별 고객 세그먼트":
-            st.subheader(f"{brand}-{country} - 고객 유형별 고객 세그먼트 분석")
+        elif selected_analysis == "🏷️ 고객 유형별 고객 분류":
+            st.subheader(f"{brand}-{country} - 고객 유형별 고객 분류 분석")
             
             if {'고객유형', '고객 세그먼트'}.issubset(country_df.columns):
                 # 세그먼트 매핑 딕셔너리
@@ -747,7 +745,7 @@ def run_eda():
                 st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
                               
         elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
-            st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 클러스터별 마케팅 이메일 발송")
+            st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 고객 유형별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
             # 개발자 모드 상태 표시
@@ -768,7 +766,7 @@ def run_eda():
             
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("총 고객 수", f"{total_customers:,}명")
-            col2.metric("클러스터 수", clusters)
+            col2.metric("고객 유형 수", clusters)
             col3.metric("평균 연령", f"{avg_age:.1f}세")
             col4.metric("평균 거래액", f"{avg_transaction:,.0f}원")
             
@@ -828,7 +826,7 @@ def run_eda():
             
             # 전략 카드 생성
             for cluster in sorted(country_df['고객유형'].unique()):
-                with st.expander(f"클러스터 {cluster}번 전략", expanded=True):
+                with st.expander(f"고객 유형 {cluster}번 전략", expanded=True):
                     col1, col2 = st.columns([1, 3])
                     
                     with col1:
@@ -866,7 +864,7 @@ def run_eda():
             
             # 클러스터 선택
             selected_cluster = st.selectbox(
-                "클러스터 선택",
+                "고객 유형 선택",
                 sorted(country_df['고객유형'].unique()),
                 key='email_cluster'
             )
