@@ -38,7 +38,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
     recommendation = vehicle_recommendations.get(brand, {}).get(model, {}).get(cluster_id, {})
     
     if not recommendation:
-        basic_rec = basic_recommendations.get(brand, {}).get(model, {})
+        basic_rec = str(basic_recommendations).get(brand, {}).get(model, {})
         
         if basic_rec:
             # 차량 이미지 표시
