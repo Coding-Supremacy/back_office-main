@@ -66,14 +66,14 @@ def main():
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
                     options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🌎글로벌 고객 데이터 분석", "🚗 기아 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun", "truck", "graph-up"],
+                    icons=["house", "geo-alt", "cloud-sun","bi bi-globe-americas", "truck", "graph-up"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
                     options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🌎글로벌 고객 데이터 분석","🚙 현대 분석", "📈 시장 트렌드","🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun", "car-front", "graph-up"],
+                    icons=["house", "geo-alt", "cloud-sun", "bi bi-globe-americas","car-front", "graph-up"],
                     default_index=0
                 )
 
