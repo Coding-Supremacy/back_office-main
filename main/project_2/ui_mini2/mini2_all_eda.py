@@ -652,7 +652,7 @@ def analyze_model_priority(df, model_priority):
             if compare_df.loc[model, '충성도 점수'] > 0.7:
                 strengths.append("충성도 높음")
             if compare_df.loc[model, '인기 점수'] > 0.7:
-                strengths.append("인기 급상승")
+                strengths.append("인기 상품")
                 
             if strengths:
                 insights.append(f"- **{model}**: {', '.join(strengths)}")
