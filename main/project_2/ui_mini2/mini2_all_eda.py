@@ -492,95 +492,6 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
         else:
             st.info("선택한 모델들의 고객 유형별 선호도 차이가 크지 않습니다.")
 
-# 생산량 추천 시스템 분석 및 인사이트 생성
-def analyze_production_recommendation(df, selected_model, current_inventory, safety_stock):
-    st.subheader("🏭 생산량 추천 시스템 분석 결과")
-    
-    # 최근 1년 판매 데이터
-    recent_date = df['제품 구매 날짜'].max()
-    one_year_ago = recent_date - timedelta(days=365)
-    recent_sales = df[(df['구매한 제품'] == selected_model) & 
-                     (df['제품 구매 날짜'] >= one_year_ago)]
-    
-    if recent_sales.empty:
-        st.error("최근 1년 내 판매 데이터가 없습니다.")
-        return
-    
-    # 월별 판매량 계산
-    monthly_sales = recent_sales.groupby('구매월').size()
-    
-    # 생산량 추천 계산
-    recommended_production = calculate_production_recommendation(
-        monthly_sales,
-        current_inventory,
-        safety_stock
-    )
-    
-    st.markdown("### 📊 생산량 추천 결과")
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("최근 12개월 평균 판매량", f"{monthly_sales.mean():.1f}대/월")
-    col2.metric("현재 재고량", f"{current_inventory}대")
-    col3.metric("추천 생산량", f"{recommended_production:.0f}대")
-    
-    # 판매 추이 그래프
-    st.markdown("### 📈 최근 12개월 판매 추이")
-    fig = px.line(
-        x=monthly_sales.index,
-        y=monthly_sales.values,
-        title=f"{selected_model} 월별 판매량",
-        labels={"x": "월", "y": "판매량"}
-    )
-    st.plotly_chart(fig)
-    
-    # 생산 추천 인사이트
-    st.markdown("### 🔍 생산 계획 인사이트")
-    
-    inventory_coverage = current_inventory / monthly_sales.mean() if monthly_sales.mean() > 0 else float('inf')
-    
-    if inventory_coverage < 1:
-        st.error(f"⚠️ 위험: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량밖에 안됩니다. 즉시 생산 필요!")
-    elif inventory_coverage < 2:
-        st.warning(f"⚠️ 주의: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량입니다. 생산 계획 수립 필요.")
-    else:
-        st.success(f"✅ 안정적: 현재 재고가 평균 월 판매량의 {inventory_coverage:.1f}개월 분량입니다.")
-    
-    # 계절성 패턴 분석
-    st.markdown("### 📅 계절성 패턴 분석 (전체 기간)")
-    
-    seasonal_pattern = df[df['구매한 제품'] == selected_model].groupby('구매월_num').size()
-    
-    fig = px.line(
-        x=seasonal_pattern.index,
-        y=seasonal_pattern.values,
-        title=f"{selected_model} 월별 평균 판매 패턴",
-        labels={"x": "월", "y": "평균 판매량"}
-    )
-    st.plotly_chart(fig)
-    
-    # 계절성 인사이트
-    peak_month = int(seasonal_pattern.idxmax())
-    low_month = int(seasonal_pattern.idxmin())
-    peak_sales = int(seasonal_pattern.max())
-    low_sales = seasonal_pattern.min()
-    seasonality_ratio = peak_sales / low_sales if low_sales != 0 else float('inf')
-    # 생산 계획 범위 계산
-    start_month = max(1, peak_month - 2)
-    end_month = max(1, peak_month - 1)
-
-    if start_month == end_month:
-        production_month_text = f"{start_month}월"
-    else:
-        production_month_text = f"{start_month}~{end_month}월"
-
-    st.markdown(f"""
-    #### 🔍 계절성 주요 인사이트
-    - **최고 판매월**: {peak_month}월 (평균 {peak_sales:.1f}대)
-    - **최저 판매월**: {low_month}월 (평균 {low_sales:.1f}대)
-    - **계절성 차이**: {seasonality_ratio:.1f}배 차이
-    
-    💡 **생산 계획 제안**: {peak_month}월 수요 대비를 위해 **{production_month_text}**에 생산량 증대 필요
-""")
 
 def analyze_model_priority(df, model_priority):
     st.subheader("📊 모델별 생산 우선순위 분석 결과 (최신 충성도 지표 반영)")
@@ -681,20 +592,56 @@ def analyze_model_priority(df, model_priority):
         default=model_priority.head(3).index.tolist(),
         key="model_compare"
     )
-    
+
     if compare_models:
         compare_df = model_priority.loc[compare_models]
         
-        # 지표 비교 차트
-        fig = px.bar(
+        # 1. 누적 바 그래프 (종합 점수 구성 비교)
+        fig_stacked = px.bar(
             compare_df,
             x=compare_df.index,
             y=['수익성 점수', '충성도 점수', '인기 점수'],
-            barmode='group',
-            title="모델별 평가 지표 비교",
-            labels={'value': '점수', 'variable': '지표'}
+            title="모델별 생산 우선순위 점수 (누적)",
+            labels={'value': '점수', 'variable': '지표'},
+            color_discrete_map={
+                '수익성 점수': '#3498DB',  # 파란색
+                '충성도 점수': '#F39C12',  # 주황색
+                '인기 점수': '#2ECC71'     # 초록색
+            }
         )
-        st.plotly_chart(fig)
+        fig_stacked.update_layout(
+            barmode='stack',  # 누적 모드
+            xaxis_title='모델',
+            yaxis_title='종합 점수',
+            legend_title='지표 구성',
+            hovermode='x unified'  # 호버 시 모든 지표 표시
+        )
+        
+        # 2. 종합 점수 순위 (보조 차트)
+        fig_rank = px.bar(
+            compare_df.sort_values('종합 점수', ascending=False),
+            x='종합 점수',
+            y=compare_df.index,
+            orientation='h',
+            title="종합 점수 순위",
+            color='종합 점수',
+            color_continuous_scale='Blues'
+        )
+        fig_rank.update_layout(yaxis_title='모델')
+        
+        # 그래프 병렬 출력
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_stacked, use_container_width=True)
+        with col2:
+            st.plotly_chart(fig_rank, use_container_width=True)
+        
+        # 3. 데이터 테이블 (점수 상세 내역)
+        st.markdown("### 📊 점수 상세 내역")
+        st.dataframe(
+            compare_df[['수익성 점수', '충성도 점수', '인기 점수', '종합 점수']]
+            .style.background_gradient(cmap='YlOrRd', subset=['종합 점수'])
+        )
         
         # 강점 분석
         insights = []
@@ -754,7 +701,7 @@ def analyze_model_priority(df, model_priority):
 
 # 메인 분석 함수
 def run_all_eda():
-    st.title("🚗 차량 생산량 최적화 분석 with 인사이트")
+    st.title("🚗 글로벌 고객 데이터 분석 + 생산 우선순위 도출")
     brand = st.session_state.get("brand", "현대")
     
     df = load_data(brand)
@@ -774,7 +721,6 @@ def run_all_eda():
             "📈 모델별 판매 트렌드",
             "🌍 지역별 선호 모델", 
             "👥 고객 유형별 모델 선호도",
-            "🏭 생산량 추천 시스템",
             "📊 모델별 생산 우선순위"
         ],
         icons=["", "", "", "", ""],
@@ -848,35 +794,6 @@ def run_all_eda():
         )
         
         analyze_cluster_preference(cluster_model, selected_cluster, df, brand)
-    
-    elif selected_analysis == "🏭 생산량 추천 시스템":
-        st.header(f"{brand} 생산량 추천 시스템")
-        
-        # 모델 선택
-        selected_model = st.selectbox(
-            "모델 선택",
-            df['구매한 제품'].unique(),
-            key='model_production_select'
-        )
-        
-        # 현재 재고량 입력
-        current_inventory = st.number_input(
-            f"현재 {selected_model} 재고량 입력",
-            min_value=0,
-            value=5,
-            step=1
-        )
-        
-        # 안전 재고율 설정
-        safety_stock = st.slider(
-            "안전 재고율 설정 (%)",
-            min_value=0,
-            max_value=50,
-            value=20,
-            step=5
-        ) / 100
-        
-        analyze_production_recommendation(df, selected_model, current_inventory, safety_stock)
     
     elif selected_analysis == "📊 모델별 생산 우선순위":
         st.header(f"{brand} 모델별 생산 우선순위")
