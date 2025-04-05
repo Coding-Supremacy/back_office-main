@@ -441,7 +441,7 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
     st.subheader("👥 고객 유형별 모델 선호도 비교")
     
     compare_models = st.multiselect(
-        "비교할 모델 선택 (기본값은 선택중인 고객 유형별 판매량 상위 3개 모델입니다.)",
+        "비교할 모델 선택",
         df['구매한 제품'].unique(),
         default=df['구매한 제품'].value_counts().head(3).index.tolist()
     )
