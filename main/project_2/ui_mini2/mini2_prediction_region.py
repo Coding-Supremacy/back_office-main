@@ -269,33 +269,86 @@ def run_prediction_region():
             def generate_pdf():
                 import shutil
 
-                pdf = FPDF()
+                # PDF 설정 (가로세로 A4, UTF-8 인코딩)
+                pdf = FPDF('P', 'mm', 'A4')
                 pdf.add_page()
-                pdf.set_auto_page_break(auto=True, margin=15)
-
-                FONT_PATH_ORIG = "main_project/project_2/fonts/NanumGothic.ttf"
-                TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "NanumGothic.ttf")
-
-                # 임시 경로에 복사
+                pdf.set_auto_page_break(auto=True, margin=20)
+                pdf.set_left_margin(15)
+                
+                # 폰트 경로 설정
+                FONT_DIR = "custom_fonts"
+                FONT_REGULAR = os.path.join(FONT_DIR, "NanumGothic.ttf")
+                FONT_BOLD = os.path.join(FONT_DIR, "NanumGothicBold.ttf")
+                
+                # 임시 폰트 처리
                 try:
-                    shutil.copy(FONT_PATH_ORIG, TEMP_FONT_PATH)
+                    temp_dir = tempfile.gettempdir()
+                    temp_files = []
+                    for font_src, font_name in [(FONT_REGULAR, "NanumGothic.ttf"), 
+                                            (FONT_BOLD, "NanumGothicBold.ttf")]:
+                        temp_path = os.path.join(temp_dir, font_name)
+                        if os.path.exists(temp_path): os.remove(temp_path)
+                        shutil.copy(font_src, temp_path)
+                        temp_files.append(temp_path)
+                        
+                    # 폰트 등록
+                    pdf.add_font("NanumGothic", "", temp_files[0], uni=True)
+                    pdf.add_font("NanumGothic", "B", temp_files[1], uni=True)
                 except Exception as e:
-                    st.error(f"폰트 복사 중 오류 발생: {e}")
+                    st.error(f"폰트 로드 실패: {str(e)}")
                     return None
 
-                if os.path.exists(TEMP_FONT_PATH):
-                    pdf.add_font("NanumGothic", "", TEMP_FONT_PATH, uni=True)
-                    pdf.set_font("NanumGothic", size=10)
-                else:
-                    pdf.set_font("Arial", size=10)
+                # 텍스트 렌더링 함수 (글자 잘림 방지)
+                def render_text(text, style="", size=11, is_bold=False):
+                    text = text.replace("**", "").replace("##", "").strip()
+                    if not text: 
+                        pdf.ln(8)
+                        return
+                        
+                    pdf.set_font("NanumGothic", "B" if is_bold else style, size)
+                    
+                    # 효율적인 줄바꿈 처리 (한글 최적화)
+                    char_width = pdf.get_string_width("가")  # 한글 문자 너비 기준
+                    max_chars = int((pdf.w - 2*pdf.l_margin) / char_width) - 3
+                    
+                    lines = []
+                    current_line = ""
+                    for word in text.split():
+                        if pdf.get_string_width(current_line + word) < (pdf.w - 2*pdf.l_margin - 10):
+                            current_line += word + " "
+                        else:
+                            lines.append(current_line)
+                            current_line = word + " "
+                    lines.append(current_line)
+                    
+                    for line in lines:
+                        pdf.cell(0, 10, line.strip(), ln=True)
+                    pdf.ln(5)
 
-                lines = clean_text(st.session_state.report_text).split('\n')
-                for line in lines:
-                    for i in range(0, len(line), 60):
-                        pdf.cell(0, 10, line[i:i+60], ln=1)
+                # 본문 처리
+                for line in st.session_state.report_text.split('\n'):
+                    line = line.strip()
+                    
+                    # 1. 제목 처리 (#, ##)
+                    if line.startswith("#"):
+                        level = line.count("#")
+                        title = line.replace("#", "").strip()
+                        render_text(title, size=14-level*2, is_bold=True)
+                        
+                    # 2. 리스트 항목 (1., 2. 등)
+                    elif re.match(r'^\d+\.', line):
+                        pdf.set_font("NanumGothic", "B", 11)
+                        num_part = re.match(r'^\d+\.', line).group()
+                        pdf.cell(10, 10, num_part, ln=False)
+                        
+                        content = line[len(num_part):]
+                        render_text(content, is_bold=True)
+                        
+                    # 3. 일반 텍스트
+                    else:
+                        render_text(line)
 
-                pdf_data = pdf.output(dest='S')
-                return pdf_data
+                return pdf.output(dest='S').encode('latin-1')
 
             st.download_button(
                 label="📥 PDF 다운로드",
