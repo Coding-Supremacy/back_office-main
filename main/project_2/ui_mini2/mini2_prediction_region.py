@@ -295,7 +295,7 @@ def run_prediction_region():
                         pdf.cell(0, 10, line[i:i+60], ln=1)
 
                 pdf_data = pdf.output(dest='S')
-                return bytes(pdf_data)  # bytearray를 bytes로 변환
+                return pdf_data
 
             st.download_button(
                 label="📥 PDF 다운로드",
