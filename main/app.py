@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 
 # 페이지 설정 (항상 최상단에 배치)
-st.set_page_config(page_icon="🚗", page_title="Hyundai 고객 관리 시스템", layout="wide")
+st.set_page_config(page_icon="🚗", page_title="Hyundai,Kia 고객 관리 시스템", layout="wide")
 
 # 모듈 임포트
 from project_2.ui_mini2.mini2_all_eda import run_all_eda
