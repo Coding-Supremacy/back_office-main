@@ -475,7 +475,7 @@ def run_eda():
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
         country_df = df[df['국가'] == country].copy()
-        country_df['Cluster_Display'] = country_df['Cluster'] + 1
+        country_df['Cluster_Display'] = (country_df['Cluster'].astype(int) + 1).astype(int)
         country_df.rename(columns={"Cluster_Display": "고객유형"}, inplace=True)
         
         if selected_analysis == "👥 고객 유형별 성별 분포":
