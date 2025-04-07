@@ -62,6 +62,14 @@ st.markdown("""
         margin-bottom: 1.5rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    .strategy-card {
+        background-color: #fff8e1;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #ffc107;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -169,6 +177,51 @@ def get_change_reason(change_rate):
             "suggestion": "긴급 대책 회의 소집, 현지 실사 파견, 구조 조정 검토, 시장 철수 검토",
             "class": "negative"
         }
+
+def get_market_strategy(market_data):
+    """시장 데이터를 분석하여 전략 추천"""
+    strategies = []
+    
+    # 1. 시장 점유율 분석
+    total_export = market_data['수출량'].sum()
+    market_data['점유율'] = (market_data['수출량'] / total_export * 100).round(1)
+    
+    top_market = market_data.iloc[0]
+    if top_market['점유율'] > 40:
+        strategies.append(f"📌 {top_market['국가명']}이 전체의 {top_market['점유율']}%로 주력 시장입니다. 해당 시장에 대한 마케팅 집중 투자와 고객 충성도 제고 프로그램 도입을 권장합니다.")
+    elif top_market['점유율'] > 20:
+        strategies.append(f"📌 {top_market['국가명']}이 {top_market['점유율']}%로 주요 시장입니다. 경쟁사 대비 차별화 전략과 현지화 마케팅 강화가 필요합니다.")
+    else:
+        strategies.append(f"📌 시장 점유율이 {top_market['점유율']}%로 분산되어 있습니다. 각 시장별 맞춤형 전략 수립이 필요하며, 특히 성장 가능성이 높은 시장을 발굴해야 합니다.")
+    
+    # 2. 성장률 분석
+    market_data = market_data.sort_values('국가명')
+    growth_rates = []
+    for country in market_data['국가명'].unique():
+        country_data = market_data[market_data['국가명'] == country]
+        if len(country_data) > 1:
+            growth = (country_data['수출량'].iloc[-1] - country_data['수출량'].iloc[0]) / country_data['수출량'].iloc[0] * 100
+            growth_rates.append({'국가명': country, '성장률': growth})
+    
+    if growth_rates:
+        growth_df = pd.DataFrame(growth_rates)
+        fastest_growing = growth_df.loc[growth_df['성장률'].idxmax()]
+        declining = growth_df.loc[growth_df['성장률'].idxmin()]
+        
+        if fastest_growing['성장률'] > 15:
+            strategies.append(f"🚀 {fastest_growing['국가명']}에서 {fastest_growing['성장률']:.1f}%의 빠른 성장을 보이고 있습니다. 이 시장에 추가 투자와 생산량 확대를 고려하세요.")
+        if declining['성장률'] < -10:
+            strategies.append(f"⚠️ {declining['국가명']}에서 {declining['성장률']:.1f}%의 감소 추세입니다. 현지 문제 분석과 대책 마련이 시급합니다.")
+    
+    # 3. 계절성 분석
+    monthly_data = market_data.groupby(['국가명', '월'])['수출량'].mean().reset_index()
+    seasonal_variation = monthly_data.groupby('국가명')['수출량'].std() / monthly_data.groupby('국가명')['수출량'].mean()
+    
+    for country, variation in seasonal_variation.items():
+        if variation > 0.3:
+            strategies.append(f"🌦️ {country}에서는 계절적 변동성이 큽니다({variation:.1%}). 수요 예측 시스템 개선과 계절별 프로모션 전략을 수립하세요.")
+    
+    return strategies
 
 def create_tab_buttons():
     if 'current_tab' not in st.session_state:
@@ -625,7 +678,7 @@ def run_prediction_climate():
             # 차트 분석 섹션
             st.markdown("### 📊 비교 차트")
             
-            # 첫 번째 행 차트ㅁ
+            # 첫 번째 행 차트
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("#### 국가별 수출량 비교")
@@ -688,4 +741,32 @@ def run_prediction_climate():
             - 특정 시기의 급변동 포인트 확인  
             - 마케팅 캠페인 효과 측정에 활용
             """)
+            
+            # 추천 전략 섹션 추가
+            st.markdown("### 🎯 시장별 추천 전략")
+            
+            # 시장 데이터 분석 및 전략 생성
+            market_strategies = get_market_strategy(filtered_data)
+            
+            # 전략 카드 표시
+            for strategy in market_strategies:
+                st.markdown(f"""
+                <div class="strategy-card">
+                    <p>{strategy}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # 추가적인 전략 제안
+            st.markdown("""
+            <div class="highlight-box">
+                <h4>📌 종합 전략 제안</h4>
+                <p><strong>1. 시장 세분화 전략:</strong> 각 국가별 수요 패턴을 분석하여 맞춤형 마케팅 전략 수립</p>
+                <p><strong>2. 제품 포트폴리오 최적화:</strong> 국가별 선호 차종에 따라 제품 라인업 조정</p>
+                <p><strong>3. 계절별 프로모션:</strong> 월별 수출량 변동성을 고려한 유연한 판촉 전략</p>
+                <p><strong>4. 성장 시장 집중:</strong> 높은 성장률을 보이는 국가에 마케팅 예산 집중 투입</p>
+                <p><strong>5. 위기 대응 체계:</strong> 감소 추세 시장에 대한 신속한 대응 시스템 구축</p>
+            </div>
+            """, unsafe_allow_html=True)
 
+if __name__ == "__main__":
+    run_prediction_climate()
