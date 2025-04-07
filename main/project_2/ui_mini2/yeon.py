@@ -554,7 +554,7 @@ def run_yeon():
         if st.session_state.comparison_made or ('multi_comparison_result' in st.session_state and not reset_btn):
             if compare_btn:
                 filtered_data = df_long[
-                    (df_long["국가명"].isin(selected_countries)) &
+                    (df_long["국가명"].isin(selected_countries)) |
                     (df_long["차종 구분"] == selected_car_type) &
                     (df_long["차량 구분"] == selected_car) &
                     (df_long["날짜"].dt.year == latest_year)
