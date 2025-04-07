@@ -423,7 +423,7 @@ def run_yeon():
                 climate_data = df_long[
                     (df_long["국가명"] == selected_country) |
                     (df_long["차종 구분"] == selected_car_type) &
-                    (df_long["차량 구분"] == selected_car) &
+                    (df_long["차량 구분"] == selected_car) |
                     (df_long["날짜"].dt.year == target_year - 1)
                 ].groupby("기후대")["수출량"].sum().reset_index()
                 
