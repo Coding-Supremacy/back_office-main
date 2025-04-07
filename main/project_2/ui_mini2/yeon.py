@@ -10,7 +10,7 @@ from PIL import Image
 import yfinance as yf
 import matplotlib.colors as mcolors
 
-# CSS 스타일 (간결한 버전)
+
 st.markdown("""
 <style>
     .main {
