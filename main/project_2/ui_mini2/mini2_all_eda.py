@@ -739,11 +739,11 @@ def analyze_model_priority(df, model_priority):
         for model in compare_models:
             weeks = inventory_df.loc[model, '재고 주수']
             if weeks < 2:
-                st.warning(f"{model}: 재고 부족 (현재 {weeks:.1f}주 분) → **긴급 생산 필요**")
+                st.error(f"{model}: 재고 부족 (현재 {weeks:.1f}주 분) → **긴급 생산 필요**")
             elif weeks > 8:
-                st.info(f"{model}: 재고 과다 (현재 {weeks:.1f}주 분) → 생산 감소 검토")
+                st.success(f"{model}: 재고 과다 (현재 {weeks:.1f}주 분) → 생산 감소 검토")
             else:
-                st.success(f"{model}: 재고 적정 (현재 {weeks:.1f}주 분)")
+                st.warning(f"{model}: 재고 적정 (현재 {weeks:.1f}주 분)")
 
 # 메인 분석 함수
 def run_all_eda():
