@@ -756,9 +756,6 @@ def run_all_eda():
         st.warning("데이터를 불러오는 데 실패했습니다.")
         return
     
-    # 최신 데이터 업데이트 알림
-    latest_date = df['제품 구매 날짜'].max().strftime('%Y-%m-%d')
-    st.sidebar.success(f"최신 데이터 업데이트: {latest_date} (총 {len(df)}건)")
     
     # 분석 메뉴 선택
     selected_analysis = option_menu(
