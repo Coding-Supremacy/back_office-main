@@ -816,7 +816,7 @@ def run_all_eda():
         
         # 지역 선택
         regions = df['국가'].unique()
-        selected_region = st.selectbox("지역 선택", sorted(regions))
+        selected_region = st.selectbox("지역 선택", sorted(regions), index=1)
         
         # 해당 지역 데이터 필터링
         region_df = df[df['국가'] == selected_region]
