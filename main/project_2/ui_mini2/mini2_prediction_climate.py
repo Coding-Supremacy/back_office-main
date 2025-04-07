@@ -256,6 +256,7 @@ def load_data_and_models():
     # 데이터 불러오기
     df = pd.read_csv("hoyeon/기아.csv")
     
+    
     # 데이터 전처리
     id_vars = ['국가명', '연도', '기후대', 'GDP', '차종', '차량 구분']
     month_cols = [f"{i}월" for i in range(1, 13)]

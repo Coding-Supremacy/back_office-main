@@ -464,11 +464,11 @@ def step3_customer_data_storage():
     st.title("📝 고객 정보 입력 및 저장")
 
     with st.form(key="customer_info_form"):
-        이름 = st.text_input("이름")
-        휴대폰번호 = st.text_input("휴대폰 번호 입력", placeholder="필수입니다.")
-        이메일 = st.text_input("이메일 입력", placeholder="필수입니다.")
-        주소 = st.text_input("주소")
-        아이디 = st.text_input("아이디")
+        이름 = st.text_input("이름", value='김고객')
+        휴대폰번호 = st.text_input("휴대폰 번호 입력", placeholder="필수입니다.", value='01012345678')
+        이메일 = st.text_input("이메일 입력", placeholder="필수입니다.", value = "abc@naver.com")
+        주소 = st.text_input("주소", value = "서울시 강남구 역삼동")
+        아이디 = st.text_input("아이디", value = "abc1234")
         가입일 = st.date_input("가입일")
 
         submit_button = st.form_submit_button("고객정보 저장하기")
