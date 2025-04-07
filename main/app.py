@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 
-# 페이지 설정 (항상 최상단에 배치)
+# 페이지 설정
 st.set_page_config(page_icon="🚗", page_title="Hyundai,Kia 고객 관리 시스템", layout="wide")
 
 # 모듈 임포트
@@ -23,18 +23,17 @@ from project_2.ui_mini2.mini2_trend import run_trend
 from project_2.ui_mini2.mini2_home import run_home2
 from project_2.ui_mini2.yeon import run_yeon
 
-# 세션 상태 초기화 (없으면 기본값 설정)
+# 세션 상태 초기화
 if "brand" not in st.session_state:
     st.session_state["brand"] = "현대"
 if "country" not in st.session_state:
     st.session_state["country"] = "대한민국"
 if "dashboard_type" not in st.session_state:
     st.session_state["dashboard_type"] = "👤 딜러 전용 대시보드"
+if "prev_analysis_menu" not in st.session_state:
+    st.session_state["prev_analysis_menu"] = None
 
 def run_insurance_consultation(country):
-    """
-    선택된 국가에 따라 보험 상담 기능을 실행합니다.
-    """
     if country == "대한민국":
         run_car_customer_info()
     elif country == "미국":
@@ -50,9 +49,7 @@ def main():
     analysis_menu = None
     dealer_menu = None
 
-    # 사이드바 영역 설정
     with st.sidebar:
-        # 1. 브랜드 선택 (항상 상단)
         brand = option_menu(
             menu_title="브랜드 선택",
             options=["현대", "기아"],
@@ -62,7 +59,6 @@ def main():
         )
         st.session_state["brand"] = brand
 
-        # 2. 대시보드 유형 선택
         dashboard_type = option_menu(
             menu_title="대시보드 선택",
             options=["👤 딜러 전용 대시보드", "📈 글로벌 수출 전략 대시보드"],
@@ -71,16 +67,13 @@ def main():
         )
         st.session_state["dashboard_type"] = dashboard_type
 
-        # 3. 하위 메뉴 설정
         if dashboard_type == "👤 딜러 전용 대시보드":
-            # 국가 선택
             country = st.selectbox(
                 "국가 선택",
                 ["대한민국", "미국", "캐나다", "멕시코"]
             )
             st.session_state["country"] = country
 
-            # 딜러 서브 메뉴
             dealer_menu = option_menu(
                 menu_title="딜러 메뉴",
                 options=["🏠 홈", "🧾 고객 상담", "🧾 보험 상담", "📊 고객 분석", "👩‍💻개발과정"],
@@ -88,21 +81,30 @@ def main():
                 default_index=0
             )
         elif dashboard_type == "📈 글로벌 수출 전략 대시보드":
-            # 브랜드에 따라 분석 메뉴 다르게 구성
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측","🌎글로벌 고객 데이터 분석", "🚗 기아 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun","bi bi-globe-americas", "truck", "graph-up"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측", "🌎글로벌 고객 데이터 분석", "🚗 기아 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
+                    icons=["house", "geo-alt", "cloud-sun", "bi bi-globe-americas", "truck", "graph-up"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측","🌎글로벌 고객 데이터 분석", "🚙 현대 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun","bi bi-globe-americas", "car-front", "graph-up"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측", "🌎글로벌 고객 데이터 분석", "🚙 현대 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
+                    icons=["house", "geo-alt", "cloud-sun", "bi bi-globe-americas", "car-front", "graph-up"],
                     default_index=0
                 )
+
+    # 기후별 예측 → 다른 메뉴로 바뀌었을 경우에만 초기화
+    if st.session_state["prev_analysis_menu"] in ["🌦️ 기아 기후별 예측", "🌦️ 현대 기후별 예측"] and \
+        analysis_menu not in ["🌦️ 기아 기후별 예측", "🌦️ 현대 기후별 예측"]:
+        for key in ["selected_climate", "selected_country", "model_result"]:
+            if key in st.session_state:
+                del st.session_state[key]
+
+    # 이전 메뉴 갱신
+    st.session_state["prev_analysis_menu"] = analysis_menu
 
     # --- 본문 콘텐츠 출력 ---
     if st.session_state["dashboard_type"] == "👤 딜러 전용 대시보드":
@@ -111,27 +113,24 @@ def main():
         elif dealer_menu == "🧾 고객 상담":
             run_input_customer_info()
         elif dealer_menu == "🧾 보험 상담":
-            # 국가 선택에 따라 보험 상담 호출
             run_insurance_consultation(st.session_state["country"])
         elif dealer_menu == "📊 고객 분석":
             run_eda()
         elif dealer_menu == "👩‍💻개발과정":
             run_description1()
+
     elif st.session_state["dashboard_type"] == "📈 글로벌 수출 전략 대시보드":
         if analysis_menu == "🏠 홈":
             run_home2()
         elif analysis_menu == "📍 지역별 예측":
             run_prediction_region()
-        elif analysis_menu in ["🌦️ 기아 기후별 예측", "🌦️ 현대 기후별 예측"]:
-            # 기후 예측은 브랜드에 따라 모듈이 다름
-            if st.session_state["brand"] == "기아":
-                run_prediction_climate()
-            elif st.session_state["brand"] == "현대":
-                run_yeon()
+        elif analysis_menu == "🌦️ 기아 기후별 예측":
+            run_prediction_climate()
+        elif analysis_menu == "🌦️ 현대 기후별 예측":
+            run_yeon()
         elif analysis_menu == "🌎글로벌 고객 데이터 분석":
             run_all_eda()
         elif analysis_menu in ["🚗 기아 23년~25년 수출 분석", "🚙 현대 23년~25년 수출 분석"]:
-            # 분석 모듈 선택
             if st.session_state["brand"] == "기아":
                 run_eda_kia()
             elif st.session_state["brand"] == "현대":
