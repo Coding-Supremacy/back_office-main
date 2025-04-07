@@ -452,6 +452,45 @@ def run_yeon():
             gdp_value = fetch_gdp_data(selected_country) or df[df["국가명"] == selected_country]["GDP"].iloc[0]
             
             st.markdown("### 📌 예측 결과 요약")
+
+             # 예측 결과 표시
+            
+            st.markdown("""
+    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%); 
+                border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;
+                border-left: 5px solid #4a6fa5;">
+        <h3 style="color: #2a3f5f; margin-top: 0;">✨ 핵심 예측 지표</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div style="background: white; border-radius: 10px; padding: 1.5rem; 
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 1rem; color: #666; margin-bottom: 0.5rem;">예상 수출량</div>
+                <div style="font-size: 2.5rem; font-weight: bold; color: #2a3f5f;">
+                    {prediction:,.0f}
+                </div>
+                <div style="font-size: 0.9rem; color: #666;">
+                    {target_year}년 {target_month}월 예측
+                </div>
+            </div>
+            <div style="background: white; border-radius: 10px; padding: 1.5rem; 
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 1rem; color: #666; margin-bottom: 0.5rem;">전년 동월 대비</div>
+                <div style="font-size: 2.5rem; font-weight: bold; color: {color};">
+                    {yearly_change:+.1f}%
+                </div>
+                <div style="font-size: 0.9rem; color: #666;">
+                    {prev_year_export:,.0f} → {prediction:,.0f}
+                </div>
+            </div>
+        </div>
+    </div>
+    """.format(
+        prediction=prediction,
+        target_year=target_year,
+        target_month=target_month,
+        yearly_change=yearly_change,
+        prev_year_export=prev_year_export,
+        color="green" if yearly_change >= 5 else ("red" if yearly_change <= -5 else "orange")
+    ), unsafe_allow_html=True)
             
             col1, col2, col3 = st.columns(3)
             with col1:
