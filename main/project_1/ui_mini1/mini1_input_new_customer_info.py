@@ -542,7 +542,7 @@ def save_customer_data():
     full_data = pd.DataFrame([customer_data])
 
     # 파일 저장 경로
-    file_path = Path(__file__).parent.parent.parent.parent / "data" / f"{brand}_고객데이터_신규입력용.csv"
+    file_path = Path(__file__).parent.parent.parent.parent / "data" / f"{brand}_고객데이터_완성.csv"
     os.makedirs(file_path.parent, exist_ok=True)
     print(f"파일 경로: {file_path}")
     
