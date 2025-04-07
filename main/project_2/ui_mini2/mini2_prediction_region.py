@@ -16,7 +16,7 @@ from pathlib import Path
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-TEST_MODE = False
+TEST_MODE = True
 
 def clean_text(text):
     # 유니코드 이모지 및 특수기호 제거
