@@ -123,6 +123,9 @@ def main():
         elif dealer_menu == "👩‍💻개발 기술서 확인":
             webbrowser.open_new_tab(SLIDES_LINK)
             st.warning("브라우저에서 개발과정 문서가 열립니다. 팝업이 차단된 경우 수동으로 열어주세요.")
+            st.link_button("개발과정 보기 (Google Slides)", 
+            url="https://docs.google.com/presentation/d/1KC_awDiqIaV97Uzoqm72udBRS-SShRZt/edit?slide=id.p1#slide=id.p1")
+
             
     elif st.session_state["dashboard_type"] == "📈 글로벌 수출 전략 대시보드":
         if analysis_menu == "🏠 홈":
@@ -148,6 +151,8 @@ def main():
         elif analysis_menu == "🧑‍💻개발 기술서 확인":
             webbrowser.open_new_tab(SLIDES_LINK)
             st.warning("브라우저에서 개발과정 문서가 열립니다. 팝업이 차단된 경우 수동으로 열어주세요.")
+            st.link_button("개발과정 보기 (Google Slides)", 
+            url="https://docs.google.com/presentation/d/1KC_awDiqIaV97Uzoqm72udBRS-SShRZt/edit?slide=id.p1#slide=id.p1")
 
 if __name__ == "__main__":
     main()
