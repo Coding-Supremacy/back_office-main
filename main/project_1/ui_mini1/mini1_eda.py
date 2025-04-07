@@ -456,7 +456,7 @@ def run_eda():
             "🛒 고객 유형별 구매 빈도",
             "🚘 모델별 구매 분석",
             "🏷️ RFM 별 고객 분류",
-            "📝 종합 보고서 및 이메일 발송"
+            "📝 종합 분석"
         ],
         icons=["", "", "", ""],
         menu_icon="cast",
@@ -745,7 +745,7 @@ def run_eda():
             else:
                 st.error("필요한 컬럼이 데이터에 없습니다. '고객 세그먼트' 컬럼을 확인해주세요.")  
                               
-        elif selected_analysis == "📝 종합 보고서 및 이메일 발송":
+        elif selected_analysis == "📝 종합 분석":
             st.subheader(f"{brand}-{country} - 종합 분석 보고서 및 고객 유형별 마케팅 이메일 발송")
             marketing_strategies, brand_recommendations = generate_marketing_strategies(country_df)
 
