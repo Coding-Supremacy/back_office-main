@@ -544,9 +544,10 @@ def save_customer_data():
     # 파일 저장 경로
     file_path = Path(__file__).parent.parent.parent.parent / "data" / f"{brand}_고객데이터_신규입력용.csv"
     os.makedirs(file_path.parent, exist_ok=True)
+    print(f"파일 경로: {file_path}")
     
     # CSV 파일에 저장 (기존 파일이 있으면 추가, 없으면 새로 생성
-    full_data.to_csv(file_path, mode='a', header=not file_path.exists(), index=False, encoding='utf-8-sig')
+    full_data.to_csv(file_path, mode='a', header=not file_path.exists(), index=False, encoding='utf-8')
 
     # 문자 발송
     send_sms_notification()
