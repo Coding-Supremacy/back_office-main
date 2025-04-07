@@ -23,6 +23,14 @@ from project_2.ui_mini2.mini2_prediction_region import run_prediction_region
 from project_2.ui_mini2.mini2_trend import run_trend
 from project_2.ui_mini2.mini2_home import run_home2
 from project_2.ui_mini2.yeon import run_yeon
+from streamlit.components.v1 import html
+
+def scroll_to_top():
+    html("""
+        <script>
+            window.scrollTo(0, 0);
+        </script>
+    """, height=0)
 
 # 세션 상태 초기화 (없으면 기본값 설정)
 if "brand" not in st.session_state:
@@ -74,9 +82,11 @@ def main():
             default_index=0,
         )
         st.session_state["dashboard_type"] = dashboard_type
+        
 
         # 3. 하위 메뉴 설정
         if dashboard_type == "👤 딜러 전용 대시보드":
+            scroll_to_top()
             # 국가 선택
             country = st.selectbox(
                 "국가 선택",
@@ -92,6 +102,7 @@ def main():
                 default_index=0
             )
         elif dashboard_type == "📈 글로벌 수출 전략 대시보드":
+            scroll_to_top()
             # 브랜드에 따라 분석 메뉴 다르게 구성
             if brand == "기아":
                 analysis_menu = option_menu(
