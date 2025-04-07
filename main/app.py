@@ -1,17 +1,18 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+import webbrowser
 
 # 페이지 설정 (항상 최상단에 배치)
 st.set_page_config(page_icon="🚗", page_title="Hyundai,Kia 고객 관리 시스템", layout="wide")
 
 # 모듈 임포트
+from project_1.ui_mini1.mini1_predata1 import run_predata1
+from project_2.ui_mini2.mini2_predata2 import run_predata2
 from project_2.ui_mini2.mini2_all_eda import run_all_eda
 from project_1.ui_mini1.Car_insurance import run_car_customer_info
 from project_1.ui_mini1.Car_insurance_ca import run_car_customer_ca
 from project_1.ui_mini1.Car_insurance_us import run_car_customer_us
 from project_1.ui_mini1.Car_insurance_mx import run_car_customer_mx
-from project_1.ui_mini1.mini1_description import run_description1
-from project_2.ui_mini2.mini2_description import run_description2
 from project_1.ui_mini1.mini1_eda import run_eda
 from project_1.ui_mini1.mini1_home import run_home1
 from project_1.ui_mini1.mini1_input_new_customer_info import run_input_customer_info
@@ -50,6 +51,9 @@ def main():
     analysis_menu = None
     dealer_menu = None
 
+    # Google Slides 링크
+    SLIDES_LINK = "https://docs.google.com/presentation/d/1KC_awDiqIaV97Uzoqm72udBRS-SShRZt/edit?slide=id.p1#slide=id.p1"
+
     # 사이드바 영역 설정
     with st.sidebar:
         # 1. 브랜드 선택 (항상 상단)
@@ -83,8 +87,8 @@ def main():
             # 딜러 서브 메뉴
             dealer_menu = option_menu(
                 menu_title="딜러 메뉴",
-                options=["🏠 홈", "🧾 고객 상담", "🧾 보험 상담", "📊 고객 분석", "👩‍💻개발과정"],
-                icons=["house", "chat-dots", "pie-chart"],
+                options=["🏠 홈", "🧾 고객 상담", "🧾 보험 상담", "📊 고객 분석","💾원본 데이터 확인", "👩‍💻개발 기술서 확인"],
+                icons=["house", "chat-dots", "pie-chart", "bar-chart", "database", "file-earmark-slides"],
                 default_index=0
             )
         elif dashboard_type == "📈 글로벌 수출 전략 대시보드":
@@ -92,15 +96,15 @@ def main():
             if brand == "기아":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측","🌎글로벌 고객 데이터 분석", "🚗 기아 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun","bi bi-globe-americas", "truck", "graph-up"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 기아 기후별 예측","🌎글로벌 고객 데이터 분석", "🚗 기아 23년~25년 수출 분석", "📈 시장 트렌드", "📀원본 데이터 확인", "🧑‍💻개발 기술서 확인"],
+                    icons=["house", "geo-alt", "cloud-sun","globe", "truck", "graph-up", "database", "file-earmark-slides"],
                     default_index=0
                 )
             elif brand == "현대":
                 analysis_menu = option_menu(
                     menu_title="분석 메뉴",
-                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측","🌎글로벌 고객 데이터 분석", "🚙 현대 23년~25년 수출 분석", "📈 시장 트렌드", "🧑‍💻개발과정"],
-                    icons=["house", "geo-alt", "cloud-sun","bi bi-globe-americas", "car-front", "graph-up"],
+                    options=["🏠 홈", "📍 지역별 예측", "🌦️ 현대 기후별 예측","🌎글로벌 고객 데이터 분석", "🚙 현대 23년~25년 수출 분석", "📈 시장 트렌드", "📀원본 데이터 확인","🧑‍💻개발 기술서 확인"],
+                    icons=["house", "geo-alt", "cloud-sun","globe", "car-front", "graph-up", "database", "file-earmark-slides"],
                     default_index=0
                 )
 
@@ -111,19 +115,21 @@ def main():
         elif dealer_menu == "🧾 고객 상담":
             run_input_customer_info()
         elif dealer_menu == "🧾 보험 상담":
-            # 국가 선택에 따라 보험 상담 호출
             run_insurance_consultation(st.session_state["country"])
         elif dealer_menu == "📊 고객 분석":
             run_eda()
-        elif dealer_menu == "👩‍💻개발과정":
-            run_description1()
+        elif dealer_menu =="💾원본 데이터 확인":
+            run_predata1()
+        elif dealer_menu == "👩‍💻개발 기술서 확인":
+            webbrowser.open_new_tab(SLIDES_LINK)
+            st.warning("브라우저에서 개발과정 문서가 열립니다. 팝업이 차단된 경우 수동으로 열어주세요.")
+            
     elif st.session_state["dashboard_type"] == "📈 글로벌 수출 전략 대시보드":
         if analysis_menu == "🏠 홈":
             run_home2()
         elif analysis_menu == "📍 지역별 예측":
             run_prediction_region()
         elif analysis_menu in ["🌦️ 기아 기후별 예측", "🌦️ 현대 기후별 예측"]:
-            # 기후 예측은 브랜드에 따라 모듈이 다름
             if st.session_state["brand"] == "기아":
                 run_prediction_climate()
             elif st.session_state["brand"] == "현대":
@@ -131,15 +137,17 @@ def main():
         elif analysis_menu == "🌎글로벌 고객 데이터 분석":
             run_all_eda()
         elif analysis_menu in ["🚗 기아 23년~25년 수출 분석", "🚙 현대 23년~25년 수출 분석"]:
-            # 분석 모듈 선택
             if st.session_state["brand"] == "기아":
                 run_eda_kia()
             elif st.session_state["brand"] == "현대":
                 run_eda_hyundai()
         elif analysis_menu == "📈 시장 트렌드":
             run_trend()
-        elif analysis_menu == "🧑‍💻개발과정":
-            run_description2()
+        elif analysis_menu =="📀원본 데이터 확인":
+            run_predata2()
+        elif analysis_menu == "🧑‍💻개발 기술서 확인":
+            webbrowser.open_new_tab(SLIDES_LINK)
+            st.warning("브라우저에서 개발과정 문서가 열립니다. 팝업이 차단된 경우 수동으로 열어주세요.")
 
 if __name__ == "__main__":
     main()
