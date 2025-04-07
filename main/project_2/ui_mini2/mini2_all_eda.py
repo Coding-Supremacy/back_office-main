@@ -5,6 +5,28 @@ from datetime import datetime, timedelta
 from streamlit_option_menu import option_menu
 import numpy as np
 
+from project_1.ui_mini1.vehicle_recommendations_data import brand_recommendations
+
+# 브랜드별 클러스터 추천 모델 (전역 변수)
+brand_recommendations = {
+    '현대': {
+        1: ['Avante (CN7 N)', "G70 (IK)", "Tucson (NX4 PHEV)"],
+        2: ["IONIQ 6 (CE)", "Grandeur (GN7 HEV)", "NEXO (FE)"],
+        3: ["IONIQ 6 (CE)", "Grandeur (GN7 HEV)", "Santa-Fe (MX5 PHEV)"],
+        4: ['Avante (CN7 N)',"Tucson (NX4 PHEV)", "G90 (HI)"],
+        5: ["IONIQ 6 (CE)", "Santa-Fe (MX5 PHEV)", "Tucson (NX4 PHEV)"],
+        6: ["Avante (CN7 N)", "G70 (IK)", "Tucson (NX4 PHEV)"]
+    },
+    '기아': {
+        1: ["K5", "Telluride", "Sportage"],
+        2: ["EV9", "Sorento", "Carnival"],
+        3: ["K5", "EV6", "Seltos"],
+        4: ["K5", "Sportage", "K8"],
+        5: ["Telluride", "EV9", "Sorento"],
+        6: ["K5", "K3", "Sonet"]
+    }
+}
+
 # 데이터 로드 및 전처리 함수
 @st.cache_data
 def load_data(brand):
@@ -395,7 +417,7 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
         
         st.markdown("### 📊 고객 유형별 특징 및 선호 모델")
         
-        # 전체 클러스터 정보 표시
+        # 전체 클러스터 정보 표시 (선택한 클러스터 강조)
         st.dataframe(
             cluster_df.style.apply(
                 lambda x: ["background: #EAF2F8" if x.name == selected_cluster else "" for i in x], 
@@ -414,7 +436,7 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
     for model in cluster_preference.head(5).index:
         diff = (cluster_avg_sales.get(model, 0) - total_avg_sales.get(model, 0)) * 100
         if diff > 5:  # 5% 이상 높은 경우
-            unique_preferences.append(f"- {model}: 일반 고객 대비 {diff:.1f}% 더 높은 선호도를 보여줌")
+            unique_preferences.append(f"- {model}: 일반 고객 대비 {diff:.1f}% 더 높은 선호도")
     
     # 클러스터 특징 가져오기
     cluster_features = cluster_df.loc[selected_cluster, "특징"]
@@ -443,7 +465,8 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
     compare_models = st.multiselect(
         "비교할 모델 선택",
         df['구매한 제품'].unique(),
-        default=df['구매한 제품'].value_counts().head(3).index.tolist()
+        default=df['구매한 제품'].value_counts().head(3).index.tolist(),
+        key=f"model_compare_{selected_cluster}"
     )
     
     if compare_models:
@@ -452,7 +475,7 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
         
         # 정수형으로 포매팅하여 출력
         st.dataframe(
-            model_cluster.style.format("{:.0f}")  # 소수점 없이 정수로 표시
+            model_cluster.style.format("{:.0f}")
             .background_gradient(cmap='Blues', axis=1)
         )
         
@@ -476,21 +499,44 @@ def analyze_cluster_preference(cluster_model, selected_cluster, df, brand):
                 min_sales = model_cluster.loc[model, worst_cluster]
                 
                 if min_sales == 0:
-                    # 최소 판매량이 0인 경우 (inf 방지)
-                    insight = f"- {model}: 유형 {best_cluster}에서만 {max_sales}건 판매 (유형 {worst_cluster}에서는 판매 없음)"
+                    insights.append(f"- {model}: 유형 {best_cluster}에서만 {max_sales}건 판매 (유형 {worst_cluster}에서는 판매 없음)")
                 else:
                     ratio = max_sales / min_sales
-                    if ratio > 3:  # 3배 이상 차이나는 경우
-                        insight = f"- {model}: 유형 {best_cluster}에서 유형 {worst_cluster}보다 {ratio:.1f}배 더 선호"
-                    else:
-                        continue  # 3배 미만 차이는 인사이트에서 제외
-                
-                insights.append(insight)
+                    if ratio > 3:
+                        insights.append(f"- {model}: 유형 {best_cluster}에서 유형 {worst_cluster}보다 {ratio:.1f}배 더 선호")
 
         if insights:
             st.markdown("#### 📌 고객 유형별 선호도 차이가 큰 모델:\n" + "\n".join(insights))
         else:
             st.info("선택한 모델들의 고객 유형별 선호도 차이가 크지 않습니다.")
+
+            # 클러스터별 추천 모델 표시 (수정된 부분)
+    st.subheader("🎯 고객유형별 추천 모델 (Top 3)")
+    
+    recommendations = brand_recommendations.get(brand, {})
+    if recommendations:
+        # 현재 선택된 클러스터의 추천 모델만 표시
+        if selected_cluster in recommendations:
+            rec_models = recommendations[selected_cluster]
+            
+            cols = st.columns(3)
+            for i, model in enumerate(rec_models):
+                with cols[i]:
+                    st.metric(f"{i+1}순위", model)
+            
+        # 데이터프레임으로 전체 요약 표시
+        with st.subheader("📋 모든 고객유형별 추천 모델 보기"):
+            rec_df = pd.DataFrame.from_dict(
+                recommendations,
+                orient='index',
+                columns=['1순위', '2순위', '3순위']
+            )
+            st.dataframe(
+                rec_df.style.apply(
+                    lambda x: ["background: #EAF2F8" if x.name == selected_cluster else "" for i in x],
+                    axis=1
+                )
+            )
 
 
 def analyze_model_priority(df, model_priority):
