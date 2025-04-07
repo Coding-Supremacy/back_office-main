@@ -177,7 +177,7 @@ def run_prediction_climate():
     model = joblib.load("main/project_2/models_mini2/lgbm_tuned_model.pkl")
     scaler = joblib.load("main/project_2/models_mini2/scaler.pkl")
     model_columns = joblib.load("main/project_2/models_mini2/model_columns.pkl")
-    df = pd.read_csv("main/project_2/data_mini2/기아.csv")
+    df = pd.read_csv("main/project_2/data_mini2/기아2.csv")
     
     st.title("🚗 기후별 수출량 분석 대시보드")
     st.markdown("""

@@ -281,25 +281,9 @@ def run_prediction_region():
 
         # 세션 상태에 보고서가 있다면 출력 및 PDF 저장 가능하도록
         if st.session_state.get("report_text"):
-            from markdown import markdown
             st.markdown("### 📄 AI 분석 보고서")
-
-            # 마크다운 문법을 HTML로 변환
-            report_html = markdown(st.session_state.report_text)
-
-            # 변환된 HTML을 박스에 출력
-            st.markdown(f"""
-            <div style="
-                background-color: #FAFAFA;
-                border: 1px solid #D5DBDB;
-                padding: 20px;
-                border-radius: 10px;
-                margin-bottom: 20px;
-                font-size: 16px;
-            ">
-                {report_html}
-            </div>
-            """, unsafe_allow_html=True)
+            st.text_area("보고서 내용", st.session_state.report_text, height=400, label_visibility="collapsed")
+            
             st.markdown("---")
             st.markdown("#### 📀 보고서를 PDF로 저장하기")
             
