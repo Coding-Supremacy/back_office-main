@@ -37,8 +37,8 @@ KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
 
 Elbow method 기반 최적 K 선택 (현대와 기아 고객 데이터 모두 k 값을 6으로 선정)
 
-![현대 고객 elbow method](images/hyundai_elbow.png)
-![기아 고객 elbow method](images/kia_elbow.png)
+![현대 고객 elbow method](image/hyundai_elbow.png)
+![기아 고객 elbow method](image/kia_elbow.png)
 
 ### ✅ 신규 고객 유형 예측
 ``` python
