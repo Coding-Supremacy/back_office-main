@@ -22,59 +22,66 @@ preprocessor = ColumnTransformer(
         ('cat', OneHotEncoder(), categorical_features),
         ('num', StandardScaler(), numeric_features)
     ])
-👥 고객 세분화 및 추천 시스템
-✅ (1차) RFM 기반 클러스터링
+```
+## 👥 고객 세분화 및 추천 시스템
+### ✅ (1차) RFM 기반 클러스터링
 KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
 
 입력 피처: 거래방식, 출시일, 구매일, 금액, 빈도 등
 
-✅ (2차) 고객 유형 클러스터링
+### ✅ (2차) 고객 유형 클러스터링
 추가 입력: 성별, 차량유형, 친환경 여부, 연령 등
 
 Elbow method 기반 최적 K 선택 (예: K=6)
 
-✅ 신규 고객 유형 예측
-python
+### ✅ 신규 고객 유형 예측
+``` python
 # GradientBoosting/RandomForest 분류 모델
 from sklearn.ensemble import GradientBoostingClassifier
 
 gb_model = GradientBoostingClassifier()
 gb_model.fit(X_train, y_train)
+```
 # 예측 정확도: 현대 99.2%, 기아 100%
 📈 판매/수출/생산 예측
 🔮 Prophet 시계열 예측
-python
+``` python
 from prophet import Prophet
 
 model = Prophet(daily_seasonality=False, weekly_seasonality=False)
 model.fit(df_long[['ds', 'y']])
 forecast = model.predict(model.make_future_dataframe(periods=12, freq='M'))
-💡 LightGBM 다변량 예측
-python
+```
+
+### 💡 LightGBM 다변량 예측
+```python
 import lightgbm as lgb
 
 params = {'objective': 'regression', 'metric': 'rmse'}
 train_data = lgb.Dataset(X, label=y)
 gbm = lgb.train(params, train_data, num_boost_round=100)
-📊 실시간 대시보드
+```
+### 📊 실시간 대시보드
 Streamlit 기반 시각화
 
 자동화: 이메일 발송, 보고서 생성, 마케팅 전략 제안
 
 🔁 전체 파이프라인 아키텍처
-Diagram
-Code
+``` graph TD
+    A[데이터 수집] --> B[전처리]
+    B --> C1[RFM 클러스터링]
+    C1 --> C2[고객유형 클러스터링]
+    C2 --> D[고객 유형 예측]
+    D --> E[차량 추천]
+    B --> F1[데이터 변환]
+    F1 --> F2[Prophet 예측]
+    F1 --> F3[LightGBM 예측]
+    F2 --> G[대시보드]
+    F3 --> G
+    E --> G
+```
 
-
-
-
-
-
-
-
-
-
-🧠 핵심 로직 요약
+### 🧠 핵심 로직 요약
 고객 분석 흐름
 고객 정보 입력 → 2. 클러스터링 → 3. 차량 추천 → 4. 결과 발송
 
