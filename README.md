@@ -42,7 +42,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 gb_model = GradientBoostingClassifier()
 gb_model.fit(X_train, y_train)
 ```
-# 예측 정확도: 현대 99.2%, 기아 100%
+**예측 정확도: 현대 99.2%, 기아 100%**
 📈 판매/수출/생산 예측
 🔮 Prophet 시계열 예측
 ``` python
