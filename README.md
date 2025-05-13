@@ -6,8 +6,11 @@
 
 ### 1. 📥 데이터 수집 및 구성
 - **내부 실적 데이터**: 현대·기아차 2023~2025년 판매·수출 데이터 (차종/국가/공장/월별 포함)
-- **가상 고객 데이터**: ChatGPT로 생성한 국가별 고객 프로필 (이름, 차량 선호, 구매 빈도 등)
+    데이터 링크 : https://drive.google.com/file/d/12HKQzatQsYrVRNyhZygPVDesuAUaKtvL/view?usp=sharing
+- **가상 고객 데이터**: ChatGPT로 생성한 국가별 고객 프로필 (이름, 차량 선호, 구매 빈도 등) 
+    데이터 링크 : https://drive.google.com/file/d/1BCXIBxBoqvBPdCRR7AxNzrJA-AUcfqDS/view?usp=drive_link
 - **외부 보조 데이터**: 국가별 GDP, 기후대, 경쟁사 판매량 등
+    데이터 링크 : https://drive.google.com/file/d/1ufUbxoOeEeEFdMHjLs2VZ2lEvanwF25P/view?usp=sharing
 
 ### 2. 🔧 데이터 전처리 및 통합
 ```python
@@ -32,7 +35,7 @@ KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
 ### ✅ (2차) 고객 유형 클러스터링
 추가 입력: 성별, 차량유형, 친환경 여부, 연령 등
 
-Elbow method 기반 최적 K 선택 (예: K=6)
+Elbow method 기반 최적 K 선택 (현대와 기아 고객 데이터 모두 k 값을 6으로 선정)(image/hyundai_elbow)(image/kia_elbow)
 
 ### ✅ 신규 고객 유형 예측
 ``` python
