@@ -32,6 +32,7 @@ KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
 
 입력 피처: 거래방식, 출시일, 구매일, 금액, 빈도 등
 
+**RFM 클러스터링 결과**
 ![RFM 클러스터링 결과](image/segment_result.png)
 
 ### ✅ (2차) 고객 유형 클러스터링
@@ -39,9 +40,12 @@ KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
 
 Elbow method 기반 최적 K 선택 (현대와 기아 고객 데이터 모두 k 값을 6으로 선정)
 
+**현대 고객 엘보우 메소드**
 ![현대 고객 elbow method](image/hyundai_elbow.png)
+**기아 고객 엘보우 메소드**
 ![기아 고객 elbow method](image/kia_elbow.png)
 
+**상세 클러스터링 결과**
 ![상세 클러스터링 결과](image/clustering_result.png)
 
 
