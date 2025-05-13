@@ -37,6 +37,7 @@ preprocessor = ColumnTransformer(
         ('num', StandardScaler(), numeric_features)
     ]
 )
+```
 👥 고객 세분화 및 추천 시스템
 ✅ (1차) RFM 기반 클러스터링
 KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능
