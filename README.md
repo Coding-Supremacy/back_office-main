@@ -50,14 +50,74 @@ Elbow method 기반 최적 K 선택 (현대와 기아 고객 데이터 모두 k 
 
 
 ### ✅ 신규 고객 유형 예측
+
+아래 형식으로 학습을 진행하여 신규 고객의 세그먼트를 예측하는 모델을 만들었습니다.
+
 ``` python
 # GradientBoosting/RandomForest 분류 모델
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.pipeline import Pipeline
 
-gb_model = GradientBoostingClassifier()
-gb_model.fit(X_train, y_train)
+# 1. 입력 데이터 준비
+feature_cols = ['성별', '차량구분', '거래방식', '제품출시년월', '제품구매날짜', '친환경차',
+                '연령', '거래금액', '구매빈도']
+target_col = '고객세그먼트'  # 클러스터링으로 생성된 세그먼트
+
+X = df[feature_cols]
+y = df[target_col]
+
+# 2. 학습/테스트 데이터 분할
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 3. 전처리 파이프라인 (범주형/수치형 분리)
+categorical_features = ['성별', '차량구분', '거래방식', '제품출시년월', '제품구매날짜', '친환경차']
+numeric_features = ['연령', '거래금액', '구매빈도']
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features),
+        ('num', StandardScaler(), numeric_features)
+    ]
+)
+
+# 4. 분류 모델 파이프라인 (Gradient Boosting 예시)
+gb_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', GradientBoostingClassifier(random_state=42))
+])
+
+# 5. 모델 학습
+gb_pipeline.fit(X_train, y_train)
+
+# 6. 예측 및 평가
+y_pred = gb_pipeline.predict(X_test)
+print("정확도:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
 ```
-**예측 정확도: 현대 99.2%, 기아 100%**
+
+
+**RFM 클러스터링 예측 모델 테스트 결과**
+![RFM 클러스터링 예측 모델 테스트 결과](image/segment_predict.png)
+segment_predict.png
+
+
+
+
+
+
+
+
+
+
+
+
 📈 판매/수출/생산 예측
 🔮 Prophet 시계열 예측
 ``` python
