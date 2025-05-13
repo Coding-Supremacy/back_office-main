@@ -45,13 +45,13 @@ Elbow method 기반 최적 K 선택 (현대와 기아 고객 데이터 모두 k 
 **기아 고객 엘보우 메소드**
 ![기아 고객 elbow method](image/kia_elbow.png)
 
-**상세 클러스터링 결과**
-![상세 클러스터링 결과](image/clustering_result.png)
+**고객 클러스터  결과**
+![고객 클러스터  결과](image/clustering_result.png)
 
 
 ### ✅ 신규 고객 유형 예측
 
-아래 형식으로 학습을 진행하여 신규 고객의 세그먼트를 예측하는 모델을 만들었습니다.
+**RFM 클러스터 예측 모델 학습 및 테스트 과정**
 
 ``` python
 # GradientBoosting/RandomForest 분류 모델
@@ -105,15 +105,9 @@ print(classification_report(y_test, y_pred))
 
 **RFM 클러스터링 예측 모델 테스트 결과**
 ![RFM 클러스터링 예측 모델 테스트 결과](image/segment_predict.png)
-segment_predict.png
 
 
-
-
-
-
-
-
+**고객 클러스터 예측 모델 학습 및 테스트 과정**
 
 
 
