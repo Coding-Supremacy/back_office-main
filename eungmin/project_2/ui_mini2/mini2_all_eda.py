@@ -9,7 +9,7 @@ import numpy as np
 @st.cache_data
 def load_data(brand):
     try:
-        df = pd.read_csv(f"data/{brand}_고객데이터_신규입력용.csv")
+        df = pd.read_csv(f"data/{brand}_고객데이터_신규입력용.csv", )
         df['제품 구매 날짜'] = pd.to_datetime(df['제품 구매 날짜'])
         df['구매월'] = df['제품 구매 날짜'].dt.to_period('M').astype(str)
         df['구매월_num'] = df['제품 구매 날짜'].dt.month
