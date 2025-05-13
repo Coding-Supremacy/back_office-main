@@ -15,7 +15,7 @@ def run_description1():
     # 옵션 메뉴 설정
     selected = option_menu(
         menu_title=None,
-        options=["원본 데이터", "차종 분석", "친환경차", "RFM 분석", "연령 변환", "전처리 결과", "클러스터링", "이메일 발송"],
+        options=["원본 데이터", "RFM 분석", "연령 변환", "전처리 결과", "클러스터링", "이메일 발송"],
         icons=["database", "car-front", "leaf", "graph-up", "calendar", "check-square", "diagram-3", "envelope"],
         menu_icon="cast",
         default_index=0,
@@ -34,70 +34,9 @@ def run_description1():
         st.subheader('기아 고객 데이터')
         st.dataframe(df3.head(), hide_index=True)
 
-    elif selected == "차종 분석":
-        st.subheader('같은 차종, 다른 차량구분 🚗')
-        col1, col2 = st.columns(2)
-        with col1:
-            vehicle_types = df.loc[df["구매한 제품 (Purchased Product)"] == "Avante (CN7 N)", 
-                                 ["구매한 제품 (Purchased Product)", "차량구분(vehicle types)"]]
-            st.dataframe(vehicle_types, hide_index=True)
-        with col2:
-            st.markdown("""<br><br><br><br>
-                        샘플 데이터에서는 동일한 제품이라도 차량 구분이 다른 경우가 있었습니다.<br>
-                        이를 확인하기 위해 실제로 제품 네이밍을 공유하는 모델들 중 차량 구분이 다를 수 있을지 살펴보았습니다.<br>
-                        디자인별, 구동방식(전기차, 하이브리드 등)별로 같은 네이밍 내 여러 바리에이션이 있긴 했으나 차량 구분자체는 구분이 없었습니다.<br>
-                        """, unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.code("""# 모델과 출시 년월 데이터
-    launch_dates = {
-        'G70 (IK)': '2017-09',
-        'Santa-Fe ™': '2018-01',
-        'NEXO (FE)': '2018-01',
-        'Avante (CN7 N)': '2020-05',
-        'G80 (RG3)': '2020-03',
-        'Grandeur (GN7 HEV)': '2022-01',
-        'IONIQ (AE EV)': '2016-01',
-        'i30 (PD)': '2017-03',
-        'Palisade (LX2)': '2018-12',
-        'Tucson (NX4 PHEV)': '2021-05',
-        'Avante (CN7 HEV)': '2020-07',
-        'IONIQ 6 (CE)': '2022-06',
-        'G90 (HI)': '2022-03',
-        'Santa-Fe (MX5 PHEV)': '2022-06',
-        'G90 (RS4)': '2022-03'
-    }""")
-        with col2:
-            st.markdown("""<br><br><br><br><br><br>
-                        따라서 고객 선호차종을 분석할 때는 차량 구분을 중심으로 작업을 진행했습니다.    
-                        그리고 구매한 제품의 최초 모델 출시년월 컬럼을 추가하여
-                        향후 고객 구매 트렌드 예측 및 맞춤형 서비스 제공을 위한 기반 자료로 활용하고자 하였습니다.
-                        """, unsafe_allow_html=True)
 
-    elif selected == "친환경차":
-        st.subheader("🌳 친환경차 모델 확인")
-        col1, col2 = st.columns(2)
-        with col1:
-            eco_friendly_table = [
-                {"Model": "NEXO (FE)", "Type": "수소 전기차 (FCEV)"},
-                {"Model": "Avante (CN7 HEV)", "Type": "하이브리드 (HEV)"},
-                {"Model": "Grandeur (GN7 HEV)", "Type": "하이브리드 (HEV)"},
-                {"Model": "IONIQ (AE EV)", "Type": "전기차 (EV)"},
-                {"Model": "Tucson (NX4 PHEV)", "Type": "플러그인 하이브리드 (PHEV)"},
-                {"Model": "IONIQ 6 (CE)", "Type": "전기차 (EV)"},
-                {"Model": "Santa-Fe (MX5 PHEV)", "Type": "플러그인 하이브리드 (PHEV)"}
-            ]
-            eco_friendly_df = pd.DataFrame(eco_friendly_table)
-            st.dataframe(eco_friendly_df, hide_index=True)
-        with col2:
-            df_ecoproduct = df2[['구매한 제품', '친환경차']]
-            st.dataframe(df_ecoproduct, hide_index=True)
-        st.markdown("""
-    구매 모델 중 **FCEV, HEV, EV, PHEV 모델**은 친환경차로 분류하여 **친환경차를 선호하는 고객군**을 파악하고자 하였습니다.
-                        """)
-
-    elif selected == "RFM 분석":
+    elif selected == "RFM 고객 세그먼트 클러스터링":
         st.subheader('RFM 고객 세그먼트 분석 및 수정 🙆')
         col1, col2 = st.columns(2)
 
@@ -194,15 +133,15 @@ def run_description1():
         st.subheader('클러스터링을 위한 X 데이터 선정')
         st.markdown("""
     위의 가공 데이터를 바탕으로 클러스터링을 위한 X 데이터를 선정하였습니다.
-    - 연령 (Age)
-    - 거래 금액 (Transaction Amount)
-    - 제품 구매 빈도 (Purchase Frequency)
-    - 성별 (Gender),차량구분(vehicle types)
-    - 거래 방식 (Transaction Method)
-    - 제품 출시년월 (Launch Date)
-    - 제품 구매 날짜 (Purchase Date)
-    - 고객 세그먼트 (Customer Segment)
-    - 친환경차 (Eco-friendly Product)    
+    - 연령
+    - 거래 금액
+    - 제품 구매 빈도
+    - 성별,차량구분
+    - 거래 방식
+    - 제품 출시년월
+    - 제품 구매 날짜
+    - 고객 세그먼트
+    - 친환경차 
         """)
 
         st.markdown("""<b>고객 세그먼트 (Customer Segment)를 클러스터링 결과로 보지 않고 X 값으로 활용한 이유:</b><br>
@@ -212,7 +151,7 @@ def run_description1():
         
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main/project_1/img/elbow.png', use_container_width=True)
+            st.image('main/project_1/img/elbow.png', use_column_width=True)
         with col2:
             st.markdown("""<br><br><br><br><br><br>
     엘보우 기법 분석 결과 클러스터 수를 8개로 선정하여 KMeans 클러스터링을 진행하였습니다.<br>
@@ -222,7 +161,7 @@ def run_description1():
         st.subheader("SVC 모델을 활용한 신규 고객 클러스터링 분류")
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main_project/project_1/img/sc3.png', use_container_width=True)
+            st.image('main_project/project_1/img/sc3.png', use_column_width=True)
         with col2:
             st.markdown("""
     파이프라인을 구축하여 새 고객 데이터가 입력되면 카테고리컬 데이터는 인코딩, 수치형 데이터는 스케일링이 자동으로 수행과, SVC 모델을 통해 클러스터링 및 분류가 이루어지도록 설계하였습니다.
@@ -244,7 +183,7 @@ def run_description1():
         "제품 구매 빈도": [2]
     }""")
         with col2:
-            st.image('main_project/project_1/img/sc4.png', use_container_width=True)
+            st.image('main_project/project_1/img/sc4.png', use_column_width=True)
 
     elif selected == "이메일 발송":
         st.subheader("고객 세그먼트별 프로모션 이메일 발송")
@@ -253,8 +192,8 @@ def run_description1():
     """)
         col1, col2 = st.columns(2)
         with col1:
-            st.image('main_project/project_1/img/sc1.png', use_container_width=True)
+            st.image('main_project/project_1/img/sc1.png', use_column_width=True)
             st.markdown("0번 클러스터 프로모션 메일 예시")
         with col2:
-            st.image('main_project/project_1/img/sc2.png', use_container_width=True)
+            st.image('main_project/project_1/img/sc2.png', use_column_width=True)
             st.markdown("1번 클러스터 프로모션 메일 예시")

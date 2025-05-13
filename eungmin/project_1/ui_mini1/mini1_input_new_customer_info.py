@@ -9,7 +9,7 @@ from pathlib import Path
 import base64
 import requests
 import project_1.ui_mini1.mini1_promo_email as promo_email
-from project_1.ui_mini1.vehicle_recommendations_data import vehicle_recommendations, vehicle_prices, vehicle_links, launch_dates, eco_friendly_models, brand_recommendations, basic_recommendations
+from project_1.ui_mini1.vehicle_recommendations_data import (vehicle_recommendations, vehicle_prices, vehicle_links, launch_dates, eco_friendly_models, brand_recommendations, basic_recommendations)
     
 
 def get_abs_path(relative_path):
@@ -39,6 +39,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
     
     if not recommendation:
         basic_rec = basic_recommendations.get(brand, {}).get(model, {})
+        print(type(basic_rec))
         
         if basic_rec:
             # 차량 이미지 표시
@@ -64,7 +65,7 @@ def display_vehicle_recommendation(brand, model, cluster_id):
             
             # 가격 정보 표시
             with st.expander("💰 **가격 정보**", expanded=True):
-                price_info = basic_rec.get("가격", "정보 없음")
+                price_info = dict(basic_rec).get("가격", "정보 없음")
                 st.markdown(f"""
                 <div style="
                     background: #f8f9fa;
@@ -226,7 +227,8 @@ def display_vehicle_recommendation(brand, model, cluster_id):
     with col2:
         # 추천 이유 섹션 (아이콘과 함께)
         with st.expander("✨ **추천 이유**", expanded=True):
-            reasons = recommendation.get("추천이유", [])
+            reasons = recommendation.get("추천이유", "")
+            print(reasons)
             for reason in reasons:
                 # **텍스트** 를 <strong>텍스트</strong>로 바꿔주는 처리
                 reason_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', reason)
@@ -405,6 +407,8 @@ def run_input_step1(brand):
 
             st.session_state["step"] = 2
             st.session_state["recommended_vehicles"] = brand_recommendations[brand].get(cluster_id, [])
+            st.write(f"추천 차량 목록: {st.session_state['recommended_vehicles']}")
+            st.write(cluster_id)
             st.rerun()
 
 def step2_vehicle_selection(brand):
