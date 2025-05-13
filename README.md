@@ -81,6 +81,8 @@ gb_pipeline = Pipeline([
     ('classifier', GradientBoostingClassifier(random_state=42))
 ])
 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
 # 5. 모델 학습
 gb_pipeline.fit(X_train, y_train)
 
@@ -104,18 +106,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
+# 범주형, 수치형 데이터 구분분
 categorical_cols = ['성별', '차량구분', '거래 방식', '제품 출시년월', '제품 구매 날짜', '고객 세그먼트', '친환경차']
 numerical_cols = ['연령', '거래 금액', '제품 구매 빈도']
 
+#입력 데이터
 X = data[categorical_cols + numerical_cols]
+# 타겟 데이터
 y = data['Cluster']
 
-# 전처리 파이프라인
+# 전처리 파이프라인(수치형 데이터는 피쳐 스케일링, 범주형 데이터는 원핫 인코딩)
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), numerical_cols),
@@ -123,19 +127,13 @@ preprocessor = ColumnTransformer(
     ]
 )
 
+# 예측 모델 파이프라인인
 rf_pipeline = Pipeline([
     ('preprocessor', preprocessor),
     ('classifier', RandomForestClassifier())
 ])
-gb_pipeline = Pipeline([
-    ('preprocessor', preprocessor),
-    ('classifier', GradientBoostingClassifier())
-])
-svm_pipeline = Pipeline([
-    ('preprocessor', preprocessor),
-    ('classifier', SVC())
-])
 
+# 학습, 테스트 데이터 생성성
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 모델 학습
@@ -149,17 +147,6 @@ print("Random Forest:")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.3f}")
 print("Classification Report:\n", classification_report(y_test, y_pred_rf))
 
-# Gradient Boosting
-y_pred_gb = gb_pipeline.predict(X_test)
-print("Gradient Boosting:")
-print(f"Accuracy: {accuracy_score(y_test, y_pred_gb):.3f}")
-print("Classification Report:\n", classification_report(y_test, y_pred_gb))
-
-# SVM
-y_pred_svm = svm_pipeline.predict(X_test)
-print("SVM:")
-print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.3f}")
-print("Classification Report:\n", classification_report(y_test, y_pred_svm))
 
 ```
 
