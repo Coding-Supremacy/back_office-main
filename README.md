@@ -4,7 +4,7 @@
 
 ## 📂 데이터 및 분석 프로세스
 
-### 1. 📥 데이터 수집 및 구성
+### 📥 데이터 수집 및 구성
 - **내부 실적 데이터**: 현대·기아차 2023~2025년 판매·수출 데이터 (차종/국가/공장/월별 포함)
         데이터 링크 : https://drive.google.com/file/d/12HKQzatQsYrVRNyhZygPVDesuAUaKtvL/view?usp=sharing
 - **가상 고객 데이터**: ChatGPT로 생성한 국가별 고객 프로필 (이름, 차량 선호, 구매 빈도 등) 
@@ -12,20 +12,9 @@
 - **외부 보조 데이터**: 국가별 GDP, 기후대, 경쟁사 판매량 등
            데이터 링크 : https://drive.google.com/file/d/1ufUbxoOeEeEFdMHjLs2VZ2lEvanwF25P/view?usp=sharing
 
-### 2. 🔧 데이터 전처리 및 통합
-```python
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
 
-categorical_features = ['성별', '차량구분', '거래방식', '제품출시년월', '제품구매날짜', '친환경차']
-numeric_features = ['연령', '거래금액', '구매빈도', '고객세그먼트']
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('cat', OneHotEncoder(), categorical_features),
-        ('num', StandardScaler(), numeric_features)
-    ])
-```
+
 ## 👥 고객 세분화 및 추천 시스템
 ### ✅ (1차) RFM 기반 클러스터링
 KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능 고객 분류
@@ -108,6 +97,77 @@ print(classification_report(y_test, y_pred))
 
 
 **고객 클러스터 예측 모델 학습 및 테스트 과정**
+
+``` python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+
+categorical_cols = ['성별', '차량구분', '거래 방식', '제품 출시년월', '제품 구매 날짜', '고객 세그먼트', '친환경차']
+numerical_cols = ['연령', '거래 금액', '제품 구매 빈도']
+
+X = data[categorical_cols + numerical_cols]
+y = data['Cluster']
+
+# 전처리 파이프라인
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', StandardScaler(), numerical_cols),
+        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_cols)
+    ]
+)
+
+rf_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier())
+])
+gb_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', GradientBoostingClassifier())
+])
+svm_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', SVC())
+])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 모델 학습
+rf_pipeline.fit(X_train, y_train)
+gb_pipeline.fit(X_train, y_train)
+svm_pipeline.fit(X_train, y_train)
+
+# Random Forest
+y_pred_rf = rf_pipeline.predict(X_test)
+print("Random Forest:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.3f}")
+print("Classification Report:\n", classification_report(y_test, y_pred_rf))
+
+# Gradient Boosting
+y_pred_gb = gb_pipeline.predict(X_test)
+print("Gradient Boosting:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_gb):.3f}")
+print("Classification Report:\n", classification_report(y_test, y_pred_gb))
+
+# SVM
+y_pred_svm = svm_pipeline.predict(X_test)
+print("SVM:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.3f}")
+print("Classification Report:\n", classification_report(y_test, y_pred_svm))
+
+```
+
+**고객 클러스터링 예측 모델 테스트 결과**
+![고객 클러스터링 예측 모델 테스트 결과](image/cluster_predict.png)
+
+
+
 
 
 
