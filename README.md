@@ -1,28 +1,28 @@
 # 🚗 AI 기반 고객 맞춤형 자동차 추천 및 영업전략 자동화 시스템
 
-현대·기아차 실제 판매 데이터를 활용하여 고객 세분화, 차량 추천, 판매 예측, 실시간 리포트 및 마케팅 자동화까지 모두 아우르는 **실전형 데이터 분석/AI 플랫폼 프로젝트**입니다.
+현대·기아차 실제 판매 데이터를 활용한 고객 세분화, 차량 추천, 판매 예측, 리포트 자동화까지 전 과정을 다루는 실전형 데이터 분석/AI 프로젝트입니다.
 
 ---
 
-## 📥 데이터 수집 및 구성
+## 📁 데이터 구성
 
-- **내부 실적 데이터**  
-  - 현대·기아차 2023~2025년 판매·수출 데이터 (차종/국가/공장/월별 포함)
+- **내부 판매 실적 데이터**  
+  - 현대/기아차 차종별 · 국가별 · 월별 · 내수/수출/공장 데이터
 
 - **가상 고객 데이터**  
-  - ChatGPT로 생성한 국가별 고객 프로필 (이름, 차량 선호, 구매 빈도 등)
+  - ChatGPT 기반 국가별 고객 프로필 (이름, 선호, 구매 이력 등)
 
 - **외부 보조 데이터**  
   - 국가별 GDP, 기후대, 경쟁사 판매량 등
 
 ---
 
-## 🔧 데이터 전처리 및 통합
+## 🔄 데이터 전처리
 
-- 문자열 숫자 변환: `"5,388"` → `5388`
-- 컬럼명 통일 및 한글화: `'Domestic'` → `'내수용'`
-- 결측치 처리: `NaN` → `0` 또는 최소값
-- 범주형/수치형 분리 및 전처리 파이프라인 구성
+- 문자열 숫자 변환 (`"5,388"` → `5388`)
+- 컬럼명 통일 및 한글화 (`'Domestic'` → `'내수용'`)
+- 결측치 처리 (`NaN` → `0`)
+- 수치형/범주형 구분 후 전처리 파이프라인 적용
 
 ```python
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -31,52 +31,41 @@ from sklearn.compose import ColumnTransformer
 categorical_features = ['성별', '차량구분', '거래방식', '제품출시년월', '제품구매날짜', '친환경차']
 numeric_features = ['연령', '거래금액', '구매빈도', '고객세그먼트']
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('cat', OneHotEncoder(), categorical_features),
-        ('num', StandardScaler(), numeric_features)
-    ]
-)
-```
-👥 고객 세분화 및 추천 시스템
-✅ (1차) RFM 기반 클러스터링
-KMeans (K=4): VIP / 일반 / 신규 / 이탈 가능
+preprocessor = ColumnTransformer([
+    ('cat', OneHotEncoder(), categorical_features),
+    ('num', StandardScaler(), numeric_features)
+])
+👥 고객 분석 및 추천
+(1) RFM 기반 고객 클러스터링
+KMeans (K=4): VIP, 일반, 신규, 이탈 가능 고객
 
-입력: 거래방식, 출시일, 구매일, 금액, 빈도 등
+입력: 거래일, 금액, 빈도 등
 
-✅ (2차) 고객 유형 클러스터링
-추가 입력: 성별, 차량유형, 친환경 여부, 연령 등
+(2) 추가 고객 유형 클러스터링
+성별, 차량유형, 친환경 여부, 연령 등 포함
 
-Elbow method 기반 최적 K 선택 (예: K=6)
+Elbow method → 최적 K 도출
 
-✅ 신규 고객 유형 예측 (분류 모델)
-사용 모델: GradientBoosting, RandomForest
+(3) 신규 고객 분류 모델
+모델: GradientBoosting, RandomForest
 
-예측 정확도:
+정확도: 현대 99.2%, 기아 100%
 
-현대 → 99.2%
-
-기아 → 100%
-
-📈 판매/수출/생산 예측
-🔮 Prophet 시계열 예측
-wide → long 데이터 변환 후 월별 예측
-
-연도/월 → ds, 실적 → y
-
+📈 판매/수출 예측
+Prophet 시계열 모델
 python
 복사
 편집
 from prophet import Prophet
 
-model = Prophet(daily_seasonality=False, weekly_seasonality=False)
+model = Prophet()
 model.fit(df_long[['ds', 'y']])
 forecast = model.predict(model.make_future_dataframe(periods=12, freq='M'))
-💡 LightGBM 다변량 예측
-입력 피처: 수출량, GDP, 국가명, 기후대 등
+월별 실적 예측 (long format 필요)
 
-타겟: 다음달_수출량
+계절성, 추세 반영 가능
 
+LightGBM 다변량 모델
 python
 복사
 편집
@@ -84,41 +73,34 @@ import lightgbm as lgb
 
 params = {'objective': 'regression', 'metric': 'rmse'}
 train_data = lgb.Dataset(X, label=y)
-gbm = lgb.train(params, train_data, num_boost_round=100)
-📊 실시간 대시보드 및 자동화
-Streamlit: 브랜드/국가/고객유형별 분석 및 추천 결과 시각화
+model = lgb.train(params, train_data, num_boost_round=100)
+입력: GDP, 국가, 기후대, 이전 실적 등
 
-자동화: 이메일·문자 발송, 보고서 생성, 마케팅 전략 자동 제안
+타겟: 다음달 수출량 예측
 
-🔁 전체 분석 파이프라인
+📊 시각화 & 자동화
+Streamlit 대시보드: 브랜드/국가/고객유형 기반 시각화 및 추천 결과 제공
+
+자동화 기능:
+
+보고서 생성
+
+고객별 추천 차량 자동 발송
+
+전략 요약 공유
+
+🔁 전체 파이프라인 (요약)
 mermaid
 복사
 편집
 graph TD
-A[데이터 수집] --> B[전처리 및 통합]
+A[데이터 수집] --> B[전처리]
 B --> C1[RFM 클러스터링]
-C1 --> C2[고객유형 클러스터링]
-C2 --> D[고객 유형 예측 모델]
-D --> E[차량 추천/마케팅 자동화]
-B --> F1[판매/수출 데이터 변환]
-F1 --> F2[Prophet 시계열 예측]
-F1 --> F3[LightGBM 다변량 예측]
-F2 --> G[실시간 대시보드]
-F3 --> G
+C1 --> C2[고객 유형 클러스터링]
+C2 --> D[신규 고객 예측]
+D --> E[차량 추천/전략 제안]
+B --> F1[Prophet 예측]
+B --> F2[LightGBM 예측]
+F1 --> G[대시보드 시각화]
+F2 --> G
 E --> G
-🧠 주요 분석·추천 로직 요약
-🚀 고객 분석 흐름
-고객 정보 입력
-
-클러스터/유형 예측
-
-맞춤 차량 및 프로모션 추천
-
-결과 저장 및 자동 발송
-
-📦 판매/수출 예측 흐름
-Prophet/LightGBM 예측
-
-트렌드·계절성 분석
-
-전략 자동 제안 (마케팅·생산·재고 등)
